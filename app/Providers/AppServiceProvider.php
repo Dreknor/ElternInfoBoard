@@ -248,6 +248,11 @@ class AppServiceProvider extends ServiceProvider
                 : Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
         });
 
+        // MCP-Server (Chatbot): eigenes Kontingent je Nutzer, damit ein Bot nicht unbegrenzt abfragt.
+        RateLimiter::for('mcp', function (Request $request) {
+            return Limit::perMinute(60)->by('mcp:'.($request->user()?->id ?: $request->ip()));
+        });
+
         // Dediziertes, strenges Rate-Limit für externe API-Key-Endpunkte (Vertretungsplan, Stundenplan).
         // Verhindert Brute-Force-Angriffe auf den API-Key.
         RateLimiter::for('external-api', function (Request $request) {

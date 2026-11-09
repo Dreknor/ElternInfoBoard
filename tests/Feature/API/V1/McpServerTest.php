@@ -8,6 +8,12 @@ use Laravel\Sanctum\Sanctum;
 
 class McpServerTest extends AppApiTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['mcp_server.enabled' => true]);
+    }
+
     private function rpc(string $method, array $params = [], int $id = 1)
     {
         return $this->postJson('/api/v1/mcp', ['jsonrpc' => '2.0', 'id' => $id, 'method' => $method, 'params' => $params], [
@@ -29,7 +35,7 @@ class McpServerTest extends AppApiTestCase
     /** @test */
     public function blocks_users_that_must_change_their_password(): void
     {
-        Sanctum::actingAs($this->parentIn($this->group(), ['changePassword' => true]));
+        Sanctum::actingAs($this->parentIn($this->group(), ['changePassword' => true]), ['*']);
 
         $this->rpc('tools/list')->assertForbidden();
     }
@@ -37,7 +43,7 @@ class McpServerTest extends AppApiTestCase
     /** @test */
     public function every_tool_maps_to_an_existing_get_only_api_route(): void
     {
-        foreach (ToolCatalog::tools() as $tool) {
+        foreach (ToolCatalog::all() as $tool) {
             $path = (new \ReflectionProperty($tool, 'path'))->getValue($tool);
             $route = collect(Route::getRoutes()->getRoutes())->first(fn ($r) => $r->uri() === $path);
 
@@ -49,7 +55,7 @@ class McpServerTest extends AppApiTestCase
     /** @test */
     public function lists_only_read_only_tools(): void
     {
-        Sanctum::actingAs($this->parentIn($this->group()));
+        Sanctum::actingAs($this->parentIn($this->group()), ['*']);
 
         $tools = $this->rpc('tools/list', ['per_page' => 100])->assertOk()->json('result.tools');
 
@@ -66,7 +72,7 @@ class McpServerTest extends AppApiTestCase
         $user = $this->parentIn($group);
         $visible = $this->postIn($group);
         $hidden = $this->postIn($this->group('Andere'));
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $list = $this->tool('list_posts')->assertOk()->json('result');
         $this->assertFalse($list['isError'] ?? false);
@@ -84,7 +90,7 @@ class McpServerTest extends AppApiTestCase
         $group = $this->group();
         $user = $this->parentIn($group);
         $post = $this->postIn($group, ['read_receipt' => true]);
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $this->tool('get_post', ['post' => $post->id])->assertOk();
 
@@ -95,7 +101,7 @@ class McpServerTest extends AppApiTestCase
     /** @test */
     public function rejects_unknown_and_invalid_arguments(): void
     {
-        Sanctum::actingAs($this->parentIn($this->group()));
+        Sanctum::actingAs($this->parentIn($this->group()), ['*']);
 
         $this->assertTrue($this->tool('list_posts', ['foo' => 'bar'])->json('result.isError'));
         $this->assertTrue($this->tool('get_post', ['post' => '../../me'])->json('result.isError'));
@@ -109,7 +115,7 @@ class McpServerTest extends AppApiTestCase
         $user = $this->parentIn($group);
         $own = $this->childOf($user, $group);
         $foreign = $this->childOf($this->parentIn($group), $group);
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $this->assertFalse($this->tool('get_stundenplan', ['child' => $own->id])->json('result.isError') ?? false);
         $this->assertTrue($this->tool('get_stundenplan', ['child' => $foreign->id])->json('result.isError'));
@@ -128,7 +134,7 @@ class McpServerTest extends AppApiTestCase
         $conversation->users()->attach([$user->id => ['joined_at' => now()->subDay()], $other->id => ['joined_at' => now()->subDay()]]);
         $message = $conversation->messages()->create(['sender_id' => $other->id, 'body' => 'Hallo', 'type' => 'file']);
         $message->addMediaFromString('inhalt')->usingFileName('Elternbrief.pdf')->toMediaCollection('message-attachments');
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $result = $this->tool('get_messenger_messages', ['conversation' => $conversation->id])->assertOk()->json('result');
 
@@ -150,7 +156,7 @@ class McpServerTest extends AppApiTestCase
         $user = $this->parentIn($group);
         $post = $this->postIn($group);
         $post->addMediaFromString('inhalt')->usingFileName('Plan.pdf')->toMediaCollection('files');
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $result = $this->tool('get_post', ['post' => $post->id])->json('result');
 

@@ -35,7 +35,7 @@
                                 <div class="form-group">
                                     <label>Ende</label>
                                     <input type="date" class="form-control border-input" name="ende"
-                                           value="{{old('ends', $nachricht->archiv_ab->format('Y-m-d'))}}" required>
+                                           value="{{old('ends', $nachricht->archiv_ab?->format('Y-m-d'))}}" required>
                                 </div>
                             </div>
 

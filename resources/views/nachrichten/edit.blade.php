@@ -35,7 +35,7 @@
                     <div class="col-md-auto col-sm-6">
                         <div class="form-group">
                             <label>Archiv ab</label>
-                            <input type="date" class="form-control border-input date-input" name="archiv_ab" value="{{$post->archiv_ab->format('Y-m-d')}}" >
+                            <input type="date" class="form-control border-input date-input" name="archiv_ab" value="{{$post->archiv_ab?->format('Y-m-d')}}" >
                         </div>
                     </div>
                     @if($external == 1)

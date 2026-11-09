@@ -272,6 +272,30 @@ class LinksModuleTest extends TestCase
     }
 
     #[Test]
+    public function kompakte_navigation_ordnet_links_unter_infos_und_inhalte_erstellen_ein(): void
+    {
+        $seiten = new Module(['setting' => 'Seiten', 'category' => 'module', 'options' => [
+            'active' => true, 'rights' => [],
+            'nav' => ['name' => 'Seiten', 'link' => 'seiten', 'icon' => 'fas fa-file'],
+            'adm-nav' => ['name' => 'Seiten verwalten', 'link' => 'seiten/verwaltung', 'icon' => 'fas fa-file', 'adm-rights' => ['edit links']],
+        ]]);
+        // Optionen wie in der Migration (activateModule() im Test überschreibt sie).
+        $links = new Module(['setting' => 'Links', 'category' => 'module', 'options' => [
+            'active' => true, 'rights' => [],
+            'nav' => ['name' => 'Links', 'link' => 'links', 'icon' => 'fas fa-link'],
+            'adm-nav' => ['name' => 'Links verwalten', 'link' => 'links/verwaltung', 'icon' => 'fas fa-link', 'adm-rights' => ['edit links']],
+        ]]);
+        $modules = collect([$links, $seiten]);
+
+        $nav = app(\App\Services\NavigationService::class)->build($this->admin, $modules, collect(), 'links');
+
+        $infos = collect($nav['groups'])->firstWhere('key', 'informationen');
+        $this->assertContains('Links', collect($infos['items'] ?? [])->pluck('name')->all());
+        $inhalte = collect($nav['admin'])->firstWhere('key', 'adm-inhalte');
+        $this->assertContains('Links verwalten', collect($inhalte['items'] ?? [])->pluck('name')->all());
+    }
+
+    #[Test]
     public function dashboard_api_liefert_keine_links_bei_inaktivem_modul(): void
     {
         $this->link(['title' => 'Homepage', 'pinned' => true]);

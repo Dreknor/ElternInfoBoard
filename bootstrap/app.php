@@ -39,6 +39,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\EnforceIntegrationTokenScope::class,
         ]);
 
+        // MCP-Tokens (Chatbot) gelten nur für den MCP-Endpunkt – vorn in der Gruppe, damit vor
+        // Route-Model-Binding und Controller nichts mit einem solchen Token läuft.
+        $middleware->api(prepend: [\App\Http\Middleware\RestrictMcpTokens::class]);
+
         // Wartungsmodus-Bypass wird vom Online-Updater gesetzt und vor dem
         // Entschlüsseln der Cookies geprüft – daher unverschlüsselt lassen.
         $middleware->encryptCookies(except: ['laravel_maintenance']);

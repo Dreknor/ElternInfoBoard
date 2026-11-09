@@ -10,8 +10,20 @@ use App\Mcp\Tools\ApiEndpointTool;
  */
 class ToolCatalog
 {
-    /** @return list<ApiEndpointTool> */
+    /**
+     * Auf dieser Instanz angebotene Werkzeuge (ohne die per `MCP_DISABLED_TOOLS` abgeschalteten).
+     *
+     * @return list<ApiEndpointTool>
+     */
     public static function tools(): array
+    {
+        $disabled = (array) config('mcp_server.disabled_tools', []);
+
+        return array_values(array_filter(self::all(), fn (ApiEndpointTool $tool) => ! in_array($tool->name(), $disabled, true)));
+    }
+
+    /** @return list<ApiEndpointTool> */
+    public static function all(): array
     {
         $id = fn (string $what): array => ['type' => 'integer', 'description' => "ID: {$what}", 'in' => 'path', 'min' => 1];
         $childFilter = ['type' => 'integer', 'description' => 'Nur dieses Kind (ID aus list_children).', 'min' => 1];
@@ -22,8 +34,9 @@ class ToolCatalog
             new ApiEndpointTool('list_children', 'Eigene Kinder mit Klasse und Gruppe.', 'api/parent/children'),
             new ApiEndpointTool('get_dashboard', 'Startseite: offene Aufgaben, Kinder heute, nächste Termine, neueste Beiträge, Losung, Erkrankungen.', 'api/v1/parent/dashboard'),
             new ApiEndpointTool('get_open_todos', 'Offene Aufgaben (Lesebestätigungen, Rückmeldungen, Abfragen).', 'api/v1/parent/todo'),
-            new ApiEndpointTool('list_notifications', 'Benachrichtigungen des Nutzers.', 'api/v1/notifications', [
+            new ApiEndpointTool('list_notifications', 'Benachrichtigungen des Nutzers (neueste zuerst, Cursor-Pagination).', 'api/v1/notifications', [
                 'unread' => ['type' => 'boolean', 'description' => 'Nur ungelesene.'],
+                'cursor' => ['type' => 'string', 'description' => '`meta.next_cursor` der vorherigen Antwort.'],
             ]),
             new ApiEndpointTool('list_posts', 'Nachrichten/Beiträge der eigenen Gruppen (neueste zuerst, mit Cursor-Pagination).', 'api/v1/posts', [
                 'filter' => ['type' => 'string', 'description' => '`todo` = nur Beiträge mit offener Aufgabe.', 'enum' => ['todo']],
@@ -36,7 +49,10 @@ class ToolCatalog
             ]),
             new ApiEndpointTool('get_post', 'Einzelner Beitrag mit Text, Anhängen, Rückmeldung und eigenen Antworten.', 'api/v1/posts/{post}', ['post' => $id('Beitrag')]),
             new ApiEndpointTool('get_post_poll', 'Abstimmung eines Beitrags mit Ergebnissen.', 'api/v1/posts/{post}/poll', ['post' => $id('Beitrag')]),
-            new ApiEndpointTool('list_post_comments', 'Kommentare eines Beitrags.', 'api/v1/posts/{post}/comments', ['post' => $id('Beitrag')]),
+            new ApiEndpointTool('list_post_comments', 'Kommentare eines Beitrags (älteste zuerst, Cursor-Pagination).', 'api/v1/posts/{post}/comments', [
+                'post' => $id('Beitrag'),
+                'cursor' => ['type' => 'string', 'description' => '`meta.next_cursor` der vorherigen Antwort.'],
+            ]),
             new ApiEndpointTool('list_termine', 'Termine im Zeitraum (Standard: heute bis +6 Monate, max. ein Jahr).', 'api/v1/termine', [
                 'from' => ['type' => 'string', 'description' => 'Startdatum YYYY-MM-DD.', 'pattern' => '/^\d{4}-\d{2}-\d{2}$/'],
                 'to' => ['type' => 'string', 'description' => 'Enddatum YYYY-MM-DD.', 'pattern' => '/^\d{4}-\d{2}-\d{2}$/'],
@@ -62,7 +78,7 @@ class ToolCatalog
             new ApiEndpointTool('get_infoseite', 'Eine Infoseite mit allen Inhaltsblöcken.', 'api/v1/sites/{site}', ['site' => $id('Infoseite')]),
             new ApiEndpointTool('get_elternrat', 'Elternrat: Themen, Termine mit eigener Zusage, eigene Aufgaben (nur mit Berechtigung).', 'api/v1/elternrat'),
             new ApiEndpointTool('get_elternrat_discussion', 'Ein Elternrat-Thema mit Kommentaren.', 'api/v1/elternrat/discussions/{discussion}', ['discussion' => $id('Thema')]),
-            new ApiEndpointTool('list_files', 'Dateien und Anhänge (Name, Typ, Größe) der für den Nutzer sichtbaren Beiträge (Messenger-Anhänge stehen in get_messenger_messages).', 'api/files', [
+            new ApiEndpointTool('list_files', 'Dateien der eigenen Gruppen (Name, Typ, Größe). Beitragsanhänge stehen in get_post, Messenger-Anhänge in get_messenger_messages.', 'api/files', [
                 'search' => ['type' => 'string', 'description' => 'Filter nach Dateiname.'],
                 'mime_type' => ['type' => 'string', 'description' => 'Filter nach MIME-Typ, z. B. application/pdf.'],
                 'page' => ['type' => 'integer', 'description' => 'Seite (Standard 1).', 'min' => 1],

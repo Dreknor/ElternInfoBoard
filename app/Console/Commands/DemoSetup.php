@@ -53,6 +53,13 @@ use Spatie\Permission\PermissionRegistrar;
 
 class DemoSetup extends Command
 {
+    // Demo-Daten je Bereich (app/Console/Commands/Demo)
+    use Demo\SeedsElternabfragen;
+    use Demo\SeedsFamilieUndCare;
+    use Demo\SeedsInhalte;
+    use Demo\SeedsMessenger;
+    use Demo\SeedsStundenplan;
+
     /**
      * The name and signature of the console command.
      *
@@ -60,7 +67,11 @@ class DemoSetup extends Command
      */
     protected $signature = 'demo:setup
                             {--fresh : Datenbank vorher leeren (migrate:fresh --seed)}
-                            {--force : Bestätigungsabfragen überspringen}';
+                            {--force : Bestätigungsabfragen überspringen}
+                            {--existing= : Vorhandene Demo-Daten: abbrechen | ergaenzen | neu (ohne Rückfrage)}
+                            {--admin-name= : Name des Administrators (ohne Rückfrage)}
+                            {--admin-email= : E-Mail-Adresse des Administrators (ohne Rückfrage)}
+                            {--admin-password= : Passwort des Administrators, mind. 8 Zeichen (ohne Rückfrage)}';
 
     /**
      * The console command description.
@@ -92,29 +103,73 @@ class DemoSetup extends Command
             }
         }
 
-        // Optionale Migration
-        if ($this->option('fresh')) {
-            if (!$this->option('force')) {
-                $this->warn('⚠️  --fresh löscht die gesamte Datenbank und führt migrate:fresh --seed aus!');
-                if (!$this->confirm('Wirklich fortfahren?', false)) {
-                    $this->info('Abgebrochen.');
-                    return self::SUCCESS;
-                }
+        // Umgang mit vorhandenen Daten:
+        //   --fresh / --existing=neu   Datenbank komplett leeren (migrate:fresh --seed) und neu anlegen
+        //   --existing=ergaenzen       Vorhandenes bleibt, Fehlendes wird angelegt (nichts doppelt)
+        //   --existing=abbrechen       nichts tun (Standard, wenn Demo-Daten gefunden werden)
+        $mode = $this->option('fresh') ? 'neu' : $this->option('existing');
+        if ($mode !== null && ! in_array($mode, ['abbrechen', 'ergaenzen', 'neu'], true)) {
+            $this->error('--existing muss „abbrechen“, „ergaenzen“ oder „neu“ sein.');
+
+            return self::FAILURE;
+        }
+
+        // Noch nicht migrierte Datenbank: keine Daten vorhanden; ohne „neu“ zuerst migrieren
+        $hasUsersTable = \Illuminate\Support\Facades\Schema::hasTable('users');
+        $demoUsers = $hasUsersTable ? User::where('email', 'like', '%@ev-schulzentrum-demo.de')->count() : 0;
+        $otherUsers = $hasUsersTable ? User::where('email', 'not like', '%@ev-schulzentrum-demo.de')->count() : 0;
+        if (! $hasUsersTable && $mode !== 'neu') {
+            $this->info('🔄 Datenbank ist leer – führe migrate --seed aus...');
+            $this->call('migrate', ['--seed' => true, '--force' => true]);
+        }
+
+        if ($mode === null && $demoUsers > 0) {
+            $this->warn("⚠️  Es sind bereits Demo-Daten vorhanden ({$demoUsers} Demo-Konten).");
+            $this->line('   • abbrechen  – nichts ändern');
+            $this->line('   • ergaenzen  – vorhandene Demo-Daten behalten, fehlende anlegen (nichts doppelt)');
+            $this->line('   • neu        – Datenbank komplett leeren und alle Demo-Daten neu anlegen');
+            $mode = $this->option('force')
+                ? 'ergaenzen'
+                : $this->choice('Wie soll mit den vorhandenen Demo-Daten verfahren werden?', ['abbrechen', 'ergaenzen', 'neu'], 'abbrechen');
+        }
+
+        if ($mode === 'abbrechen') {
+            $this->info('Abgebrochen – es wurde nichts geändert.');
+
+            return self::SUCCESS;
+        }
+
+        if ($mode === 'neu') {
+            $this->warn('⚠️  „neu“ löscht die GESAMTE Datenbank (migrate:fresh --seed), nicht nur Demo-Daten!');
+            if ($otherUsers > 0) {
+                // Schutz vor versehentlichem Leeren einer echten Instanz
+                $this->warn("   Die Datenbank enthält {$otherUsers} Konto/Konten außerhalb der Demo (z. B. echte Nutzer oder Ihr Admin-Konto).");
+            }
+            if (! $this->option('force') && ! $this->confirm('Wirklich alle Daten löschen und neu anlegen?', false)) {
+                $this->info('Abgebrochen – es wurde nichts geändert.');
+
+                return self::SUCCESS;
             }
             $this->info('🔄 Führe migrate:fresh --seed aus...');
             $this->call('migrate:fresh', ['--seed' => true, '--force' => true]);
-        } else {
-            // Prüfen ob bereits Demo-Daten vorhanden
-            if (User::where('email', 'schulleitung@ev-schulzentrum-demo.de')->exists()) {
-                $this->warn('⚠️  Demo-Daten scheinen bereits vorhanden zu sein (Demo-Benutzer gefunden).');
-                if (!$this->option('force') && !$this->confirm('Trotzdem fortfahren?', false)) {
-                    $this->info('Abgebrochen. Nutze --fresh um alle Daten neu anzulegen.');
-                    return self::SUCCESS;
-                }
-            }
+        } elseif ($mode === 'ergaenzen' || $demoUsers > 0) {
+            $this->info('➕ Vorhandene Demo-Daten bleiben erhalten, fehlende werden ergänzt.');
         }
 
         $this->newLine();
+        // Zugangsdaten per Option (z. B. für automatisierte Testsysteme), sonst Rückfrage
+        $adminName = $this->option('admin-name') ?: null;
+        $adminEmail = $this->option('admin-email') ?: null;
+        $adminPassword = $this->option('admin-password') ?: null;
+        if ($adminEmail && $adminPassword) {
+            if (! filter_var($adminEmail, FILTER_VALIDATE_EMAIL) || strlen($adminPassword) < 8) {
+                $this->error('--admin-email muss gültig und --admin-password mindestens 8 Zeichen lang sein.');
+
+                return self::FAILURE;
+            }
+            $adminName ??= 'Administrator';
+            $adminPasswordConfirm = $adminPassword;
+        } else {
         $this->info('📝 Bitte geben Sie die Admin-Zugangsdaten ein:');
         $adminName = $this->ask('Name des Administrators', 'Administrator');
         $adminEmail = $this->ask('E-Mail-Adresse');
@@ -132,6 +187,7 @@ class DemoSetup extends Command
             $this->error('Die Passwörter stimmen nicht überein.');
             $adminPassword = $this->secret('Passwort (min. 8 Zeichen)');
             $adminPasswordConfirm = $this->secret('Passwort bestätigen');
+        }
         }
 
         $this->newLine();
@@ -166,6 +222,9 @@ class DemoSetup extends Command
                 ['Familie Koch', 'koch@ev-schulzentrum-demo.de', 'Demo1234!'],
                 ['Familie Bauer', 'bauer@ev-schulzentrum-demo.de', 'Demo1234!'],
                 ['Familie Wagner', 'wagner@ev-schulzentrum-demo.de', 'Demo1234!'],
+                ['Vater (Familie Müller)', 'michael.mueller@ev-schulzentrum-demo.de', 'Demo1234!'],
+                ['Großmutter (nur Info)', 'ingrid.mueller@ev-schulzentrum-demo.de', 'Demo1234!'],
+                ['Vater (Familie Koch)', 'stefan.koch@ev-schulzentrum-demo.de', 'Demo1234!'],
             ]
         );
         $this->newLine();
@@ -199,6 +258,20 @@ class DemoSetup extends Command
         $this->setupStep('Schulferien', fn() => $this->createHolidays());
         $this->setupStep('Arbeitsgemeinschaften', fn() => $this->createArbeitsgemeinschaften($admin));
         $this->setupStep('Benachrichtigungen', fn() => $this->createNotifications($admin));
+        // Weitere Module (app/Console/Commands/Demo)
+        $this->setupStep('Familien & Bezugspersonen', fn() => $this->createFamilien());
+        $this->setupStep('Hort: Anwesenheit, Notizen, Abholungen', fn() => $this->createCareExtras());
+        $this->setupStep('Meldepflichtige Erkrankungen', fn() => $this->createActiveDiseases());
+        $this->setupStep('Stundenplan', fn() => $this->createStundenplan());
+        $this->setupStep('Vertretungsplan: Wochen & Abwesenheiten', fn() => $this->createVertretungsplanExtras());
+        $this->setupStep('Messenger', fn() => $this->createMessenger($admin));
+        $this->setupStep('Moderation', fn() => $this->createModeration($admin));
+        $this->setupStep('Elternabfragen', fn() => $this->createElternabfragen($admin));
+        $this->setupStep('Reinigungsplan', fn() => $this->createReinigung());
+        $this->setupStep('Links', fn() => $this->createLinks($admin));
+        $this->setupStep('Changelog', fn() => $this->createChangelog($admin));
+        $this->setupStep('Nachrichten: Reaktionen, Bilder, Antworten, Archiv', fn() => $this->createNachrichtenExtras($admin));
+        $this->setupStep('Dateien', fn() => $this->createDateien($admin));
         // Admin allen Gruppen zuordnen
         $this->setupStep('Admin zu allen Gruppen hinzufügen', fn() => $this->addAdminToAllGroups($admin));
     }
@@ -246,6 +319,7 @@ class DemoSetup extends Command
                 'view krankmeldung', 'view schickzeiten', 'view rueckmeldungen',
                 'view vertretungsplan', 'view mitarbeiterboard', 'view groups',
                 'manage rueckmeldungen', 'view external offer',
+                'view stundenplan', 'view stundenplan teacher', 'view stundenplan room',
             ],
             'Elternrat' => [
                 'view elternrat', 'view groups', 'manage elternrat events', 'manage elternrat tasks',
@@ -843,6 +917,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Eltern und Sorgeberechtigte,</p><p>wir begrüßen Sie herzlich zum neuen Schuljahr am <strong>Evangelischen Schulzentrum Radebeul</strong>! Wir freuen uns auf eine gemeinsame Zeit voller Lernen, Lachen und Wachsen.</p><p>Über dieses Portal erhalten Sie alle wichtigen Informationen zu Ihrem Kind, können Krankmeldungen absenden, Termine einsehen und vieles mehr.</p><p>Bei Fragen steht Ihnen unser Sekretariat gerne zur Verfügung.</p><p>Herzliche Grüße<br>Die Schulleitung</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $schulleitungId,
                 'type' => 'post',
                 'reactable' => true,
@@ -857,6 +932,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Eltern der Klasse 3b,</p><p>wir planen für den <strong>' . Carbon::now()->addWeeks(3)->format('d.m.Y') . '</strong> einen Tagesausflug ins Elbsandsteingebirge zur Bastei. Die Kinder erkunden auf einem kindgerechten Wanderweg die Felsen und lernen die Landschaft kennen.</p><p><strong>Details:</strong></p><ul><li>Abfahrt: 8:00 Uhr am Schulhof</li><li>Rückkehr: ca. 16:30 Uhr</li><li>Kosten: 8,50 € (Bus + Eintritt)</li><li>Bitte festes Schuhwerk und Lunchpaket mitbringen</li></ul><p>Bitte melden Sie Ihr Kind verbindlich an:</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $lehrerinId,
                 'type' => 'post',
                 'reactable' => false,
@@ -890,6 +966,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Eltern der Klasse 1a,</p><p>wir laden Sie herzlich zum Elternabend am <strong>' . Carbon::now()->addWeeks(2)->format('d.m.Y') . ' um 19:00 Uhr</strong> in den Konferenzraum der Schule ein.</p><p>Auf der Tagesordnung stehen:</p><ul><li>Rückblick auf das erste Schulhalbjahr</li><li>Informationen zum Förderunterricht</li><li>Planung des Sommerfestes</li><li>Verschiedenes</li></ul><p>Bitte melden Sie Ihre Teilnahme bis ' . Carbon::now()->addWeeks(1)->format('d.m.Y') . ' zurück.</p>',
                 'released' => false,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $this->users['lehrer2']->id,
                 'type' => 'post',
                 'reactable' => false,
@@ -922,7 +999,7 @@ class DemoSetup extends Command
                 'external' => false,
                 'read_receipt' => true,
                 'read_receipt_deadline' => Carbon::now()->addWeeks(2),
-                'archived_at' => Carbon::now()->addWeeks(2),
+                'archiv_ab' => Carbon::now()->addWeeks(4),
             ]
         );
         $this->attachGroupToPost($post4, 'gesamtelternschaft');
@@ -940,6 +1017,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Schulgemeinschaft,</p><p>unsere Schulbibliothek benötigt dringend neue Bücher! Im Rahmen unserer Spendenaktion möchten wir bis zum <strong>' . Carbon::now()->addMonths(2)->format('d.m.Y') . '</strong> insgesamt <strong>500 €</strong> sammeln, um neue altersgerechte Bücher für alle Klassenstufen anzuschaffen.</p><p>Spenden können Sie:</p><ul><li>Direkt an das Sekretariat (Bar oder Überweisung)</li><li>Über den Förderverein</li><li>Durch Buchspenden (Absprache mit der Bibliothekarin)</li></ul><p>Jeder Beitrag hilft! Herzlichen Dank für Ihre Unterstützung.</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $this->users['elternrat']->id,
                 'type' => 'post',
                 'reactable' => true,
@@ -954,6 +1032,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Schulgemeinschaft,</p><p>herzliche Einladung zu unserem diesjährigen <strong>Sommerfest am ' . Carbon::now()->addMonths(3)->format('d.m.Y') . ' ab 14:00 Uhr</strong> auf dem Schulgelände!</p><p>Es erwartet Sie und Ihre Kinder:</p><ul><li>Auftritte der Schulchöre und -kapelle</li><li>Kaffee, Kuchen und Grillen</li><li>Spiele und Aktivitäten für Kinder</li><li>Flohmarkt</li><li>Ausstellung der Kunstprojekte</li></ul><p>Wir freuen uns auf einen gemeinsamen Nachmittag!</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $schulleitungId,
                 'type' => 'post',
                 'reactable' => true,
@@ -968,6 +1047,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Die Musikschule Radebeul bietet ab September neue Kurse für Kinder ab 5 Jahren an:</p><ul><li>Musikalische Früherziehung (5–7 Jahre)</li><li>Blockflöte Anfänger</li><li>Keyboard für Kinder</li><li>Kinderchor</li></ul><p>Anmeldungen sind bis 15. August möglich unter musikschule-radebeul.de</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $adminId,
                 'type' => 'post',
                 'reactable' => false,
@@ -1524,10 +1604,10 @@ class DemoSetup extends Command
         ];
 
         foreach ($losungen as $losung) {
-            Losung::firstOrCreate(
-                ['date' => $losung['date']->toDateString()],
-                $losung
-            );
+            // date ist als Zeitstempel gecastet – Abgleich nur über das Datum, sonst bei jedem Lauf doppelt
+            if (! Losung::whereDate('date', $losung['date']->toDateString())->exists()) {
+                Losung::create($losung);
+            }
         }
     }
 
