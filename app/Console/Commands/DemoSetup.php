@@ -53,6 +53,13 @@ use Spatie\Permission\PermissionRegistrar;
 
 class DemoSetup extends Command
 {
+    // Demo-Daten je Bereich (app/Console/Commands/Demo)
+    use Demo\SeedsElternabfragen;
+    use Demo\SeedsFamilieUndCare;
+    use Demo\SeedsInhalte;
+    use Demo\SeedsMessenger;
+    use Demo\SeedsStundenplan;
+
     /**
      * The name and signature of the console command.
      *
@@ -60,7 +67,10 @@ class DemoSetup extends Command
      */
     protected $signature = 'demo:setup
                             {--fresh : Datenbank vorher leeren (migrate:fresh --seed)}
-                            {--force : Bestätigungsabfragen überspringen}';
+                            {--force : Bestätigungsabfragen überspringen}
+                            {--admin-name= : Name des Administrators (ohne Rückfrage)}
+                            {--admin-email= : E-Mail-Adresse des Administrators (ohne Rückfrage)}
+                            {--admin-password= : Passwort des Administrators, mind. 8 Zeichen (ohne Rückfrage)}';
 
     /**
      * The console command description.
@@ -115,6 +125,19 @@ class DemoSetup extends Command
         }
 
         $this->newLine();
+        // Zugangsdaten per Option (z. B. für automatisierte Testsysteme), sonst Rückfrage
+        $adminName = $this->option('admin-name') ?: null;
+        $adminEmail = $this->option('admin-email') ?: null;
+        $adminPassword = $this->option('admin-password') ?: null;
+        if ($adminEmail && $adminPassword) {
+            if (! filter_var($adminEmail, FILTER_VALIDATE_EMAIL) || strlen($adminPassword) < 8) {
+                $this->error('--admin-email muss gültig und --admin-password mindestens 8 Zeichen lang sein.');
+
+                return self::FAILURE;
+            }
+            $adminName ??= 'Administrator';
+            $adminPasswordConfirm = $adminPassword;
+        } else {
         $this->info('📝 Bitte geben Sie die Admin-Zugangsdaten ein:');
         $adminName = $this->ask('Name des Administrators', 'Administrator');
         $adminEmail = $this->ask('E-Mail-Adresse');
@@ -132,6 +155,7 @@ class DemoSetup extends Command
             $this->error('Die Passwörter stimmen nicht überein.');
             $adminPassword = $this->secret('Passwort (min. 8 Zeichen)');
             $adminPasswordConfirm = $this->secret('Passwort bestätigen');
+        }
         }
 
         $this->newLine();
@@ -199,6 +223,20 @@ class DemoSetup extends Command
         $this->setupStep('Schulferien', fn() => $this->createHolidays());
         $this->setupStep('Arbeitsgemeinschaften', fn() => $this->createArbeitsgemeinschaften($admin));
         $this->setupStep('Benachrichtigungen', fn() => $this->createNotifications($admin));
+        // Weitere Module (app/Console/Commands/Demo)
+        $this->setupStep('Familien & Bezugspersonen', fn() => $this->createFamilien());
+        $this->setupStep('Hort: Anwesenheit, Notizen, Abholungen', fn() => $this->createCareExtras());
+        $this->setupStep('Meldepflichtige Erkrankungen', fn() => $this->createActiveDiseases());
+        $this->setupStep('Stundenplan', fn() => $this->createStundenplan());
+        $this->setupStep('Vertretungsplan: Wochen & Abwesenheiten', fn() => $this->createVertretungsplanExtras());
+        $this->setupStep('Messenger', fn() => $this->createMessenger($admin));
+        $this->setupStep('Moderation', fn() => $this->createModeration($admin));
+        $this->setupStep('Elternabfragen', fn() => $this->createElternabfragen($admin));
+        $this->setupStep('Reinigungsplan', fn() => $this->createReinigung());
+        $this->setupStep('Links', fn() => $this->createLinks($admin));
+        $this->setupStep('Changelog', fn() => $this->createChangelog($admin));
+        $this->setupStep('Nachrichten: Reaktionen, Bilder, Antworten, Archiv', fn() => $this->createNachrichtenExtras($admin));
+        $this->setupStep('Dateien', fn() => $this->createDateien($admin));
         // Admin allen Gruppen zuordnen
         $this->setupStep('Admin zu allen Gruppen hinzufügen', fn() => $this->addAdminToAllGroups($admin));
     }

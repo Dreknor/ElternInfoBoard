@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Console\Commands\Demo;
+
+use App\Model\User;
+
+/**
+ * Demo-Daten (demo:setup). Wird in App\Console\Commands\DemoSetup eingebunden und
+ * nutzt dessen Zustand: $this->users, $this->groups (IDs), $this->children.
+ */
+trait SeedsStundenplan
+{
+    private function createStundenplan(): void
+    {
+        // folgt
+    }
+
+    private function createVertretungsplanExtras(): void
+    {
+        // folgt
+    }
+}
