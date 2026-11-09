@@ -114,8 +114,14 @@ class DemoSetup extends Command
             return self::FAILURE;
         }
 
-        $demoUsers = User::where('email', 'like', '%@ev-schulzentrum-demo.de')->count();
-        $otherUsers = User::where('email', 'not like', '%@ev-schulzentrum-demo.de')->count();
+        // Noch nicht migrierte Datenbank: keine Daten vorhanden; ohne „neu“ zuerst migrieren
+        $hasUsersTable = \Illuminate\Support\Facades\Schema::hasTable('users');
+        $demoUsers = $hasUsersTable ? User::where('email', 'like', '%@ev-schulzentrum-demo.de')->count() : 0;
+        $otherUsers = $hasUsersTable ? User::where('email', 'not like', '%@ev-schulzentrum-demo.de')->count() : 0;
+        if (! $hasUsersTable && $mode !== 'neu') {
+            $this->info('🔄 Datenbank ist leer – führe migrate --seed aus...');
+            $this->call('migrate', ['--seed' => true, '--force' => true]);
+        }
 
         if ($mode === null && $demoUsers > 0) {
             $this->warn("⚠️  Es sind bereits Demo-Daten vorhanden ({$demoUsers} Demo-Konten).");
@@ -1598,10 +1604,10 @@ class DemoSetup extends Command
         ];
 
         foreach ($losungen as $losung) {
-            Losung::firstOrCreate(
-                ['date' => $losung['date']->toDateString()],
-                $losung
-            );
+            // date ist als Zeitstempel gecastet – Abgleich nur über das Datum, sonst bei jedem Lauf doppelt
+            if (! Losung::whereDate('date', $losung['date']->toDateString())->exists()) {
+                Losung::create($losung);
+            }
         }
     }
 
