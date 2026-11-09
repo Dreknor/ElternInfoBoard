@@ -304,7 +304,7 @@ trait SeedsInhalte
     {
         // Reaktionstypen legt der ReactionsSeeder bei --seed an; ohne --fresh sicherstellen.
         $types = collect(['like', 'happy', 'sad', 'love', 'haha', 'wow'])
-            ->mapWithKeys(fn (string $name) => [$name => Reaction::firstOrCreate(['name' => $name])]);
+            ->mapWithKeys(fn (string $name) => [$name => Reaction::unguarded(fn () => Reaction::firstOrCreate(['name' => $name]))]);
 
         $plan = [
             'Willkommen im neuen Schuljahr 2025/26' => [

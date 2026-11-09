@@ -68,6 +68,7 @@ class DemoSetup extends Command
     protected $signature = 'demo:setup
                             {--fresh : Datenbank vorher leeren (migrate:fresh --seed)}
                             {--force : Bestätigungsabfragen überspringen}
+                            {--existing= : Vorhandene Demo-Daten: abbrechen | ergaenzen | neu (ohne Rückfrage)}
                             {--admin-name= : Name des Administrators (ohne Rückfrage)}
                             {--admin-email= : E-Mail-Adresse des Administrators (ohne Rückfrage)}
                             {--admin-password= : Passwort des Administrators, mind. 8 Zeichen (ohne Rückfrage)}';
@@ -102,26 +103,51 @@ class DemoSetup extends Command
             }
         }
 
-        // Optionale Migration
-        if ($this->option('fresh')) {
-            if (!$this->option('force')) {
-                $this->warn('⚠️  --fresh löscht die gesamte Datenbank und führt migrate:fresh --seed aus!');
-                if (!$this->confirm('Wirklich fortfahren?', false)) {
-                    $this->info('Abgebrochen.');
-                    return self::SUCCESS;
-                }
+        // Umgang mit vorhandenen Daten:
+        //   --fresh / --existing=neu   Datenbank komplett leeren (migrate:fresh --seed) und neu anlegen
+        //   --existing=ergaenzen       Vorhandenes bleibt, Fehlendes wird angelegt (nichts doppelt)
+        //   --existing=abbrechen       nichts tun (Standard, wenn Demo-Daten gefunden werden)
+        $mode = $this->option('fresh') ? 'neu' : $this->option('existing');
+        if ($mode !== null && ! in_array($mode, ['abbrechen', 'ergaenzen', 'neu'], true)) {
+            $this->error('--existing muss „abbrechen“, „ergaenzen“ oder „neu“ sein.');
+
+            return self::FAILURE;
+        }
+
+        $demoUsers = User::where('email', 'like', '%@ev-schulzentrum-demo.de')->count();
+        $otherUsers = User::where('email', 'not like', '%@ev-schulzentrum-demo.de')->count();
+
+        if ($mode === null && $demoUsers > 0) {
+            $this->warn("⚠️  Es sind bereits Demo-Daten vorhanden ({$demoUsers} Demo-Konten).");
+            $this->line('   • abbrechen  – nichts ändern');
+            $this->line('   • ergaenzen  – vorhandene Demo-Daten behalten, fehlende anlegen (nichts doppelt)');
+            $this->line('   • neu        – Datenbank komplett leeren und alle Demo-Daten neu anlegen');
+            $mode = $this->option('force')
+                ? 'ergaenzen'
+                : $this->choice('Wie soll mit den vorhandenen Demo-Daten verfahren werden?', ['abbrechen', 'ergaenzen', 'neu'], 'abbrechen');
+        }
+
+        if ($mode === 'abbrechen') {
+            $this->info('Abgebrochen – es wurde nichts geändert.');
+
+            return self::SUCCESS;
+        }
+
+        if ($mode === 'neu') {
+            $this->warn('⚠️  „neu“ löscht die GESAMTE Datenbank (migrate:fresh --seed), nicht nur Demo-Daten!');
+            if ($otherUsers > 0) {
+                // Schutz vor versehentlichem Leeren einer echten Instanz
+                $this->warn("   Die Datenbank enthält {$otherUsers} Konto/Konten außerhalb der Demo (z. B. echte Nutzer oder Ihr Admin-Konto).");
+            }
+            if (! $this->option('force') && ! $this->confirm('Wirklich alle Daten löschen und neu anlegen?', false)) {
+                $this->info('Abgebrochen – es wurde nichts geändert.');
+
+                return self::SUCCESS;
             }
             $this->info('🔄 Führe migrate:fresh --seed aus...');
             $this->call('migrate:fresh', ['--seed' => true, '--force' => true]);
-        } else {
-            // Prüfen ob bereits Demo-Daten vorhanden
-            if (User::where('email', 'schulleitung@ev-schulzentrum-demo.de')->exists()) {
-                $this->warn('⚠️  Demo-Daten scheinen bereits vorhanden zu sein (Demo-Benutzer gefunden).');
-                if (!$this->option('force') && !$this->confirm('Trotzdem fortfahren?', false)) {
-                    $this->info('Abgebrochen. Nutze --fresh um alle Daten neu anzulegen.');
-                    return self::SUCCESS;
-                }
-            }
+        } elseif ($mode === 'ergaenzen' || $demoUsers > 0) {
+            $this->info('➕ Vorhandene Demo-Daten bleiben erhalten, fehlende werden ergänzt.');
         }
 
         $this->newLine();
