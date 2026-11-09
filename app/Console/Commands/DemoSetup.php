@@ -190,6 +190,9 @@ class DemoSetup extends Command
                 ['Familie Koch', 'koch@ev-schulzentrum-demo.de', 'Demo1234!'],
                 ['Familie Bauer', 'bauer@ev-schulzentrum-demo.de', 'Demo1234!'],
                 ['Familie Wagner', 'wagner@ev-schulzentrum-demo.de', 'Demo1234!'],
+                ['Vater (Familie Müller)', 'michael.mueller@ev-schulzentrum-demo.de', 'Demo1234!'],
+                ['Großmutter (nur Info)', 'ingrid.mueller@ev-schulzentrum-demo.de', 'Demo1234!'],
+                ['Vater (Familie Koch)', 'stefan.koch@ev-schulzentrum-demo.de', 'Demo1234!'],
             ]
         );
         $this->newLine();
