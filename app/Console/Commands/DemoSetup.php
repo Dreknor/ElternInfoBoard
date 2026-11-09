@@ -114,13 +114,24 @@ class DemoSetup extends Command
             return self::FAILURE;
         }
 
-        // Noch nicht migrierte Datenbank: keine Daten vorhanden; ohne „neu“ zuerst migrieren
+        // Nicht oder nur teilweise migrierte Datenbank (z. B. nach einem abgebrochenen migrate:fresh):
+        // ohne „neu“ zuerst fehlende Migrationen nachholen, auf einer Datenbank ohne Konten auch seeden
         $hasUsersTable = \Illuminate\Support\Facades\Schema::hasTable('users');
-        $demoUsers = $hasUsersTable ? User::where('email', 'like', '%@ev-schulzentrum-demo.de')->count() : 0;
-        $otherUsers = $hasUsersTable ? User::where('email', 'not like', '%@ev-schulzentrum-demo.de')->count() : 0;
-        if (! $hasUsersTable && $mode !== 'neu') {
-            $this->info('🔄 Datenbank ist leer – führe migrate --seed aus...');
-            $this->call('migrate', ['--seed' => true, '--force' => true]);
+        $demoUsers = $hasUsersTable ? User::withoutGlobalScopes()->where('email', 'like', '%@ev-schulzentrum-demo.de')->count() : 0;
+        $otherUsers = $hasUsersTable ? User::withoutGlobalScopes()->where('email', 'not like', '%@ev-schulzentrum-demo.de')->count() : 0;
+        if ($mode !== 'neu') {
+            $seed = $demoUsers + $otherUsers === 0;
+            $pending = $this->pendingMigrations();
+            if ($pending > 0 || $seed) {
+                $this->info($seed
+                    ? "🔄 Datenbank ohne Konten – führe migrate --seed aus ({$pending} ausstehende Migrationen)..."
+                    : "🔄 {$pending} ausstehende Migrationen – führe migrate aus...");
+                if ($this->call('migrate', ['--seed' => $seed, '--force' => true]) !== self::SUCCESS) {
+                    $this->error('Migration fehlgeschlagen – Demo-Daten wurden nicht angelegt.');
+
+                    return self::FAILURE;
+                }
+            }
         }
 
         if ($mode === null && $demoUsers > 0) {
@@ -151,7 +162,11 @@ class DemoSetup extends Command
                 return self::SUCCESS;
             }
             $this->info('🔄 Führe migrate:fresh --seed aus...');
-            $this->call('migrate:fresh', ['--seed' => true, '--force' => true]);
+            if ($this->call('migrate:fresh', ['--seed' => true, '--force' => true]) !== self::SUCCESS) {
+                $this->error('migrate:fresh fehlgeschlagen – Demo-Daten wurden nicht angelegt.');
+
+                return self::FAILURE;
+            }
         } elseif ($mode === 'ergaenzen' || $demoUsers > 0) {
             $this->info('➕ Vorhandene Demo-Daten bleiben erhalten, fehlende werden ergänzt.');
         }
@@ -234,6 +249,18 @@ class DemoSetup extends Command
         return self::SUCCESS;
     }
 
+
+    /**
+     * Anzahl noch nicht ausgeführter Migrationen (inkl. zusätzlicher Pfade, z. B. Settings).
+     */
+    private function pendingMigrations(): int
+    {
+        $migrator = app('migrator');
+        $ran = $migrator->repositoryExists() ? $migrator->getRepository()->getRan() : [];
+        $files = $migrator->getMigrationFiles(array_merge([database_path('migrations')], $migrator->paths()));
+
+        return count(array_diff(array_keys($files), $ran));
+    }
     private function runSetup(string $adminName, string $adminEmail, string $adminPassword): void
     {
         $this->setupStep('Berechtigungen & Rollen', fn() => $this->createPermissionsAndRoles());
