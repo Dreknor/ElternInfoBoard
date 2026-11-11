@@ -158,7 +158,7 @@
         @if($child->notice()->future()->count() > 0)
             <div class="space-y-2 mb-3">
                 @foreach($child->notice()->future()->get() as $notice)
-                    <div class="rounded-lg overflow-hidden border"
+                    <div class="notice-item rounded-lg overflow-hidden border"
                          style="background-color: var(--color-widget-body-bg); border-color: var(--color-widget-primary-from)">
                         <div class="px-3 py-2 flex items-center justify-between"
                              style="background-color: var(--color-widget-body-bg); border-bottom: 1px solid var(--color-widget-primary-from)">
