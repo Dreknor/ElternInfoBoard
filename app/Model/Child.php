@@ -175,6 +175,17 @@ class Child extends Model implements HasMedia
             ->where('end_date', '>', now());
     }
 
+    /**
+     * AGs von heute für die Anwesenheitsliste: ausgeblendet, sobald das Ende mehr als
+     * 15 Minuten zurückliegt. Gefiltert wird bei jedem Aufruf, nicht im Tages-Cache.
+     */
+    public function arbeitsgemeinschaften_aktuell(): \Illuminate\Support\Collection
+    {
+        return $this->arbeitsgemeinschaften_today()
+            ->filter(fn ($ag) => ! $ag->end_time || today()->setTimeFrom($ag->end_time)->addMinutes(15)->isFuture())
+            ->values();
+    }
+
     public function arbeitsgemeinschaften_today()
     {
         return Cache::remember('arbeitsgemeinschaften_today_'.$this->id, Carbon::now()->diffInSeconds(Carbon::now()->endOfDay()), function () {
