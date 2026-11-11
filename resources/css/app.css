@@ -940,6 +940,55 @@ html, body {
 
   .row              { @apply flex flex-wrap -mx-3; }
 
+  /* Responsive Spalten: unterhalb ihres Breakpoints volle Breite. Die Breakpoint-Klassen setzen
+     nur ihre eigene Breite – sonst überschreibt z. B. .col-lg-3 ein .col-md-6 auf Tablets. */
+  .col-sm-auto,
+  .col-sm-1,
+  .col-sm-2,
+  .col-sm-3,
+  .col-sm-4,
+  .col-sm-5,
+  .col-sm-6,
+  .col-sm-7,
+  .col-sm-8,
+  .col-sm-9,
+  .col-sm-10,
+  .col-sm-11,
+  .col-sm-12,
+  .col-md-auto,
+  .col-md-1,
+  .col-md-2,
+  .col-md-3,
+  .col-md-4,
+  .col-md-5,
+  .col-md-6,
+  .col-md-7,
+  .col-md-8,
+  .col-md-9,
+  .col-md-10,
+  .col-md-11,
+  .col-md-12,
+  .col-lg-auto,
+  .col-lg-1,
+  .col-lg-2,
+  .col-lg-3,
+  .col-lg-4,
+  .col-lg-5,
+  .col-lg-6,
+  .col-lg-7,
+  .col-lg-8,
+  .col-lg-9,
+  .col-lg-10,
+  .col-lg-11,
+  .col-lg-12,
+  .col-xl-auto,
+  .col-xl-3,
+  .col-xl-4,
+  .col-xl-6,
+  .col-xl-8,
+  .col-xl-9,
+  .col-xl-12 { @apply w-full px-3; }
+
   /* Fixed columns */
   .col              { @apply flex-1 min-w-0 px-3; }
   .col-auto         { @apply w-auto px-3; }
@@ -957,58 +1006,58 @@ html, body {
   .col-12           { @apply w-full px-3; }
 
   /* sm: responsive cols */
-  .col-sm-auto { @apply px-3 sm:w-auto; }
-  .col-sm-1  { @apply w-full px-3 sm:w-1/12; }
-  .col-sm-2  { @apply w-full px-3 sm:w-2/12; }
-  .col-sm-3  { @apply w-full px-3 sm:w-3/12; }
-  .col-sm-4  { @apply w-full px-3 sm:w-4/12; }
-  .col-sm-5  { @apply w-full px-3 sm:w-5/12; }
-  .col-sm-6  { @apply w-full px-3 sm:w-6/12; }
-  .col-sm-7  { @apply w-full px-3 sm:w-7/12; }
-  .col-sm-8  { @apply w-full px-3 sm:w-8/12; }
-  .col-sm-9  { @apply w-full px-3 sm:w-9/12; }
-  .col-sm-10 { @apply w-full px-3 sm:w-10/12; }
-  .col-sm-11 { @apply w-full px-3 sm:w-11/12; }
-  .col-sm-12 { @apply w-full px-3; }
+  .col-sm-auto { @apply sm:w-auto; }
+  .col-sm-1  { @apply sm:w-1/12; }
+  .col-sm-2  { @apply sm:w-2/12; }
+  .col-sm-3  { @apply sm:w-3/12; }
+  .col-sm-4  { @apply sm:w-4/12; }
+  .col-sm-5  { @apply sm:w-5/12; }
+  .col-sm-6  { @apply sm:w-6/12; }
+  .col-sm-7  { @apply sm:w-7/12; }
+  .col-sm-8  { @apply sm:w-8/12; }
+  .col-sm-9  { @apply sm:w-9/12; }
+  .col-sm-10 { @apply sm:w-10/12; }
+  .col-sm-11 { @apply sm:w-11/12; }
+  .col-sm-12 { @apply sm:w-full; }
 
   /* md: responsive cols */
-  .col-md-auto { @apply px-3 md:w-auto; }
-  .col-md-1  { @apply w-full px-3 md:w-1/12; }
-  .col-md-2  { @apply w-full px-3 md:w-2/12; }
-  .col-md-3  { @apply w-full px-3 md:w-3/12; }
-  .col-md-4  { @apply w-full px-3 md:w-4/12; }
-  .col-md-5  { @apply w-full px-3 md:w-5/12; }
-  .col-md-6  { @apply w-full px-3 md:w-6/12; }
-  .col-md-7  { @apply w-full px-3 md:w-7/12; }
-  .col-md-8  { @apply w-full px-3 md:w-8/12; }
-  .col-md-9  { @apply w-full px-3 md:w-9/12; }
-  .col-md-10 { @apply w-full px-3 md:w-10/12; }
-  .col-md-11 { @apply w-full px-3 md:w-11/12; }
-  .col-md-12 { @apply w-full px-3; }
+  .col-md-auto { @apply md:w-auto; }
+  .col-md-1  { @apply md:w-1/12; }
+  .col-md-2  { @apply md:w-2/12; }
+  .col-md-3  { @apply md:w-3/12; }
+  .col-md-4  { @apply md:w-4/12; }
+  .col-md-5  { @apply md:w-5/12; }
+  .col-md-6  { @apply md:w-6/12; }
+  .col-md-7  { @apply md:w-7/12; }
+  .col-md-8  { @apply md:w-8/12; }
+  .col-md-9  { @apply md:w-9/12; }
+  .col-md-10 { @apply md:w-10/12; }
+  .col-md-11 { @apply md:w-11/12; }
+  .col-md-12 { @apply md:w-full; }
 
   /* lg: responsive cols */
-  .col-lg-auto { @apply px-3 lg:w-auto; }
-  .col-lg-1  { @apply w-full px-3 lg:w-1/12; }
-  .col-lg-2  { @apply w-full px-3 lg:w-2/12; }
-  .col-lg-3  { @apply w-full px-3 lg:w-3/12; }
-  .col-lg-4  { @apply w-full px-3 lg:w-4/12; }
-  .col-lg-5  { @apply w-full px-3 lg:w-5/12; }
-  .col-lg-6  { @apply w-full px-3 lg:w-6/12; }
-  .col-lg-7  { @apply w-full px-3 lg:w-7/12; }
-  .col-lg-8  { @apply w-full px-3 lg:w-8/12; }
-  .col-lg-9  { @apply w-full px-3 lg:w-9/12; }
-  .col-lg-10 { @apply w-full px-3 lg:w-10/12; }
-  .col-lg-11 { @apply w-full px-3 lg:w-11/12; }
-  .col-lg-12 { @apply w-full px-3; }
+  .col-lg-auto { @apply lg:w-auto; }
+  .col-lg-1  { @apply lg:w-1/12; }
+  .col-lg-2  { @apply lg:w-2/12; }
+  .col-lg-3  { @apply lg:w-3/12; }
+  .col-lg-4  { @apply lg:w-4/12; }
+  .col-lg-5  { @apply lg:w-5/12; }
+  .col-lg-6  { @apply lg:w-6/12; }
+  .col-lg-7  { @apply lg:w-7/12; }
+  .col-lg-8  { @apply lg:w-8/12; }
+  .col-lg-9  { @apply lg:w-9/12; }
+  .col-lg-10 { @apply lg:w-10/12; }
+  .col-lg-11 { @apply lg:w-11/12; }
+  .col-lg-12 { @apply lg:w-full; }
 
   /* xl: responsive cols */
-  .col-xl-auto { @apply px-3 xl:w-auto; }
-  .col-xl-3  { @apply w-full px-3 xl:w-3/12; }
-  .col-xl-4  { @apply w-full px-3 xl:w-4/12; }
-  .col-xl-6  { @apply w-full px-3 xl:w-6/12; }
-  .col-xl-8  { @apply w-full px-3 xl:w-8/12; }
-  .col-xl-9  { @apply w-full px-3 xl:w-9/12; }
-  .col-xl-12 { @apply w-full px-3; }
+  .col-xl-auto { @apply xl:w-auto; }
+  .col-xl-3  { @apply xl:w-3/12; }
+  .col-xl-4  { @apply xl:w-4/12; }
+  .col-xl-6  { @apply xl:w-6/12; }
+  .col-xl-8  { @apply xl:w-8/12; }
+  .col-xl-9  { @apply xl:w-9/12; }
+  .col-xl-12 { @apply xl:w-full; }
 
   /* ── Cards ────────────────────────────────────────────────── */
   .card {
