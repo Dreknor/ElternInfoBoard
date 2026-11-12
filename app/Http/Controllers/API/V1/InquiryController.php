@@ -7,8 +7,10 @@ use App\Enums\InquiryChangeRequestStatus;
 use App\Model\InquiryAssignment;
 use App\Model\InquiryChangeRequest;
 use App\Model\InquiryDraft;
+use App\Model\InquiryReceipt;
 use App\Model\InquiryResponse;
 use App\Services\Elternabfragen\ChangeRequestService;
+use App\Services\Elternabfragen\DeliveryService;
 use App\Services\Elternabfragen\FieldSchema;
 use App\Services\Elternabfragen\GuardianConfirmation;
 use App\Services\Elternabfragen\InquiryAccess;
@@ -18,6 +20,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -72,10 +75,20 @@ class InquiryController extends ApiController
      * checkbox (Array der Optionen), radio, select, text (`format`: email|phone|postal_code|number),
      * textarea, date (YYYY-MM-DD), file (Upload beim Absenden), info (nur Überschrift/Hinweis),
      * child (Auswahl eines eigenen Kindes: `options` mit Kind-ID als `value`; gespeichert als {id, name}).
+     *
+     * `receipts`: Erklärungsquittungen des Auftrags (neueste zuerst; nur für Sorgeberechtigte, sonst leer).
+     * `withdrawal`: `possible` + widerrufbare Einwilligungen (`fields` mit key/label) – unabhängig von
+     * Frist und Korrekturfenster (Art. 7 Abs. 3 DSGVO).
      */
     public function show(Request $request, InquiryAssignment $assignment): JsonResponse
     {
         $this->authorizeView($request, $assignment);
+
+        return response()->json(['data' => $this->showPayload($request, $assignment)]);
+    }
+
+    private function showPayload(Request $request, InquiryAssignment $assignment): array
+    {
         $user = $request->user();
         $assignment->load(['inquiry.templateVersion', 'child', 'currentResponse.user', 'responses.user']);
         $state = $this->access->state($user, $assignment);
@@ -87,7 +100,7 @@ class InquiryController extends ApiController
         $children = $this->responses->childOptions($version->fields, $user);
         $prefill = ! $draft && ! $current && $state['can_view_answers'] ? $this->responses->prefillFromPrevious($assignment, $user) : [];
 
-        return response()->json(['data' => $this->summary($request, $assignment) + [
+        return $this->summary($request, $assignment) + [
             'intro' => $assignment->inquiry->intro,
             'purpose' => $version->purpose,
             'parent_info' => $version->parent_info,
@@ -115,7 +128,12 @@ class InquiryController extends ApiController
                 'is_current' => $r->is_current,
                 'correction_reason' => $r->correction_reason,
             ])->values() : [],
-        ]]);
+            'receipts' => $state['can_view_answers']
+                ? InquiryReceipt::where('assignment_id', $assignment->id)->orderByDesc('declared_at')->orderByDesc('sequence')->get()
+                    ->map(fn (InquiryReceipt $r) => $this->presentReceipt($assignment, $r))->values()
+                : [],
+            'withdrawal' => $this->responses->withdrawalState($user, $assignment),
+        ];
     }
 
     /**
@@ -182,7 +200,7 @@ class InquiryController extends ApiController
         return response()->json([
             'message' => 'Vielen Dank! Ihre Angaben wurden verbindlich übermittelt.',
             'data' => $this->summary($request, $assignment) + ['response' => $this->presentResponse($assignment, $response)],
-        ], 201);
+        ] + $this->receiptResult($assignment, $response->getRelation('receipt')), 201);
     }
 
     /**
@@ -198,12 +216,67 @@ class InquiryController extends ApiController
             'confirm.accepted' => 'Bitte bestätigen Sie, dass Sie die Angaben geprüft haben und mit ihnen einverstanden sind.',
         ]);
 
-        $this->confirmation->confirm($assignment, $request->user(), ['channel' => 'app', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()]);
+        $confirmation = $this->confirmation->confirm($assignment, $request->user(), ['channel' => 'app', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()]);
         $assignment->refresh()->load(['inquiry', 'child']);
 
         return response()->json([
             'message' => 'Vielen Dank! Ihre Bestätigung wurde gespeichert.',
             'data' => $this->summary($request, $assignment),
+        ] + $this->receiptResult($assignment, $confirmation->getRelation('receipt')));
+    }
+
+    /**
+     * Einwilligung(en) widerrufen (Art. 7 Abs. 3 DSGVO) – jederzeit, auch nach Fristende, solange
+     * die Antworten nicht gelöscht sind. Erzeugt eine neue Antwortversion mit den Einwilligungen
+     * als `denied` und eine Quittung der Art `withdrawal`. Bei gemeinsamer Erklärung wirkt der
+     * Widerruf sofort. 403 ohne Sorgerecht, 422 bei nicht widerrufbaren Feldern.
+     *
+     * @bodyParam fields string[] Schlüssel der Einwilligungen; ohne Angabe alle widerrufbaren. Example: ["foto"]
+     * @bodyParam confirm string required Bestätigung des Widerrufs. Example: accepted
+     * @bodyParam reason string Optionaler Grund (max. 500 Zeichen).
+     */
+    public function withdraw(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        abort_unless($this->access->canAnswer($request->user(), $assignment), 403, 'Einwilligungen können nur sorgeberechtigte Personen widerrufen.');
+        $request->validate([
+            'fields' => 'nullable|array',
+            'fields.*' => 'string|max:100',
+            // Vertrag: "confirm": "accepted" (zusätzlich die üblichen Werte von „accepted“)
+            'confirm' => ['required', Rule::in(['accepted', '1', 'true', 'yes', 'on'])],
+            'reason' => 'nullable|string|max:500',
+        ], ['confirm.required' => 'Bitte bestätigen Sie den Widerruf.', 'confirm.in' => 'Bitte bestätigen Sie den Widerruf.']);
+
+        $response = $this->responses->withdraw(
+            $assignment,
+            $request->user(),
+            array_values((array) $request->input('fields', [])),
+            $request->input('reason'),
+            'app',
+            ['ip' => $request->ip(), 'user_agent' => $request->userAgent()],
+        );
+        $assignment->refresh();
+
+        return response()->json([
+            'message' => 'Ihr Widerruf wurde gespeichert.',
+            'data' => $this->showPayload($request, $assignment),
+        ] + $this->receiptResult($assignment, $response->getRelation('receipt')));
+    }
+
+    /**
+     * Erklärungsquittung als PDF (byteidentisch zum Original). 404, wenn die Quittung nicht zu
+     * diesem Auftrag gehört; 403 ohne Sorgerecht.
+     */
+    public function receipt(Request $request, InquiryAssignment $assignment, string $uuid): Response
+    {
+        $this->authorizeView($request, $assignment);
+        $receipt = InquiryReceipt::where('assignment_id', $assignment->id)->where('uuid', $uuid)->first();
+        abort_if($receipt === null, 404, 'Quittung nicht gefunden.');
+        abort_unless($this->access->canAnswer($request->user(), $assignment), 403, 'Quittungen können nur sorgeberechtigte Personen abrufen.');
+
+        return response($this->receipts->pdf($receipt), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$receipt->fileName().'"',
         ]);
     }
 
@@ -371,6 +444,30 @@ class InquiryController extends ApiController
                 ->values(),
             'answer_hash' => $response->answer_hash,
             'pdf_url' => route('api.v1.elternabfragen.pdf', $assignment),
+        ];
+    }
+
+    private function presentReceipt(InquiryAssignment $assignment, InquiryReceipt $receipt): array
+    {
+        return [
+            'uuid' => $receipt->uuid,
+            'kind' => $receipt->kind->value,
+            'kind_label' => $receipt->kind->label(),
+            'declared_at' => $receipt->declared_at->toIso8601String(),
+            'declarant_name' => $receipt->declarant_name,
+            'child_name' => $receipt->child_name,
+            'backfilled' => (bool) $receipt->backfilled,
+            'content_hash' => $receipt->content_hash,
+            'pdf_url' => route('api.v1.elternabfragen.receipts.pdf', [$assignment, $receipt->uuid]),
+        ];
+    }
+
+    /** @return array{receipt?: array, receipt_delivery?: string} */
+    private function receiptResult(InquiryAssignment $assignment, ?InquiryReceipt $receipt): array
+    {
+        return $receipt === null ? [] : [
+            'receipt' => $this->presentReceipt($assignment, $receipt),
+            'receipt_delivery' => app(DeliveryService::class)->receiptDelivery($receipt),
         ];
     }
 

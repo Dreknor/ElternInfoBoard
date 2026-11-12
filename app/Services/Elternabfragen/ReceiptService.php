@@ -32,8 +32,15 @@ use Throwable;
  */
 class ReceiptService
 {
-    /** Layout des Quittungs-PDFs. Bei Änderungen an View oder Darstellung erhöhen. */
-    public const LAYOUT_VERSION = 1;
+    /**
+     * Layout des Quittungs-PDFs. Bei Änderungen an View oder Darstellung erhöhen.
+     * Ältere Quittungen müssen weiterhin byteidentisch rendern (View verzweigt bei Bedarf
+     * nach $receipt->layout_version).
+     *
+     * 1: Abgabe, Korrektur, übernommene Änderung, Bestätigung
+     * 2: Widerruf einer Einwilligung (eigener Textabsatz)
+     */
+    public const LAYOUT_VERSION = 2;
 
     /** Feste Zeitzone der Darstellung (unabhängig von späteren Einstellungen). */
     public const TIMEZONE = 'Europe/Berlin';
@@ -314,6 +321,22 @@ class ReceiptService
             ];
         }
 
+        // Widerruf: Einwilligungen, die gegenüber der vorherigen Antwortversion widerrufen wurden
+        $withdrawn = [];
+        $withdrawalReason = null;
+        if ($receipt->kind === InquiryReceiptKind::Withdrawal) {
+            $response = InquiryResponse::findOrFail($receipt->response_id);
+            $before = $response->previous_response_id ? (InquiryResponse::find($response->previous_response_id)?->answers ?? []) : [];
+            foreach ($version->fields ?? [] as $field) {
+                if (($field['type'] ?? null) === InquiryFieldType::Consent->value
+                    && ($before[$field['key']] ?? null) === FieldSchema::GRANTED
+                    && ($answers[$field['key']] ?? null) === FieldSchema::DENIED) {
+                    $withdrawn[] = (string) ($field['label'] ?? '');
+                }
+            }
+            $withdrawalReason = $response->correction_reason;
+        }
+
         $retention = match (true) {
             $receipt->retention_days !== null => 'Die Angaben werden '.$receipt->retention_days.' Tage nach Abschluss der Abfrage gelöscht, soweit keine gesetzliche Aufbewahrungspflicht besteht.',
             default => 'Die Angaben werden aufbewahrt, solange sie für den genannten Zweck benötigt werden, und danach von der Schule gelöscht.',
@@ -333,6 +356,8 @@ class ReceiptService
                 default => 'Webseite',
             },
             'retentionText' => $retention,
+            'withdrawnFields' => $withdrawn,
+            'withdrawalReason' => $withdrawalReason,
         ];
     }
 

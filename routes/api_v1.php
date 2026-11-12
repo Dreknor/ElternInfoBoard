@@ -119,6 +119,8 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
         Route::post('{assignment}/confirm', [InquiryController::class, 'confirm'])->whereNumber('assignment')->middleware('throttle:20,1')->name('confirm');
         Route::get('{assignment}/pdf', [InquiryController::class, 'pdf'])->whereNumber('assignment')->name('pdf');
         Route::get('{assignment}/files/{field}', [InquiryController::class, 'file'])->whereNumber('assignment')->name('file');
+        Route::get('{assignment}/quittungen/{uuid}/pdf', [InquiryController::class, 'receipt'])->whereNumber('assignment')->whereUuid('uuid')->name('receipts.pdf');
+        Route::post('{assignment}/widerruf', [InquiryController::class, 'withdraw'])->whereNumber('assignment')->middleware('throttle:20,1')->name('withdraw');
     });
 
     // Links (Modul „Links“)

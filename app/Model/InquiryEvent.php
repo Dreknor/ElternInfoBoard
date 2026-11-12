@@ -74,6 +74,7 @@ class InquiryEvent extends Model
             'response.corrected' => 'Korrektur eingereicht',
             'response.reviewed' => 'Antwort geprüft',
             'response.changed' => 'Änderungsmeldung übernommen (neue Version)',
+            'response.withdrawn' => 'Einwilligung widerrufen (neue Version)',
             'change.requested' => 'Änderung gemeldet',
             'change.withdrawn' => 'Änderungsmeldung zurückgezogen',
             'change.accepted' => 'Änderungsmeldung übernommen',

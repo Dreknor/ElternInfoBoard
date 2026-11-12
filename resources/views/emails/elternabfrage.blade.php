@@ -13,7 +13,19 @@
         vielen Dank! Ihre Angaben zur Abfrage <strong>„{{ $inquiryTitle }}“</strong> für <strong>{{ $childName }}</strong>
         sind am <strong>{{ $submittedAt }}</strong> eingegangen (Antwortversion {{ $version }}).
     </p>
-    <p>Die eingereichte Zusammenfassung und eine PDF-Bestätigung finden Sie jederzeit im {{ $boardName }}.</p>
+    @unless($receiptNumber)
+        <p>Die eingereichte Zusammenfassung und eine PDF-Bestätigung finden Sie jederzeit im {{ $boardName }}.</p>
+    @endunless
+@elseif($kind === \App\Mail\ElternabfrageMail::KIND_CONFIRMED)
+    <p>
+        vielen Dank! Ihre Bestätigung der Angaben zur Abfrage <strong>„{{ $inquiryTitle }}“</strong> für <strong>{{ $childName }}</strong>
+        ist am <strong>{{ $submittedAt }}</strong> eingegangen (Antwortversion {{ $version }}).
+    </p>
+@elseif($kind === \App\Mail\ElternabfrageMail::KIND_WITHDRAWAL)
+    <p>
+        Ihr Widerruf einer Einwilligung zur Abfrage <strong>„{{ $inquiryTitle }}“</strong> für <strong>{{ $childName }}</strong>
+        ist am <strong>{{ $submittedAt }}</strong> eingegangen und gilt ab sofort (Antwortversion {{ $version }}).
+    </p>
 @elseif($kind === \App\Mail\ElternabfrageMail::KIND_CONFIRMATION_REQUEST)
     <div style="background-color: #dbeafe; border-left: 4px solid #2563eb; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
         <strong style="color: #1e3a8a;">Ihre Bestätigung wird benötigt</strong>
@@ -28,7 +40,9 @@
         Ihre gemeldete Änderung zur Abfrage <strong>„{{ $inquiryTitle }}“</strong> für <strong>{{ $childName }}</strong>
         wurde von der Schule übernommen (neue Antwortversion {{ $version }}).
     </p>
-    <p>Die aktuellen Angaben und eine PDF-Bestätigung finden Sie jederzeit im {{ $boardName }}.</p>
+    @unless($receiptNumber)
+        <p>Die aktuellen Angaben und eine PDF-Bestätigung finden Sie jederzeit im {{ $boardName }}.</p>
+    @endunless
 @elseif($kind === \App\Mail\ElternabfrageMail::KIND_CHANGE_REJECTED)
     <p>
         Ihre gemeldete Änderung zur Abfrage <strong>„{{ $inquiryTitle }}“</strong> für <strong>{{ $childName }}</strong>
@@ -56,11 +70,22 @@
     @endif
 @endif
 
+@if($receiptNumber)
+    <p style="background-color: #f3f4f6; padding: 12px 16px; border-radius: 4px;">
+        @if($receiptPdf !== null)
+            Ihre Quittung (Nr. {{ $receiptNumber }}) finden Sie im Anhang dieser E-Mail.
+        @else
+            Ihre Quittung (Nr. {{ $receiptNumber }}) steht im {{ $boardName }} und in der App zum Download bereit.
+        @endif
+    </p>
+@endif
+
 <p style="margin-top: 24px;">
     <a href="{{ $url }}"
        style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
         {{ match ($kind) {
-            \App\Mail\ElternabfrageMail::KIND_CONFIRMATION, \App\Mail\ElternabfrageMail::KIND_CHANGE_ACCEPTED => 'Eingereichte Angaben ansehen',
+            \App\Mail\ElternabfrageMail::KIND_CONFIRMATION, \App\Mail\ElternabfrageMail::KIND_CHANGE_ACCEPTED,
+            \App\Mail\ElternabfrageMail::KIND_CONFIRMED, \App\Mail\ElternabfrageMail::KIND_WITHDRAWAL => 'Eingereichte Angaben ansehen',
             \App\Mail\ElternabfrageMail::KIND_CHANGE_REJECTED => 'Begründung ansehen',
             \App\Mail\ElternabfrageMail::KIND_CONFIRMATION_REQUEST => 'Angaben prüfen und bestätigen',
             default => 'Zur Abfrage',

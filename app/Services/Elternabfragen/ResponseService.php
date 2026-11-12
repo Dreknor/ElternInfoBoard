@@ -219,10 +219,113 @@ class ResponseService
 
         $kind = match (true) {
             $action === 'response.changed' => InquiryReceiptKind::ChangeAccepted,
+            $action === 'response.withdrawn' => InquiryReceiptKind::Withdrawal,
             $previous !== null => InquiryReceiptKind::Correction,
             default => InquiryReceiptKind::Submission,
         };
         $response->setRelation('receipt', $this->receipts->issue($response, $kind, null, ['declarant' => $user]));
+
+        return $response;
+    }
+
+    /**
+     * Einwilligungen der gültigen Antwort, die widerrufen werden können (Feldtyp consent, Wert
+     * „granted“), als Schlüssel => Beschriftung.
+     *
+     * @return array<string, string>
+     */
+    public function withdrawableFields(InquiryAssignment $assignment): array
+    {
+        $answers = $assignment->current_response_id !== null
+            ? (InquiryResponse::whereKey($assignment->current_response_id)->first()?->answers ?? [])
+            : [];
+
+        return collect($this->fields($assignment))
+            ->filter(fn (array $f) => ($f['type'] ?? null) === InquiryFieldType::Consent->value
+                && ($answers[$f['key']] ?? null) === FieldSchema::GRANTED)
+            ->mapWithKeys(fn (array $f) => [$f['key'] => (string) ($f['label'] ?? $f['key'])])
+            ->all();
+    }
+
+    /**
+     * Widerruf aus Sicht des Nutzers: möglich für Sorgeberechtigte, solange die Antworten nicht
+     * gelöscht sind – unabhängig von Frist und Korrekturfenster (Art. 7 Abs. 3 DSGVO).
+     *
+     * @return array{possible: bool, fields: list<array{key: string, label: string}>}
+     */
+    public function withdrawalState(User $user, InquiryAssignment $assignment): array
+    {
+        if (! $this->access->canAnswer($user, $assignment) || $assignment->inquiry?->purged_at !== null) {
+            return ['possible' => false, 'fields' => []];
+        }
+
+        $fields = [];
+        foreach ($this->withdrawableFields($assignment) as $key => $label) {
+            $fields[] = ['key' => (string) $key, 'label' => $label];
+        }
+
+        return ['possible' => $fields !== [], 'fields' => $fields];
+    }
+
+    /**
+     * Einwilligung(en) widerrufen (Art. 7 Abs. 3 DSGVO): neue Antwortversion, in der die
+     * genannten Einwilligungen „denied“ sind, mit genau einer Quittung der Art „withdrawal“
+     * (Relation „receipt“ der Rückgabe). Jederzeit möglich – auch nach Fristende, ohne
+     * Korrekturfenster und bei abgeschlossener Abfrage –, aber nicht nach der Löschung.
+     * Bei gemeinsamer Erklärung wirkt der Widerruf sofort (siehe GuardianConfirmation).
+     *
+     * @param  list<string>  $fieldKeys  leer = alle widerrufbaren Einwilligungen
+     * @param  array{ip?: ?string, user_agent?: ?string}  $meta
+     *
+     * @throws ValidationException bei nicht widerrufbaren Feldern
+     */
+    public function withdraw(InquiryAssignment $assignment, User $user, array $fieldKeys, ?string $reason, string $channel, array $meta = []): InquiryResponse
+    {
+        if (! $this->access->canAnswer($user, $assignment)) {
+            throw new HttpException(403, 'Einwilligungen können nur sorgeberechtigte Personen widerrufen.');
+        }
+        if ($assignment->inquiry?->purged_at !== null) {
+            throw new HttpException(403, 'Die Antworten zu dieser Abfrage wurden bereits gelöscht.');
+        }
+
+        $response = DB::transaction(function () use ($assignment, $user, $fieldKeys, $reason, $channel, $meta) {
+            /** @var InquiryAssignment $locked */
+            $locked = InquiryAssignment::query()->whereKey($assignment->id)->lockForUpdate()->first();
+            $locked->setRelation('inquiry', $assignment->inquiry);
+            $locked->setRelation('child', $assignment->child);
+
+            $available = $this->withdrawableFields($locked);
+            if ($available === []) {
+                throw ValidationException::withMessages(['fields' => 'Es liegt keine erteilte Einwilligung vor, die widerrufen werden kann.']);
+            }
+            $keys = $fieldKeys === [] ? array_keys($available) : array_values(array_unique(array_map('strval', $fieldKeys)));
+            if (array_diff($keys, array_keys($available)) !== []) {
+                throw ValidationException::withMessages(['fields' => 'Mindestens eine der gewählten Angaben ist keine erteilte Einwilligung und kann nicht widerrufen werden.']);
+            }
+
+            $answers = InquiryResponse::findOrFail($locked->current_response_id)->answers ?? [];
+            foreach ($keys as $key) {
+                $answers[$key] = FieldSchema::DENIED;
+            }
+
+            $reason = Str::limit(trim((string) $reason), 500, '');
+            $response = $this->createVersion(
+                $locked,
+                $user,
+                $answers,
+                ['channel' => $channel] + $meta,
+                'Widerruf der Einwilligung'.($reason !== '' ? ': '.$reason : ''),
+                [],
+                'response.withdrawn',
+            );
+            // Erst mit der Quittung ist die Version als Widerruf erkennbar: Bestätigungsstand neu ableiten
+            $locked->refreshStatus();
+
+            return $response;
+        });
+
+        $assignment->refresh();
+        $this->delivery->withdrawn($response->setRelation('assignment', $assignment));
 
         return $response;
     }

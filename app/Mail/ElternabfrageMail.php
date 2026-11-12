@@ -5,12 +5,15 @@ namespace App\Mail;
 use App\Settings\GeneralSetting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 
 /**
  * Benachrichtigung, Erinnerung, Eingangsbestätigung, Bitte um Bestätigung und Rückmeldung
  * zu einer Änderungsmeldung einer Elternabfrage.
- * Enthält bewusst keine Antwortinhalte (Datenminimierung) – nur Link zur Abfrage.
+ * Der Mailtext enthält bewusst keine Antwortinhalte (Datenminimierung) – nur Link zur Abfrage.
+ * Eingangsbestätigungen tragen die Erklärungsquittung: bei nicht sensiblen Abfragen als
+ * PDF-Anhang, bei sensiblen nur als Hinweis auf den Download im Portal bzw. in der App.
  */
 class ElternabfrageMail extends Mailable
 {
@@ -31,6 +34,12 @@ class ElternabfrageMail extends Mailable
     /** Änderungsmeldung der Eltern wurde abgelehnt (Begründung nur im Board). */
     public const KIND_CHANGE_REJECTED = 'change_rejected';
 
+    /** Bestätigung einer weiteren sorgeberechtigten Person ist eingegangen (mit Quittung). */
+    public const KIND_CONFIRMED = 'confirmed';
+
+    /** Widerruf einer Einwilligung ist eingegangen (mit Quittung). */
+    public const KIND_WITHDRAWAL = 'withdrawal';
+
     public string $boardName;
 
     public function __construct(
@@ -43,6 +52,9 @@ class ElternabfrageMail extends Mailable
         public ?string $purpose = null,
         public ?string $submittedAt = null,
         public ?int $version = null,
+        public ?string $receiptNumber = null,
+        public ?string $receiptPdf = null,
+        public ?string $receiptFileName = null,
     ) {
         $this->boardName = rescue(fn () => (new GeneralSetting)->app_name, config('app.name'), false);
     }
@@ -55,9 +67,25 @@ class ElternabfrageMail extends Mailable
             self::KIND_CONFIRMATION_REQUEST => 'Bitte bestätigen: '.$this->inquiryTitle,
             self::KIND_CHANGE_ACCEPTED => 'Änderung übernommen: '.$this->inquiryTitle,
             self::KIND_CHANGE_REJECTED => 'Änderung nicht übernommen: '.$this->inquiryTitle,
+            self::KIND_CONFIRMED => 'Bestätigung eingegangen: '.$this->inquiryTitle,
+            self::KIND_WITHDRAWAL => 'Widerruf eingegangen: '.$this->inquiryTitle,
             default => 'Neue Elternabfrage: '.$this->inquiryTitle,
         };
 
         return $this->subject($subject)->view('emails.elternabfrage');
+    }
+
+    /**
+     * @return Attachment[]
+     */
+    public function attachments(): array
+    {
+        if ($this->receiptPdf === null || $this->receiptFileName === null) {
+            return [];
+        }
+
+        return [
+            Attachment::fromData(fn () => $this->receiptPdf, $this->receiptFileName)->withMime('application/pdf'),
+        ];
     }
 }

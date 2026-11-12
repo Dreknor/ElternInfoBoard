@@ -819,6 +819,8 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
         Route::post('{assignment}/bestaetigen', [$parent, 'confirm'])->whereNumber('assignment')->middleware('throttle:20,1')->name('confirm');
         Route::get('{assignment}/bestaetigung.pdf', [$parent, 'pdf'])->whereNumber('assignment')->name('pdf');
         Route::get('{assignment}/datei/{field}', [$parent, 'file'])->whereNumber('assignment')->name('file');
+        Route::get('{assignment}/quittungen/{uuid}.pdf', [$parent, 'receipt'])->whereNumber('assignment')->whereUuid('uuid')->name('receipts.pdf');
+        Route::post('{assignment}/widerruf', [$parent, 'withdraw'])->whereNumber('assignment')->middleware('throttle:20,1')->name('withdraw');
     });
 
     Route::prefix('verwaltung/elternabfragen')->name('elternabfragen.admin.')->group(function () {

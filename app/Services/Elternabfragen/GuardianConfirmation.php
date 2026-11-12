@@ -8,6 +8,7 @@ use App\Model\InquiryAssignment;
 use App\Model\InquiryChangeRequest;
 use App\Model\InquiryConfirmation;
 use App\Model\InquiryEvent;
+use App\Model\InquiryReceipt;
 use App\Model\InquiryResponse;
 use App\Model\User;
 use App\Services\Family\FamilyResolver;
@@ -23,6 +24,10 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * bestätigen genau diese Antwortversion. Erst dann gilt der Auftrag als abgeschlossen.
  * Eine Korrektur erzeugt eine neue Version und erfordert erneut alle Bestätigungen.
  * Maßgeblich sind die aktuell gültigen Sorgerechtsbeziehungen zum Kind.
+ *
+ * Widerruf einer Einwilligung (Art. 7 Abs. 3 DSGVO): Er wirkt sofort und braucht keine
+ * erneute Bestätigung. Eine Widerrufsversion übernimmt daher den Bestätigungsstand der
+ * Version, auf der sie beruht (Kette über previous_response_id).
  */
 class GuardianConfirmation
 {
@@ -67,8 +72,9 @@ class GuardianConfirmation
             return collect();
         }
 
-        $response = $this->currentResponse($assignment);
-        $done = InquiryConfirmation::where('response_id', $response->id)->pluck('user_id')->push($response->user_id)->filter()->all();
+        $chain = $this->chain($this->currentResponse($assignment));
+        $done = InquiryConfirmation::whereIn('response_id', $chain->pluck('id'))->pluck('user_id')
+            ->merge($chain->pluck('user_id'))->filter()->all();
 
         return $this->guardians($assignment)->reject(fn (User $user) => in_array($user->id, $done, true))->values();
     }
@@ -106,21 +112,31 @@ class GuardianConfirmation
             return [];
         }
 
-        $response = $this->currentResponse($assignment);
-        $confirmations = InquiryConfirmation::where('response_id', $response->id)->get()->keyBy('user_id');
+        $chain = $this->chain($this->currentResponse($assignment));
+        // Je Person die neueste Bestätigung bzw. die neueste eingereichte Version der Kette
+        $confirmations = InquiryConfirmation::whereIn('response_id', $chain->pluck('id'))->orderBy('confirmed_at')->orderBy('id')->get()->keyBy('user_id')
+            // Basis-Collection: except() arbeitet dann mit den Schlüsseln (user_id), nicht mit Modell-IDs
+            ->toBase();
+        $submitted = $chain->reverse()->keyBy('user_id');
+
         $rows = [];
 
-        foreach ($this->guardians($assignment)->push($response->user)->filter()->unique('id') as $user) {
+        $users = $this->guardians($assignment);
+        foreach ($chain as $version) {
+            $users->push($version->user);
+        }
+        foreach ($users->filter()->unique('id') as $user) {
             $confirmation = $confirmations->get($user->id);
+            $own = $submitted->get($user->id);
             $rows[] = [
                 'name' => $user->name,
                 'user_id' => $user->id,
                 'state' => match (true) {
-                    $user->id === $response->user_id => 'submitted',
+                    $own !== null => 'submitted',
                     $confirmation !== null => 'confirmed',
                     default => 'pending',
                 },
-                'at' => $user->id === $response->user_id ? $response->submitted_at : $confirmation?->confirmed_at,
+                'at' => $own !== null ? $own->submitted_at : $confirmation?->confirmed_at,
             ];
         }
 
@@ -182,6 +198,32 @@ class GuardianConfirmation
         }
 
         return $confirmation;
+    }
+
+    /**
+     * Gültige Antwort und – solange sie aus einem Widerruf stammt – die Versionen, auf denen sie
+     * beruht (neueste zuerst). Ohne Widerruf nur die gültige Antwort.
+     *
+     * @return Collection<int, InquiryResponse>
+     */
+    private function chain(InquiryResponse $response): Collection
+    {
+        $chain = collect([$response]);
+        while ($response->previous_response_id !== null && $chain->count() < 50 && $this->isWithdrawal($response)) {
+            $response = InquiryResponse::with('user')->find($response->previous_response_id);
+            if ($response === null) {
+                break;
+            }
+            $chain->push($response);
+        }
+
+        return $chain;
+    }
+
+    /** Die Antwortversion entstand durch einen Widerruf (maßgeblich ist ihre Quittung). */
+    public function isWithdrawal(InquiryResponse $response): bool
+    {
+        return InquiryReceipt::where('response_id', $response->id)->where('kind', InquiryReceiptKind::Withdrawal->value)->exists();
     }
 
     private function currentResponse(InquiryAssignment $assignment): InquiryResponse

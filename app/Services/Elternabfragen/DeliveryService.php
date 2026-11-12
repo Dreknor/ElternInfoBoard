@@ -4,13 +4,16 @@ namespace App\Services\Elternabfragen;
 
 use App\Enums\InquiryAssignmentStatus;
 use App\Enums\InquiryChangeRequestStatus;
+use App\Enums\InquiryReceiptKind;
 use App\Mail\ElternabfrageMail;
 use App\Model\Inquiry;
 use App\Model\InquiryAssignment;
 use App\Model\InquiryChangeRequest;
 use App\Model\InquiryDelivery;
+use App\Model\InquiryReceipt;
 use App\Model\InquiryRecipient;
 use App\Model\InquiryResponse;
+use App\Model\InquiryTemplateVersion;
 use App\Model\Notification;
 use App\Model\User;
 use Illuminate\Support\Facades\Mail;
@@ -56,6 +59,8 @@ class DeliveryService
     /**
      * Eingangsbestätigung an die absendende Person; weitere Sorgeberechtigte werden
      * informiert, dass die Abfrage beantwortet wurde (getrennte Haushalte).
+     * Die E-Mail verschickt sendReceipt() zusammen mit der Erklärungsquittung (eine Mail);
+     * nur Antworten ohne Quittung (Altbestand) erhalten hier die bisherige Eingangsbestätigung.
      */
     public function confirm(InquiryResponse $response): void
     {
@@ -76,7 +81,7 @@ class DeliveryService
             ]);
             $this->log($assignment, $submitter->id, InquiryDelivery::KIND_CONFIRMATION, InquiryDelivery::CHANNEL_BELL, 'auto', null, true);
 
-            if (filled($submitter->email)) {
+            if (filled($submitter->email) && ! $this->hasReceipt($response->id)) {
                 $this->sendMail($assignment, $submitter, InquiryDelivery::KIND_CONFIRMATION, 'auto', null, new ElternabfrageMail(
                     kind: ElternabfrageMail::KIND_CONFIRMATION,
                     userName: $submitter->name,
@@ -217,7 +222,8 @@ class DeliveryService
             ]);
             $this->log($assignment, $requester->id, InquiryDelivery::KIND_CHANGE_RESULT, InquiryDelivery::CHANNEL_BELL, 'auto', $request->handled_by, true);
 
-            if (filled($requester->email)) {
+            // Übernommene Änderung: Rückmeldung kommt mit der Quittung (sendReceipt), nicht doppelt
+            if (filled($requester->email) && ! ($accepted && $request->response_id !== null && $this->hasReceipt($request->response_id))) {
                 $this->sendMail($assignment, $requester, InquiryDelivery::KIND_CHANGE_RESULT, 'auto', $request->handled_by, new ElternabfrageMail(
                     kind: $accepted ? ElternabfrageMail::KIND_CHANGE_ACCEPTED : ElternabfrageMail::KIND_CHANGE_REJECTED,
                     userName: $requester->name,
@@ -252,6 +258,133 @@ class DeliveryService
                 'url' => $url,
                 'icon' => self::ICON,
             ]));
+    }
+
+    /**
+     * Erklärungsquittung an die erklärende Person (Listener auf ReceiptIssued). Zugleich die
+     * Eingangsbestätigung der Erklärung – es geht genau eine Mail je Erklärung.
+     * Nicht sensibel: PDF im Anhang. Sensibel oder PDF nicht erzeugbar: nur Hinweis auf den
+     * Download. Nachträglich erstellte Quittungen werden nie verschickt.
+     */
+    public function sendReceipt(InquiryReceipt $receipt): void
+    {
+        $user = $this->receiptRecipient($receipt);
+        if ($user === null) {
+            return;
+        }
+
+        $assignment = InquiryAssignment::with(['inquiry', 'child' => fn ($q) => $q->withTrashed()])->find($receipt->assignment_id);
+        if ($assignment === null || $assignment->inquiry === null) {
+            return;
+        }
+
+        $pdf = null;
+        if (! $this->receiptIsSensitive($receipt)) {
+            try {
+                $pdf = app(ReceiptService::class)->pdf($receipt);
+            } catch (Throwable $e) {
+                // Mail trotzdem verschicken – mit Hinweis auf den Download
+                report($e);
+            }
+        }
+
+        [$mailKind, $deliveryKind] = match ($receipt->kind) {
+            InquiryReceiptKind::ChangeAccepted => [ElternabfrageMail::KIND_CHANGE_ACCEPTED, InquiryDelivery::KIND_CHANGE_RESULT],
+            InquiryReceiptKind::Confirmation => [ElternabfrageMail::KIND_CONFIRMED, InquiryDelivery::KIND_CONFIRMATION],
+            InquiryReceiptKind::Withdrawal => [ElternabfrageMail::KIND_WITHDRAWAL, InquiryDelivery::KIND_WITHDRAWAL],
+            default => [ElternabfrageMail::KIND_CONFIRMATION, InquiryDelivery::KIND_CONFIRMATION],
+        };
+
+        $this->sendMail($assignment, $user, $deliveryKind, 'auto', null, new ElternabfrageMail(
+            kind: $mailKind,
+            userName: $user->name,
+            inquiryTitle: $assignment->inquiry->title,
+            childName: $receipt->child_name,
+            deadline: $assignment->effectiveDeadline()->format('d.m.Y H:i'),
+            url: url('elternabfragen/'.$assignment->id),
+            submittedAt: $receipt->declared_at->format('d.m.Y H:i'),
+            version: $receipt->response_version,
+            receiptNumber: $receipt->uuid,
+            receiptPdf: $pdf,
+            receiptFileName: $pdf !== null ? $receipt->fileName() : null,
+        ));
+    }
+
+    /**
+     * Wie erhält die erklärende Person ihre Quittung? „mail“ = PDF per E-Mail,
+     * „download“ = sensible Abfrage, keine Mailadresse o. Ä. (nur Download in Portal/App).
+     */
+    public function receiptDelivery(InquiryReceipt $receipt): string
+    {
+        return $this->receiptRecipient($receipt) !== null && ! $this->receiptIsSensitive($receipt) ? 'mail' : 'download';
+    }
+
+    /**
+     * Widerruf einer Einwilligung: Hinweis an die verantwortliche Person und an weitere
+     * Sorgeberechtigte (ohne Antwortinhalte). Fehlende Bestätigungen der zugrunde liegenden
+     * Version werden für die neue Version erneut angefragt.
+     */
+    public function withdrawn(InquiryResponse $response): void
+    {
+        $assignment = $response->assignment;
+        $inquiry = $assignment->inquiry;
+        $user = $response->user;
+        $name = $user?->name ?? 'Eine sorgeberechtigte Person';
+        $child = $assignment->child?->first_name ?? $assignment->childName();
+
+        $responsibleId = $inquiry->responsible_user_id ?? $inquiry->created_by;
+        if ($responsibleId) {
+            Notification::create([
+                'type' => self::NOTIFICATION_TYPE,
+                'user_id' => $responsibleId,
+                'title' => 'Einwilligung widerrufen',
+                'message' => $name.' hat zu „'.$inquiry->title.'“ für '.$assignment->childName().' eine Einwilligung widerrufen.',
+                'url' => url('verwaltung/elternabfragen/antworten/'.$response->id),
+                'icon' => 'fas fa-user-slash',
+                'important' => true,
+            ]);
+            $this->log($assignment, $responsibleId, InquiryDelivery::KIND_WITHDRAWAL_NOTICE, InquiryDelivery::CHANNEL_BELL, 'auto', null, true);
+        }
+
+        $assignment->recipients()->with('user')->get()
+            ->filter(fn (InquiryRecipient $r) => $r->user && $r->user_id !== $response->user_id)
+            ->each(fn (InquiryRecipient $r) => Notification::create([
+                'type' => self::NOTIFICATION_TYPE,
+                'user_id' => $r->user_id,
+                'title' => 'Einwilligung widerrufen',
+                'message' => '„'.$inquiry->title.'“ für '.$child.': '.$name.' hat eine Einwilligung widerrufen.',
+                'url' => url('elternabfragen/'.$assignment->id),
+                'icon' => self::ICON,
+            ]));
+
+        app(GuardianConfirmation::class)->pendingUsers($assignment)
+            ->each(fn (User $pending) => $this->requestConfirmation($assignment, $pending, 'auto', null, $user));
+    }
+
+    /** Empfänger der Quittungsmail: erklärende Person mit E-Mail und Sorgerecht; nie bei Nacherfassung. */
+    private function receiptRecipient(InquiryReceipt $receipt): ?User
+    {
+        if ($receipt->backfilled || $receipt->user_id === null) {
+            return null;
+        }
+        $user = $receipt->user;
+        $assignment = InquiryAssignment::with(['inquiry', 'child'])->find($receipt->assignment_id);
+        if ($user === null || blank($user->email) || $assignment === null) {
+            return null;
+        }
+
+        return app(InquiryAccess::class)->canAnswer($user, $assignment) ? $user : null;
+    }
+
+    private function receiptIsSensitive(InquiryReceipt $receipt): bool
+    {
+        return (bool) InquiryTemplateVersion::whereKey($receipt->template_version_id)->value('is_sensitive');
+    }
+
+    /** Zur Antwortversion gibt es eine (eigene, nicht nachträgliche) Quittung, deren Mail die Bestätigung ersetzt. */
+    private function hasReceipt(int $responseId): bool
+    {
+        return InquiryReceipt::where('response_id', $responseId)->whereNull('confirmation_id')->where('backfilled', false)->exists();
     }
 
     /**

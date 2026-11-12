@@ -31,6 +31,12 @@ class InquiryDelivery extends Model
     /** Rückmeldung an die Eltern: Änderungsmeldung übernommen bzw. abgelehnt. */
     public const KIND_CHANGE_RESULT = 'change_result';
 
+    /** Hinweis an die verantwortliche Person: Eltern haben eine Einwilligung widerrufen. */
+    public const KIND_WITHDRAWAL_NOTICE = 'withdrawal_notice';
+
+    /** Quittung über einen Widerruf an die widerrufende Person. */
+    public const KIND_WITHDRAWAL = 'withdrawal';
+
     public const REMINDER_KINDS = [self::KIND_REMINDER_BEFORE, self::KIND_REMINDER_AFTER, self::KIND_REMINDER_MANUAL];
 
     public const CHANNEL_MAIL = 'mail';
@@ -73,6 +79,8 @@ class InquiryDelivery extends Model
             self::KIND_CONFIRMATION_REQUEST => 'Bitte um Bestätigung',
             self::KIND_CHANGE_NOTICE => 'Hinweis Änderungsmeldung',
             self::KIND_CHANGE_RESULT => 'Rückmeldung zur Änderungsmeldung',
+            self::KIND_WITHDRAWAL_NOTICE => 'Hinweis Widerruf',
+            self::KIND_WITHDRAWAL => 'Bestätigung des Widerrufs',
             default => $this->kind,
         };
     }

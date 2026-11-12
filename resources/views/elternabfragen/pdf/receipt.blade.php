@@ -54,6 +54,17 @@
         <p class="muted" style="margin-top: 4px;">Die erklärende Person hat die unten aufgeführten Angaben (Antwortversion {{ $receipt->response_version }}) als weitere sorgeberechtigte Person verbindlich bestätigt.</p>
     @elseif($receipt->kind === \App\Enums\InquiryReceiptKind::ChangeAccepted)
         <p class="muted" style="margin-top: 4px;">Die von der erklärenden Person gemeldete Änderung wurde von der Schule geprüft und als neue Antwortversion übernommen.</p>
+    @elseif($receipt->kind === \App\Enums\InquiryReceiptKind::Withdrawal)
+        {{-- Ab Layout 2 (Layout-1-Quittungen sind nie Widerrufe) --}}
+        <div class="note">
+            <p><strong>Widerruf der Einwilligung (Art. 7 Abs. 3 DSGVO)</strong></p>
+            <p>Die erklärende Person hat folgende Einwilligung(en) mit Wirkung für die Zukunft widerrufen:</p>
+            <p>@foreach($withdrawnFields as $label){{ $loop->first ? '' : ' · ' }}„{{ $label }}“@endforeach</p>
+            @if(filled($withdrawalReason))
+                <p class="pre">Vermerk: {{ $withdrawalReason }}</p>
+            @endif
+            <p class="muted">Die Rechtmäßigkeit der bis zum Widerruf erfolgten Verarbeitung bleibt unberührt. Unten stehen die Angaben in der Fassung nach dem Widerruf (Antwortversion {{ $receipt->response_version }}).</p>
+        </div>
     @endif
 
     <h2>Angaben der Schule</h2>

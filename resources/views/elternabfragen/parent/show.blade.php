@@ -11,6 +11,8 @@
     $isCorrection = ! $changing && $assignment->isAnswered() && $state['can_correct'] && $editing;
     $existing = $current?->answers ?? [];
     $overdue = $state['deadline']->isPast();
+    $receipts = $receipts ?? collect();
+    $withdrawal = $withdrawal ?? ['possible' => false, 'fields' => []];
 @endphp
 <div class="max-w-2xl mx-auto px-4 py-6">
     @if($preview)
@@ -134,6 +136,21 @@
                     </p>
                 </div>
             </div>
+        </div>
+    @endif
+
+    @if(session('receipt_uuid') && $state['can_view_answers'])
+        {{-- Hinweis zur Erklärungsquittung nach Abgabe, Bestätigung oder Widerruf --}}
+        <div class="ea-alert ea-alert-info mb-5" role="status">
+            <i class="fas fa-receipt" aria-hidden="true"></i>
+            <p class="mb-0">
+                @if(session('receipt_delivery') === 'mail')
+                    Eine Quittung wurde Ihnen per E-Mail geschickt.
+                @else
+                    Ihre Quittung steht hier zum Download bereit.
+                @endif
+                <a href="{{ route('elternabfragen.receipts.pdf', [$assignment, session('receipt_uuid')]) }}" class="underline ml-1">Quittung herunterladen</a>
+            </p>
         </div>
     @endif
 
@@ -408,6 +425,75 @@
                 @endif
             </div>
         </section>
+
+        @if($withdrawal['possible'] ?? false)
+            {{-- Widerruf einer Einwilligung (Art. 7 Abs. 3 DSGVO) – jederzeit möglich --}}
+            <details class="ea-card group mb-5" @if($errors->has('fields') || $errors->has('reason')) open @endif>
+                <summary class="cursor-pointer px-5 py-4 font-semibold ea-text flex items-center justify-between list-none">
+                    <span><i class="fas fa-user-slash ea-muted mr-2" aria-hidden="true"></i>Einwilligung widerrufen</span>
+                    <i class="fas fa-chevron-down text-xs ea-muted transition group-open:rotate-180" aria-hidden="true"></i>
+                </summary>
+                <form method="POST" action="{{ route('elternabfragen.withdraw', $assignment) }}" class="px-5 pb-5 space-y-4"
+                      onsubmit="return confirm('Möchten Sie die gewählten Einwilligungen wirklich widerrufen? Der Widerruf gilt ab sofort.')">
+                    @csrf
+                    <p class="text-sm ea-muted mb-0">
+                        Sie können erteilte Einwilligungen jederzeit mit Wirkung für die Zukunft widerrufen. Die Schule wird informiert.
+                        @if($confirmations !== []) Der Widerruf gilt sofort, eine Bestätigung der anderen Sorgeberechtigten ist nicht nötig. @endif
+                    </p>
+                    <fieldset class="space-y-2">
+                        <legend class="ea-label">Welche Einwilligung möchten Sie widerrufen?</legend>
+                        @foreach($withdrawal['fields'] as $field)
+                            <label class="ea-choice">
+                                <input type="checkbox" name="fields[]" value="{{ $field['key'] }}" @checked(in_array($field['key'], (array) old('fields', array_column($withdrawal['fields'], 'key')), true))>
+                                <span class="ea-text">{{ $field['label'] }}</span>
+                            </label>
+                        @endforeach
+                        @error('fields')<p class="text-sm text-red-600 mb-0">{{ $message }}</p>@enderror
+                    </fieldset>
+                    <div>
+                        <label for="withdrawal_reason" class="ea-label">Grund (optional)</label>
+                        <textarea id="withdrawal_reason" name="reason" rows="2" maxlength="500" class="ea-input">{{ old('reason') }}</textarea>
+                        @error('reason')<p class="text-sm text-red-600 mb-0">{{ $message }}</p>@enderror
+                    </div>
+                    <label class="ea-choice">
+                        <input type="checkbox" name="confirm" value="1" required>
+                        <span class="ea-text">Ich widerrufe die gewählten Einwilligungen für {{ $assignment->childName() }}.</span>
+                    </label>
+                    <button class="ea-btn ea-btn-danger w-full sm:w-auto">
+                        <i class="fas fa-user-slash" aria-hidden="true"></i> Einwilligung widerrufen
+                    </button>
+                </form>
+            </details>
+        @endif
+
+        @if($receipts->isNotEmpty())
+            {{-- Erklärungsquittungen (§ 126b BGB) aller Erklärungen zu diesem Kind --}}
+            <section class="ea-card mb-5" aria-labelledby="quittungen">
+                <div class="ea-card-header">
+                    <div class="ea-card-icon"><i class="fas fa-receipt" aria-hidden="true"></i></div>
+                    <div>
+                        <h2 id="quittungen" class="ea-card-title">Quittungen</h2>
+                        <p class="ea-card-sub">Nachweis jeder Erklärung als PDF</p>
+                    </div>
+                </div>
+                <ul class="px-5 pb-4 space-y-2 mb-0">
+                    @foreach($receipts as $receipt)
+                        <li class="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl ea-subtle text-sm">
+                            <div class="flex-1 min-w-0">
+                                <p class="font-medium ea-text mb-0">
+                                    {{ $receipt->kind->label() }}
+                                    @if($receipt->backfilled) <x-elternabfragen.badge color="slate">nachträglich erstellt</x-elternabfragen.badge> @endif
+                                </p>
+                                <p class="ea-muted mb-0">{{ $receipt->declared_at->format('d.m.Y, H:i') }} Uhr · {{ $receipt->declarant_name }} · Version {{ $receipt->response_version }}</p>
+                            </div>
+                            <a href="{{ route('elternabfragen.receipts.pdf', [$assignment, $receipt->uuid]) }}" class="ea-btn ea-btn-secondary ea-btn-sm w-full sm:w-auto">
+                                <i class="fas fa-file-pdf text-red-500" aria-hidden="true"></i> PDF<span class="sr-only"> der Quittung vom {{ $receipt->declared_at->format('d.m.Y, H:i') }} Uhr</span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
 
         @if($assignment->responses->count() > 1)
             <details class="ea-card group">

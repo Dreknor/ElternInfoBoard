@@ -6,8 +6,10 @@ use App\Enums\InquiryFieldType;
 use App\Http\Controllers\Controller;
 use App\Model\Inquiry;
 use App\Model\InquiryAssignment;
+use App\Model\InquiryReceipt;
 use App\Model\InquiryResponse;
 use App\Services\Elternabfragen\ChangeRequestService;
+use App\Services\Elternabfragen\DeliveryService;
 use App\Services\Elternabfragen\FieldSchema;
 use App\Services\Elternabfragen\GuardianConfirmation;
 use App\Services\Elternabfragen\InquiryAccess;
@@ -33,6 +35,7 @@ class ParentInquiryController extends Controller
         private readonly GuardianConfirmation $confirmation,
         private readonly ChangeRequestService $changes,
         private readonly ReceiptService $receipts,
+        private readonly DeliveryService $delivery,
     ) {}
 
     public function index(Request $request): View
@@ -114,6 +117,11 @@ class ParentInquiryController extends Controller
                 : null,
             'preview' => false,
             'confirmations' => $state['can_view_answers'] ? $this->confirmation->overview($assignment) : [],
+            // Erklärungsquittungen aller Erklärungen zum Kind (nur Sorgeberechtigte: sie enthalten Antworten)
+            'receipts' => $state['can_view_answers']
+                ? InquiryReceipt::where('assignment_id', $assignment->id)->orderByDesc('declared_at')->orderByDesc('sequence')->get()
+                : collect(),
+            'withdrawal' => $this->responses->withdrawalState($user, $assignment),
         ]);
     }
 
@@ -127,10 +135,10 @@ class ParentInquiryController extends Controller
             'confirm.accepted' => 'Bitte bestätigen Sie, dass Sie die Angaben geprüft haben und mit ihnen einverstanden sind.',
         ]);
 
-        $this->confirmation->confirm($assignment, $request->user(), ['channel' => 'web', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()]);
+        $confirmation = $this->confirmation->confirm($assignment, $request->user(), ['channel' => 'web', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()]);
 
         return redirect()->route('elternabfragen.show', $assignment)
-            ->with(['type' => 'success', 'Meldung' => 'Vielen Dank! Ihre Bestätigung wurde gespeichert.']);
+            ->with(['type' => 'success', 'Meldung' => 'Vielen Dank! Ihre Bestätigung wurde gespeichert.'] + $this->receiptFlash($confirmation->getRelation('receipt')));
     }
 
     public function saveDraft(Request $request, InquiryAssignment $assignment): RedirectResponse
@@ -157,7 +165,7 @@ class ParentInquiryController extends Controller
             'confirm.accepted' => 'Bitte bestätigen Sie die Richtigkeit Ihrer Angaben.',
         ]);
 
-        $this->responses->submit(
+        $response = $this->responses->submit(
             $assignment,
             $request->user(),
             (array) $request->input('answers', []),
@@ -167,7 +175,64 @@ class ParentInquiryController extends Controller
         );
 
         return redirect()->route('elternabfragen.show', $assignment)
-            ->with(['type' => 'success', 'Meldung' => 'Vielen Dank! Ihre Angaben wurden verbindlich übermittelt.', 'submitted' => true]);
+            ->with(['type' => 'success', 'Meldung' => 'Vielen Dank! Ihre Angaben wurden verbindlich übermittelt.', 'submitted' => true]
+                + $this->receiptFlash($response->getRelation('receipt')));
+    }
+
+    /**
+     * Einwilligung(en) widerrufen (Art. 7 Abs. 3 DSGVO) – jederzeit, solange die Antworten nicht
+     * gelöscht sind. Neue Antwortversion mit Quittung „Widerruf“.
+     */
+    public function withdraw(Request $request, InquiryAssignment $assignment): RedirectResponse
+    {
+        $this->authorizeView($request, $assignment);
+        abort_unless($this->access->canAnswer($request->user(), $assignment), 403, 'Einwilligungen können nur sorgeberechtigte Personen widerrufen.');
+        $request->validate([
+            'fields' => 'required|array|min:1',
+            'fields.*' => 'string|max:100',
+            'confirm' => 'accepted',
+            'reason' => 'nullable|string|max:500',
+        ], [
+            'fields.required' => 'Bitte wählen Sie mindestens eine Einwilligung aus.',
+            'confirm.accepted' => 'Bitte bestätigen Sie den Widerruf.',
+        ]);
+
+        $response = $this->responses->withdraw(
+            $assignment,
+            $request->user(),
+            array_values((array) $request->input('fields')),
+            $request->input('reason'),
+            'web',
+            ['ip' => $request->ip(), 'user_agent' => $request->userAgent()],
+        );
+
+        return redirect()->route('elternabfragen.show', $assignment)
+            ->with(['type' => 'success', 'Meldung' => 'Ihr Widerruf wurde gespeichert und gilt ab sofort.'] + $this->receiptFlash($response->getRelation('receipt')));
+    }
+
+    /**
+     * Erklärungsquittung als PDF (byteidentisch zum Original; nur Sorgeberechtigte).
+     */
+    public function receipt(Request $request, InquiryAssignment $assignment, string $uuid): Response
+    {
+        $this->authorizeView($request, $assignment);
+        $receipt = InquiryReceipt::where('assignment_id', $assignment->id)->where('uuid', $uuid)->first();
+        abort_if($receipt === null, 404);
+        abort_unless($this->access->canAnswer($request->user(), $assignment), 403);
+
+        return response($this->receipts->pdf($receipt), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$receipt->fileName().'"',
+        ]);
+    }
+
+    /** Hinweis zur Quittung für die nächste Seite: per E-Mail geschickt oder nur zum Download. */
+    private function receiptFlash(?InquiryReceipt $receipt): array
+    {
+        return $receipt === null ? [] : [
+            'receipt_uuid' => $receipt->uuid,
+            'receipt_delivery' => $this->delivery->receiptDelivery($receipt),
+        ];
     }
 
     /**
