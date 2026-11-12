@@ -74,10 +74,10 @@ Es darf frei für nicht-kommerzielle Projekte im Bildungsbereich genutzt werden.
 
 | Komponente | Version / Hinweis |
 |---|---|
-| PHP | **8.4** (die `composer.lock` ist gegen PHP 8.4 aufgelöst) |
+| PHP | **8.4**
 | PHP-Erweiterungen | `curl`, `gd`, `mbstring`, `openssl`, `pdo_mysql`, `xml`, `zip`, `intl`, `bcmath`; empfohlen `imagick` |
 | Composer | ≥ 2.x |
-| Node.js / npm | Node ≥ 20.19 bzw. ≥ 22.12 (Vite 7) – nur zum Bauen der Assets |
+| Node.js / npm | Node ≥ 20.19 bzw. ≥ 22.12 (Vite 7) |
 | Datenbank | MySQL 8 / MariaDB 10.6+ |
 | Webserver | Apache (mit `mod_rewrite`) oder nginx, Document-Root auf `public/` |
 | Cron | ein Cronjob für `php artisan schedule:run` (Pflicht) |
