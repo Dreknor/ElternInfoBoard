@@ -87,6 +87,12 @@ try {
 
         // Elternabfragen: geplante Starts, Erinnerungen, Export- und Löschfristen
         Schedule::command('elternabfragen:process')->everyFifteenMinutes()->withoutOverlapping();
+        // Erklärungsquittungen: Bestand nach dem Update einmalig nacherfassen (nur solange
+        // Erklärungen ohne Quittung existieren – günstige EXISTS-Prüfung) und Kette wöchentlich prüfen
+        Schedule::command('elternabfragen:quittungen-nacherfassen --limit=500')->hourlyAt(40)->withoutOverlapping(120)
+            ->when(fn () => app(\App\Services\Elternabfragen\ReceiptBackfill::class)->hasPending());
+        Schedule::command('elternabfragen:verify --all')->weeklyOn(0, '04:40')->withoutOverlapping()
+            ->when(fn () => Schema::hasTable('inquiry_receipts'));
 
         // Elternrat Event Erinnerungen - stündlich prüfen
         Schedule::call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();

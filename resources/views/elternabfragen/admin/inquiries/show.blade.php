@@ -394,6 +394,10 @@
                     </form>
                 </section>
             @endif
+
+            @if($receipts ?? null)
+                @include('elternabfragen.admin.inquiries._receipts')
+            @endif
         </div>
 
         <aside class="space-y-6">

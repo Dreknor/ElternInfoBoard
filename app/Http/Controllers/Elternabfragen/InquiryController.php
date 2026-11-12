@@ -170,6 +170,9 @@ class InquiryController extends Controller
                 : collect(),
             'pendingApprovals' => AdminController::pendingApprovalCount(),
             'pendingChanges' => $user->can('view elternabfragen answers') ? InquiryChangeRequest::pending()->where('inquiry_id', $inquiry->id)->count() : 0,
+            // Erklärungsquittungen enthalten Antwortinhalte – nur mit „view elternabfragen answers“
+            'receipts' => $user->can('view elternabfragen answers') && $inquiry->isReleased() && ! $inquiry->purged_at
+                ? ReceiptController::overview($inquiry) : null,
         ]);
     }
 

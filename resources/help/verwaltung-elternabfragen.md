@@ -137,6 +137,14 @@ Je Kind ist eine offene Meldung möglich; meldet derselbe Elternteil erneut, ers
 
 **PDF für die Schülerakte** in der Abfrage erstellt ein Blatt je Kind mit vollständiger Antwort, wahlweise für eine Klasse und nur für noch nicht gedruckte Antworten. Jedes Blatt hat ein Feld für den Ablagevermerk. Beim Erstellen wird je Kind vermerkt, welche Antwortversion gedruckt wurde. Nach einer Korrektur oder einem Neustart muss erneut gedruckt werden. Antworten, bei denen noch Bestätigungen fehlen, gelten nicht als gedruckt.
 
+## Quittungen
+
+Zu jeder Erklärung der Eltern (Abgabe, Korrektur, übernommene Änderung, Bestätigung, Widerruf) stellt das System eine **Quittung** als PDF aus. Sie belegt Wortlaut und Antworten zum Zeitpunkt der Erklärung. Benötigt wird das Recht, Antworten zu sehen.
+
+- Auf der Seite der Abfrage zeigt der Bereich **Quittungen**, ob alle Quittungen lückenlos und unverändert sind („Kette in Ordnung“), und listet sie je Kind. Mit **PDF** laden Sie eine Zweitschrift herunter – sie ist mit dem Original identisch.
+- Unter **Quittung prüfen** laden Sie ein vorgelegtes PDF hoch. „Echt und unverändert“ heißt: Die Datei ist genau die ausgestellte Quittung. Die Datei wird dabei nicht gespeichert. Ausdrucke, Scans oder neu gespeicherte PDFs lassen sich nicht prüfen.
+- Für Antworten aus der Zeit vor den Quittungen werden Quittungen nach dem Update automatisch **nacherfasst** (gekennzeichnet, ohne E-Mail an die Eltern).
+
 ## 4. Export
 
 Der Export läuft in drei Schritten: **Auswahl → Vorschau prüfen → Datei erstellen**. **Export** in der Abfrage: Ebene (gesamte Abfrage oder Klasse), Felder, Format (Excel oder CSV) und **Ziel** wählen. Die **Vorschau** zeigt Anzahl der Datensätze, Felder, Antwortversion, fehlende oder auffällige Angaben, Ziel und verantwortliche Person. Jeder Export und jeder Download wird protokolliert; die Datei wird nach Ablauf (Standard 7 Tage) gelöscht. Die Übertragung in die Schulverwaltung erfolgt manuell.

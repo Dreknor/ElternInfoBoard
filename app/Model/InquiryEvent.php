@@ -80,6 +80,8 @@ class InquiryEvent extends Model
             'change.rejected' => 'Änderungsmeldung abgelehnt',
             'export.created' => 'Export erstellt',
             'export.downloaded' => 'Export heruntergeladen',
+            'receipts.backfilled' => 'Quittungen nacherfasst',
+            'receipt.downloaded' => 'Zweitschrift einer Quittung heruntergeladen',
             default => $this->action,
         };
     }

@@ -205,6 +205,28 @@ Sekretariat“. Die Meldung selbst dokumentiert Zeitpunkt und Erklärung (z. B. 
   Dateien werden entfernt
 * Löschung der Antworten entfernt auch die Meldungen
 
+### 6.5 Erklärungsquittungen: Prüfung und Nacherfassung
+
+* `php artisan elternabfragen:verify {inquiry?} {--all}` – `ReceiptService::verifyChain` je Abfrage,
+  Ausgabe OK/FEHLER, Exit-Code 1 bei Fehlern; wöchentlich im Scheduler (`--all`), Fehler als
+  `Log::warning` nur mit Abfrage-ID und Anzahl
+* Verwaltung (`view elternabfragen answers`, wie Antwortansicht und Akten-PDF, weil Quittungen
+  Antwortinhalte enthalten): Reiter „Quittung prüfen“ (`ReceiptController`, PDF bis 10 MB, wird nicht
+  gespeichert, Vergleich über `matchesPdf`), Bereich „Quittungen“ auf der Abfrageseite
+  (Kettenstatus, Liste je Kind, Zweitschrift; Download protokolliert als `receipt.downloaded`)
+* Nacherfassung des Bestands (`ReceiptBackfill`, `elternabfragen:quittungen-nacherfassen`,
+  `--dry-run`, `--limit`): je Antwortversion ohne Quittung (`submission` bei
+  `previous_response_id = null`, `change_accepted` bei verknüpfter Änderungsmeldung bzw.
+  Korrekturgrund „Änderungsmeldung: …“, sonst `correction`) und je Bestätigung ohne Quittung eine
+  Quittung mit `backfilled = true`, ursprünglichem Zeitpunkt, Person und Kanal; keine E-Mails.
+  Reihenfolge je Abfrage chronologisch (Antwort vor Bestätigung, dann ID), unter Sperre der Abfrage
+  in einer Transaktion. **Entscheidung:** Hat eine Abfrage schon Quittungen (nach dem Update
+  entstanden), werden die fehlenden hinten angehängt – die Kette bleibt lückenlos prüfbar, die
+  Nummer entspricht dann nicht der Zeitfolge (maßgeblich ist `declared_at`); Protokoll
+  `receipts.backfilled` vermerkt das. Idempotent; der Scheduler startet den Befehl stündlich nur,
+  solange Erklärungen ohne Quittung existieren (`ReceiptBackfill::hasPending`, zwei EXISTS-Abfragen).
+  Die Migration ruft ihn bewusst nicht auf.
+
 ## 8. Export (Kap. 9)
 
 Auswahl (Abfrage/Klasse, Felder, offene Fälle, Format XLSX/CSV, Ziel) → Vorschau

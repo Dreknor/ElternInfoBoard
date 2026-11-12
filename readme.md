@@ -311,7 +311,7 @@ Dazu gehören unter anderem:
 - Informationsmails (täglich bzw. wöchentlich zu der eingestellten Zeit)
 - Erinnerungen für Rückmeldungen, Lesebestätigungen, Abfragen, Reinigung und Elternrat-Termine
 - Krankmeldungs-Tagesbericht, Schickzeiten-Erinnerung, automatischer Check-in
-- Elternabfragen (alle 15 Minuten: Starts, Erinnerungen, Export- und Löschfristen)
+- Elternabfragen (alle 15 Minuten: Starts, Erinnerungen, Export- und Löschfristen; wöchentlich Prüfung der Erklärungsquittungen, nach dem Update stündlich Nacherfassung fehlender Quittungen, bis keine mehr fehlen)
 - UCS@school-Abgleich (nachts) und Bereinigung verwaister Klassen (sonntags)
 - Online-Update, wenn in der Oberfläche angefordert
 - **Datenschutz-Bereinigung**: Logs (90 Tage), Audit-Trail, Lesebestätigungen und Reminder-Logs (12 Monate), Check-ins und Kinder-Notizen (3 Monate), Krankmeldungen, Messenger-Nachrichten zum Schuljahresende (1. 8.), endgültige Löschung deaktivierter Benutzer nach 400 Tagen
@@ -375,6 +375,10 @@ sh deploy.sh
 
 Das Skript führt dieselben Schritte aus und bricht beim ersten Fehler im Wartungsmodus ab. Nach Behebung erneut ausführen oder `php artisan up`.
 
+### Hinweise zu einzelnen Versionen
+
+- **Erklärungsquittungen (Elternabfragen):** Nach dem Update legt der Scheduler für bereits abgegebene Antworten und Bestätigungen automatisch Quittungen an (stündlich bis zu 500, nur solange welche fehlen; ohne E-Mails). Sofort und vollständig geht es mit `php artisan elternabfragen:quittungen-nacherfassen` (vorher ansehen mit `--dry-run`); danach `php artisan elternabfragen:verify --all`.
+
 ---
 
 ## UCS@school-Integration
@@ -433,6 +437,8 @@ Ein lesender MCP-Endpunkt für Chatbots (`POST /api/v1/mcp`) ist standardmäßig
 | `media:make-private` | Altbestand von Mediendateien auf die private Disk umziehen (`--dry-run`) |
 | `ucs:ping` / `sync:ucs-parents` | UCS@school testen bzw. abgleichen |
 | `family:status` | Stand des Familienmodells anzeigen |
+| `elternabfragen:verify {id?} --all` | Erklärungsquittungen (Hash-Kette) einer bzw. aller Abfragen prüfen; Exit-Code ≠ 0 bei Fehlern |
+| `elternabfragen:quittungen-nacherfassen` | Fehlende Quittungen für ältere Antworten anlegen (`--dry-run`, `--limit=`); läuft nach dem Update automatisch |
 | `stundenplan:import {datei}` | Stundenplan aus JSON importieren |
 | `settings:clear-cache` | Einstellungs-Cache leeren |
 

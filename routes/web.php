@@ -909,6 +909,14 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
             Route::get('aenderungen/{changeRequest}/datei/{field}', [$changes, 'file'])->name('change-requests.file');
         });
 
+        // Erklärungsquittungen: vorgelegtes PDF prüfen, Zweitschrift (enthalten Antwortinhalte)
+        Route::middleware('permission:view elternabfragen answers')->group(function () {
+            $receipts = \App\Http\Controllers\Elternabfragen\ReceiptController::class;
+            Route::get('quittung-pruefen', [$receipts, 'check'])->name('receipts.check');
+            Route::post('quittung-pruefen', [$receipts, 'verify'])->middleware('throttle:30,1')->name('receipts.verify');
+            Route::get('quittungen/{receipt}', [$receipts, 'download'])->whereNumber('receipt')->name('receipts.download');
+        });
+
         // Export (Prozess E)
         Route::middleware('permission:export elternabfragen')->group(function () use ($exports) {
             Route::get('abfragen/{inquiry}/export', [$exports, 'create'])->name('exports.create');

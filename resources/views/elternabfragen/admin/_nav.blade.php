@@ -12,6 +12,8 @@
             ? ['label' => 'Freigaben', 'icon' => 'fas fa-user-check', 'count' => $pendingApprovals ?? 0] : null,
         'elternabfragen.admin.staff' => $user->canAny(['read elternabfragen', 'view elternabfragen answers'])
             ? ['label' => 'Antworten', 'icon' => 'fas fa-eye'] : null,
+        'elternabfragen.admin.receipts.check' => $user->can('view elternabfragen answers')
+            ? ['label' => 'Quittung prüfen', 'icon' => 'fas fa-stamp'] : null,
         'elternabfragen.admin.settings' => $user->canAny(['approve elternabfragen', 'edit settings'])
             ? ['label' => 'Regeln', 'icon' => 'fas fa-sliders-h'] : null,
     ]);
@@ -50,6 +52,7 @@
                         'elternabfragen.admin.templates.index' => ['elternabfragen.admin.templates.'],
                         'elternabfragen.admin.staff' => ['elternabfragen.admin.staff', 'elternabfragen.admin.responses.'],
                         'elternabfragen.admin.change-requests.index' => ['elternabfragen.admin.change-requests.'],
+                        'elternabfragen.admin.receipts.check' => ['elternabfragen.admin.receipts.check', 'elternabfragen.admin.receipts.verify'],
                         default => [$route],
                     };
                     $active = \Illuminate\Support\Str::startsWith((string) $current, $prefixes);
