@@ -744,30 +744,34 @@
                     const url = form.getAttribute('action');
 
                     Swal.fire({
-                        title: 'Bist du sicher?',
-                        text: 'Diese Notiz wird dauerhaft gelöscht!',
+                        title: 'Notiz löschen?',
+                        text: 'Die Notiz wird dauerhaft gelöscht.',
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#3085d6',
                         cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ja, löschen!',
+                        confirmButtonText: 'Ja, löschen',
                         cancelButtonText: 'Abbrechen'
                     }).then((result) => {
-                        if (result.isConfirmed) {
-                            fetch(url, {
-                                method: 'DELETE',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
-                            })
-                            .then(() => {
-                                Swal.fire('Gelöscht!', 'Die Notiz wurde erfolgreich gelöscht.', 'success');
-                                form.closest('.card').remove();
-                            })
-                            .catch(() => {
-                                Swal.fire('Fehler!', 'Es gab ein Problem beim Löschen der Notiz.', 'error');
-                            });
-                        }
+                        if (!result.isConfirmed) return;
+                        fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            credentials: 'same-origin'
+                        })
+                        .then(response => {
+                            if (!response.ok) throw new Error('HTTP ' + response.status);
+                            // Eintrag entfernen (früher .card – die gibt es in der Kinderkarte nicht mehr)
+                            const item = form.closest('.notice-item');
+                            if (item) item.remove();
+                            Swal.fire('Gelöscht', 'Die Notiz wurde gelöscht.', 'success');
+                        })
+                        .catch(() => {
+                            Swal.fire('Fehler', 'Die Notiz konnte nicht gelöscht werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut.', 'error');
+                        });
                     });
                 });
             });
