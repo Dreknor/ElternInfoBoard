@@ -119,7 +119,10 @@ class ReceiptService
      */
     public function renderPdf(InquiryReceipt $receipt): string
     {
-        $pdf = Pdf::loadHTML($this->html($receipt))->setPaper('a4', 'portrait');
+        // Nur benutzte Zeichen der Schrift einbetten (sonst ~1 MB je Quittung, zu groß für den Mailanhang)
+        $pdf = Pdf::setOption(['isFontSubsettingEnabled' => true])
+            ->loadHTML($this->html($receipt))
+            ->setPaper('a4', 'portrait');
         $pdf->render();
 
         $dompdf = $pdf->getDomPDF();

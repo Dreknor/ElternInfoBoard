@@ -285,7 +285,7 @@
         </form>
 
         @if($hasDraft && ! $preview)
-            <form method="POST" action="{{ route('elternabfragen.draft.discard', $assignment) }}" class="mt-3 text-center" onsubmit="return confirm('Entwurf verwerfen?')">
+            <form method="POST" action="{{ route('elternabfragen.draft.discard', $assignment) }}" class="mt-3 text-center" onsubmit="return window.confirm('Entwurf verwerfen?')">
                 @csrf @method('DELETE')
                 <button class="ea-btn ea-btn-ghost ea-btn-sm"><i class="fas fa-trash-alt" aria-hidden="true"></i> Entwurf verwerfen</button>
             </form>
@@ -363,7 +363,7 @@
                     @if($latestChange->isPending())
                         <p class="ea-muted mb-0">Bis die Schule die Änderung übernommen hat, gelten die unten aufgeführten bisherigen Angaben.</p>
                         @if($own)
-                            <form method="POST" action="{{ route('elternabfragen.change.withdraw', $assignment) }}" onsubmit="return confirm('Änderungsmeldung zurückziehen?')">
+                            <form method="POST" action="{{ route('elternabfragen.change.withdraw', $assignment) }}" onsubmit="return window.confirm('Änderungsmeldung zurückziehen?')">
                                 @csrf @method('DELETE')
                                 <button class="ea-btn ea-btn-ghost ea-btn-sm"><i class="fas fa-undo" aria-hidden="true"></i> Meldung zurückziehen</button>
                             </form>
@@ -434,7 +434,7 @@
                     <i class="fas fa-chevron-down text-xs ea-muted transition group-open:rotate-180" aria-hidden="true"></i>
                 </summary>
                 <form method="POST" action="{{ route('elternabfragen.withdraw', $assignment) }}" class="px-5 pb-5 space-y-4"
-                      onsubmit="return confirm('Möchten Sie die gewählten Einwilligungen wirklich widerrufen? Der Widerruf gilt ab sofort.')">
+                      onsubmit="return window.confirm('Möchten Sie die gewählten Einwilligungen wirklich widerrufen? Der Widerruf gilt ab sofort.')">
                     @csrf
                     <p class="text-sm ea-muted mb-0">
                         Sie können erteilte Einwilligungen jederzeit mit Wirkung für die Zukunft widerrufen. Die Schule wird informiert.

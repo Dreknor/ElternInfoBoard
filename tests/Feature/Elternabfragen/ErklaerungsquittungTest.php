@@ -191,6 +191,8 @@ class ErklaerungsquittungTest extends ElternabfragenTestCase
         $second = $this->service()->renderPdf($receipt->fresh());
 
         $this->assertStringStartsWith('%PDF-', $first);
+        // Schrift nur als Teilmenge eingebettet – sonst ~1 MB, zu groß für den Mailanhang
+        $this->assertLessThan(200_000, strlen($first));
         $this->assertSame(hash('sha256', $first), hash('sha256', $second));
         $this->assertSame($receipt->pdf_sha256, hash('sha256', $first));
         $this->assertTrue($this->service()->matchesPdf($second)?->is($receipt));
