@@ -10,6 +10,7 @@ use App\Model\InquiryDraft;
 use App\Model\InquiryEvent;
 use App\Model\InquiryExport;
 use App\Model\InquiryRecipient;
+use App\Model\InquiryReceipt;
 use App\Model\InquiryResponse;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -134,6 +135,8 @@ class RetentionService
             InquiryExport::where('inquiry_id', $inquiry->id)->whereNull('file_deleted_at')->get()
                 ->each(fn (InquiryExport $export) => $this->exports->deleteFile($export));
 
+            // Quittungen per Query (die Modell-Sperre gegen Löschen greift hier bewusst nicht)
+            InquiryReceipt::where('inquiry_id', $inquiry->id)->delete();
             InquiryResponse::whereIn('assignment_id', $assignmentIds)->delete();
             InquiryDraft::whereIn('assignment_id', $assignmentIds)->delete();
             InquiryChangeRequest::whereIn('assignment_id', $assignmentIds)->delete();

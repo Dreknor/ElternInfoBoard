@@ -3,6 +3,7 @@
 namespace App\Services\Elternabfragen;
 
 use App\Enums\GuardianRight;
+use App\Enums\InquiryReceiptKind;
 use App\Model\InquiryAssignment;
 use App\Model\InquiryChangeRequest;
 use App\Model\InquiryConfirmation;
@@ -25,7 +26,10 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  */
 class GuardianConfirmation
 {
-    public function __construct(private readonly FamilyResolver $family) {}
+    public function __construct(
+        private readonly FamilyResolver $family,
+        private readonly ReceiptService $receipts,
+    ) {}
 
     public function required(InquiryAssignment $assignment): bool
     {
@@ -129,7 +133,8 @@ class GuardianConfirmation
     }
 
     /**
-     * Gültige Antwortversion verbindlich bestätigen.
+     * Gültige Antwortversion verbindlich bestätigen. Stellt in derselben Transaktion die
+     * Erklärungsquittung aus (Relation „receipt“ der Rückgabe).
      *
      * @param  array{channel?: string, ip?: ?string, user_agent?: ?string}  $meta
      */
@@ -164,6 +169,9 @@ class GuardianConfirmation
             ]);
 
             $locked->refreshStatus();
+
+            $response = InquiryResponse::findOrFail($locked->current_response_id);
+            $confirmation->setRelation('receipt', $this->receipts->issue($response, InquiryReceiptKind::Confirmation, $confirmation, ['declarant' => $user]));
 
             return $confirmation;
         });

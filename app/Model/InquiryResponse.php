@@ -6,6 +6,7 @@ use App\Enums\InquiryReviewStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use LogicException;
 
 /**
@@ -80,6 +81,18 @@ class InquiryResponse extends Model
     public function confirmations(): HasMany
     {
         return $this->hasMany(InquiryConfirmation::class, 'response_id')->orderBy('confirmed_at');
+    }
+
+    /** Erklärungsquittungen zu dieser Version (Abgabe/Korrektur/Änderung sowie Bestätigungen). */
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(InquiryReceipt::class, 'response_id')->orderBy('sequence');
+    }
+
+    /** Quittung der Erklärung, mit der diese Version entstanden ist. */
+    public function receipt(): HasOne
+    {
+        return $this->hasOne(InquiryReceipt::class, 'response_id')->whereNull('confirmation_id')->oldestOfMany('sequence');
     }
 
     public function previous(): BelongsTo

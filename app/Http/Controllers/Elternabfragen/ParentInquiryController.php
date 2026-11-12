@@ -11,6 +11,7 @@ use App\Services\Elternabfragen\ChangeRequestService;
 use App\Services\Elternabfragen\FieldSchema;
 use App\Services\Elternabfragen\GuardianConfirmation;
 use App\Services\Elternabfragen\InquiryAccess;
+use App\Services\Elternabfragen\ReceiptService;
 use App\Services\Elternabfragen\ResponseService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -31,6 +32,7 @@ class ParentInquiryController extends Controller
         private readonly FieldSchema $schema,
         private readonly GuardianConfirmation $confirmation,
         private readonly ChangeRequestService $changes,
+        private readonly ReceiptService $receipts,
     ) {}
 
     public function index(Request $request): View
@@ -204,6 +206,15 @@ class ParentInquiryController extends Controller
     {
         $this->authorizeView($request, $assignment);
         abort_unless($this->access->canAnswer($request->user(), $assignment) && $assignment->currentResponse, 404);
+
+        // Erklärungsquittung (byteidentisch zum Original); ohne Quittung (Altbestand) wie bisher
+        $receipt = $this->receipts->currentReceiptFor($assignment, $request->user());
+        if ($receipt !== null) {
+            return response($this->receipts->pdf($receipt), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="'.$receipt->fileName().'"',
+            ]);
+        }
 
         $response = $assignment->currentResponse()->with('user')->first();
 

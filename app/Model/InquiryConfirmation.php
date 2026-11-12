@@ -4,6 +4,7 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Bestätigung einer Antwortversion durch eine weitere sorgeberechtigte Person.
@@ -35,5 +36,11 @@ class InquiryConfirmation extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** Erklärungsquittung dieser Bestätigung. */
+    public function receipt(): HasOne
+    {
+        return $this->hasOne(InquiryReceipt::class, 'confirmation_id');
     }
 }

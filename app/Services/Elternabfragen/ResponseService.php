@@ -5,6 +5,7 @@ namespace App\Services\Elternabfragen;
 use App\Enums\GuardianRight;
 use App\Enums\InquiryAssignmentStatus;
 use App\Enums\InquiryFieldType;
+use App\Enums\InquiryReceiptKind;
 use App\Enums\InquiryReviewStatus;
 use App\Model\Child;
 use App\Model\InquiryAssignment;
@@ -37,6 +38,7 @@ class ResponseService
         private readonly ElternabfragenSetting $settings,
         private readonly FamilyResolver $family,
         private readonly PreviousAnswers $previousAnswers,
+        private readonly ReceiptService $receipts,
     ) {}
 
     public function fields(InquiryAssignment $assignment): array
@@ -159,6 +161,7 @@ class ResponseService
     /**
      * Neue gültige Antwortversion anlegen (Aufruf innerhalb einer Transaktion mit gesperrtem Auftrag).
      * Wird beim Absenden durch Eltern und bei der Übernahme einer Änderungsmeldung verwendet.
+     * Stellt in derselben Transaktion die Erklärungsquittung aus (Relation „receipt“ der Rückgabe).
      *
      * @param  array<string, mixed>  $answers  bereinigte Antworten inkl. Dateiangaben
      * @param  array{channel?: string, ip?: ?string, user_agent?: ?string}  $meta
@@ -213,6 +216,13 @@ class ResponseService
             'note' => $response->correction_reason,
             'data' => ['version' => $response->version, 'answer_hash' => $response->answer_hash],
         ]);
+
+        $kind = match (true) {
+            $action === 'response.changed' => InquiryReceiptKind::ChangeAccepted,
+            $previous !== null => InquiryReceiptKind::Correction,
+            default => InquiryReceiptKind::Submission,
+        };
+        $response->setRelation('receipt', $this->receipts->issue($response, $kind, null, ['declarant' => $user]));
 
         return $response;
     }
