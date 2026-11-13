@@ -122,9 +122,17 @@ class DashboardController extends Controller implements HasMiddleware
                         ->whereDate('start', '<=', Carbon::today())
                         ->whereDate('ende', '>=', Carbon::today());
                 },
+                // Tagesaktuelle und regelmäßige (wochentagsbasierte) Schickzeiten für heute;
+                // die Auswahl übernimmt Child::getSchickzeitenForToday().
                 'schickzeiten' => function ($query) {
-                    $query->select(['id', 'child_id', 'type', 'specific_date', 'time', 'time_ab', 'time_spaet'])
-                        ->where('specific_date', Carbon::today())
+                    $query->select(['id', 'child_id', 'type', 'weekday', 'specific_date', 'time', 'time_ab', 'time_spaet'])
+                        ->where(function ($q) {
+                            $q->whereDate('specific_date', Carbon::today())
+                                ->orWhere(function ($q) {
+                                    $q->whereNull('specific_date')
+                                        ->where('weekday', Carbon::today()->dayOfWeek);
+                                });
+                        })
                         ->orderBy('specific_date', 'desc');
                 }
             ])
@@ -178,17 +186,13 @@ class DashboardController extends Controller implements HasMiddleware
             $openAttendanceSurveys = Cache::remember("open_surveys_{$userId}", 60, function () use ($childIds) {
                 $openSurveys = \App\Model\ChildCheckIn::query()
                     ->whereIn('child_id', $childIds)
-                    ->where('should_be', false)
-                    ->where('checked_in', false)
-                    ->where('checked_out', false)
+                    // Offen = noch unbeantwortet (null); false heißt „abgemeldet“.
+                    // Gleiche Bedingung wie die Aufgaben der App (TodoService).
+                    ->whereNull('should_be')
+                    ->whereDate('date', '>', Carbon::today())
                     ->where(function ($query) {
-                        $query->where(function ($q) {
-                            $q->whereNotNull('lock_at')
-                                ->where('lock_at', '>=', Carbon::today());
-                        })->orWhere(function ($q) {
-                            $q->whereNull('lock_at')
-                                ->where('date', '>', Carbon::today());
-                        });
+                        $query->whereNull('lock_at')
+                            ->orWhereDate('lock_at', '>=', Carbon::today());
                     })
                     ->exists(); // exists() ist schneller als count() > 0
 

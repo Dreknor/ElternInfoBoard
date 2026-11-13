@@ -15,7 +15,7 @@
                             $isCheckedIn = $todayCheckIn && $todayCheckIn->checked_in && !$todayCheckIn->checked_out;
                             $isCheckedOut = $todayCheckIn && $todayCheckIn->checked_out;
                             $hasKrankmeldung = $child->krankmeldungen->count() > 0;
-                            $schickzeitenToday = $child->schickzeiten;
+                            $schickzeitenToday = $child->getSchickzeitenForToday();
                         @endphp
                         <div class="rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200" style="border: 1px solid var(--color-card-border);">
                             <!-- Header -->
@@ -60,34 +60,6 @@
                                             </div>
                                         </div>
 
-                                        @if($schickzeitenToday->count() > 0)
-                                            <div class="rounded p-3" style="background: var(--color-widget-accent-bg); border: 1px solid var(--color-widget-accent-border);">
-                                                <div class="flex items-center gap-2 mb-2">
-                                                    <i class="far fa-clock text-sm" style="color: var(--color-widget-accent-from);"></i>
-                                                    <span class="font-semibold text-sm" style="color: var(--color-widget-accent-border);">Schickzeit heute:</span>
-                                                </div>
-                                                @foreach($schickzeitenToday as $schickzeit)
-                                                    <p class="text-sm mb-0 ml-6" style="color: var(--color-widget-accent-to);">
-                                                        @if($schickzeit->type == 'genau')
-                                                            <i class="fas fa-dot-circle text-xs mr-1"></i>
-                                                            Genau {{$schickzeit->time?->format('H:i')}} Uhr
-                                                        @else
-                                                            <i class="fas fa-arrow-right text-xs mr-1"></i>
-                                                            @if(!is_null($schickzeit->time_ab)) Ab {{$schickzeit->time_ab?->format('H:i')}} Uhr @endif
-                                                            @if(!is_null($schickzeit->time_ab) && !is_null($schickzeit->time_spaet)) - @endif
-                                                            @if(!is_null($schickzeit->time_spaet)) Spät. {{$schickzeit->time_spaet?->format('H:i')}} Uhr @endif
-                                                        @endif
-                                                    </p>
-                                                @endforeach
-                                            </div>
-                                        @else
-                                            <div class="rounded p-2" style="background: var(--color-card-border)20; border: 1px solid var(--color-card-border);">
-                                                <p class="text-xs mb-0 text-center" style="color: var(--color-text-secondary);">
-                                                    <i class="fas fa-info-circle mr-1"></i>
-                                                    Keine Schickzeit für heute hinterlegt
-                                                </p>
-                                            </div>
-                                        @endif
                                     </div>
                                 @else
                                     <div class="flex items-start gap-2 p-3 bg-gray-100 border-l-4 border-gray-400 rounded">
@@ -96,6 +68,40 @@
                                             <p class="font-semibold text-sm mb-0" style="color: var(--color-text-primary);">Nicht angemeldet</p>
                                             <p class="text-xs mb-0" style="color: var(--color-text-secondary);">Heute noch nicht eingecheckt</p>
                                         </div>
+                                    </div>
+                                @endif
+
+                                {{-- Schickzeit auch vor dem Einchecken zeigen (z. B. morgens zur Kontrolle) --}}
+                                @if(!$hasKrankmeldung && !$isCheckedOut)
+                                    <div class="mt-3">
+                                    @if($schickzeitenToday->count() > 0)
+                                        <div class="rounded p-3" style="background: var(--color-widget-accent-bg); border: 1px solid var(--color-widget-accent-border);">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <i class="far fa-clock text-sm" style="color: var(--color-widget-accent-from);"></i>
+                                                <span class="font-semibold text-sm" style="color: var(--color-widget-accent-border);">Schickzeit heute:</span>
+                                            </div>
+                                            @foreach($schickzeitenToday as $schickzeit)
+                                                <p class="text-sm mb-0 ml-6" style="color: var(--color-widget-accent-to);">
+                                                    @if($schickzeit->type == 'genau')
+                                                        <i class="fas fa-dot-circle text-xs mr-1"></i>
+                                                        Genau {{$schickzeit->time?->format('H:i')}} Uhr
+                                                    @else
+                                                        <i class="fas fa-arrow-right text-xs mr-1"></i>
+                                                        @if(!is_null($schickzeit->time_ab)) Ab {{$schickzeit->time_ab?->format('H:i')}} Uhr @endif
+                                                        @if(!is_null($schickzeit->time_ab) && !is_null($schickzeit->time_spaet)) - @endif
+                                                        @if(!is_null($schickzeit->time_spaet)) Spät. {{$schickzeit->time_spaet?->format('H:i')}} Uhr @endif
+                                                    @endif
+                                                </p>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="rounded p-2" style="background: var(--color-card-border)20; border: 1px solid var(--color-card-border);">
+                                            <p class="text-xs mb-0 text-center" style="color: var(--color-text-secondary);">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                Keine Schickzeit für heute hinterlegt
+                                            </p>
+                                        </div>
+                                    @endif
                                     </div>
                                 @endif
                             </div>

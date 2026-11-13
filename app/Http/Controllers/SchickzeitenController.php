@@ -132,13 +132,29 @@ class SchickzeitenController extends Controller implements HasMiddleware
             ]);
         }
 
+        // Wie in der API (declineAttendance): Abmelden auch nach lock_at, aber nicht für
+        // vergangene Tage und nicht, wenn das Kind bereits eingecheckt ist.
+        if ($childCheckIn->date->endOfDay() < now()) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Anwesenheit für vergangene Tage kann nicht mehr geändert werden.',
+            ]);
+        }
+
+        if ($childCheckIn->checked_in) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Das Kind ist bereits eingecheckt und kann nicht mehr abgemeldet werden.',
+            ]);
+        }
+
         $childCheckIn->update([
             'should_be' => false,
         ]);
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Anwesenheit wurde bestätigt',
+            'Meldung' => 'Abmeldung wurde gespeichert',
         ]);
     }
 
@@ -794,14 +810,15 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 $nextDate = Carbon::now()->next($weekday);
             }
 
-            Log::debug('Schickzeit Änderung für Kind '.$child->first_name.' '.$child->last_name, [
+            // Datenschutz: keine Kindernamen im Log, nur IDs.
+            Log::debug('Schickzeit Änderung', [
                 'child_id' => $child->id,
                 'next_date' => $nextDate->toDateString(),
                 'type' => $request->type,
                 'time' => $request->time ?? null,
                 'time_ab' => $request->time_ab ?? null,
                 'time_spaet' => $request->time_spaet ?? null,
-                'changedBy' => \auth()->user()->name,
+                'changedBy' => Auth::id(),
                 'users_id' => $this->ownerIdFor($child),
             ]);
             // Prüfe, ob für dieses Kind und Datum bereits eine Schickzeit existiert
@@ -822,8 +839,9 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
             $schickzeit->save();
 
-            Log::debug('Schickzeit für Kind '.$child->first_name.' '.$child->last_name.' für den '.$nextDate->toDateString().' erstellt', [
-                'schickzeit' => $schickzeit,
+            Log::debug('Schickzeit für den '.$nextDate->toDateString().' erstellt', [
+                'schickzeit_id' => $schickzeit->id,
+                'child_id' => $child->id,
             ]);
 
         }
@@ -1337,9 +1355,9 @@ class SchickzeitenController extends Controller implements HasMiddleware
             // Glocken-Eintrag inkl. App-/Browser-Push (legt AttendanceQueryNotification selbst an)
             try {
                 $parent->notify(new AttendanceQueryNotification($title, $body));
-                Log::info("Neue Anwesenheitsabfrage-Benachrichtigung an {$parent->name} (ID: {$parent->id}) gesendet");
+                Log::info("Neue Anwesenheitsabfrage-Benachrichtigung an Nutzer {$parent->id} gesendet");
             } catch (\Exception $e) {
-                Log::error("Fehler beim Senden der Anwesenheitsabfrage-Benachrichtigung an {$parent->name}: " . $e->getMessage());
+                Log::error("Fehler beim Senden der Anwesenheitsabfrage-Benachrichtigung an Nutzer {$parent->id}: " . $e->getMessage());
             }
         }
     }
