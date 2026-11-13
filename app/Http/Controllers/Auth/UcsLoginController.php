@@ -110,6 +110,7 @@ class UcsLoginController extends Controller implements HasMiddleware
             Log::channel('ucs')->warning('[UcsLoginController] Socialite-Fehler im Callback', [
                 'error' => $e->getMessage(),
             ]);
+            \App\Services\Security\SecurityLog::record('auth.failed', null, ['method' => 'ucs', 'reason' => 'idp_error']);
 
             return redirect()->route('login')->with([
                 'type'    => 'danger',
@@ -207,6 +208,7 @@ class UcsLoginController extends Controller implements HasMiddleware
         // Marker VOR Auth::login setzen: TriggerUcsProvisioningOnLogin erkennt daran
         // den SSO-Login. Auth::login() migriert die Session-ID und behält die Daten.
         $this->rememberSsoSession($request, $idToken);
+        \App\Services\Security\AuthEventSubscriber::expect('ucs');
         Auth::login($user, remember: true);
 
         Log::channel('ucs')->info('[UcsLoginController] Login erfolgreich', [

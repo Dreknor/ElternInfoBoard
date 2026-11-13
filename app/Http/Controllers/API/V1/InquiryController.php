@@ -365,6 +365,7 @@ class InquiryController extends ApiController
         abort_unless($this->access->canAnswer($request->user(), $assignment), 404);
         $file = $assignment->currentResponse ? $this->responses->filePath($assignment->currentResponse, $field) : null;
         abort_unless($file, 404);
+        \App\Services\Security\SecurityLog::record('inquiry.file_download', null, ['inquiry_id' => $assignment->inquiry_id, 'assignment_id' => $assignment->id]);
 
         return Storage::disk(ResponseService::DISK)->download($file['path'], $file['name']);
     }

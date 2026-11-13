@@ -111,6 +111,7 @@ class StudentSsoLogin
     /** Web-Anmeldung abschließen. */
     public function login(Request $request, User $student): void
     {
+        \App\Services\Security\AuthEventSubscriber::expect('student_sso');
         Auth::guard('web')->login($student);
         $request->session()->regenerate();
         $request->session()->put(RestrictStudentAccounts::SESSION_LOGIN_AT, time());

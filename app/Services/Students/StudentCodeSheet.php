@@ -53,6 +53,8 @@ class StudentCodeSheet
             'appName' => app(\App\Settings\GeneralSetting::class)->app_name,
         ])->setPaper('a4');
 
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'schueler_zugangscodes', 'format' => 'pdf', 'rows' => $slips->count()]);
+
         return $pdf->download($filename.'_'.now()->format('Y-m-d').'.pdf');
     }
 }

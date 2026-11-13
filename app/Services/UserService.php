@@ -16,6 +16,8 @@ use App\Model\User;
 use App\Repositories\GroupsRepository;
 use App\Services\Family\FamilyService;
 use App\Scopes\GetGroupsScope;
+use App\Services\Security\AccountSecurity as SecurityAccount;
+use App\Services\Security\SecurityLog;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
 use Carbon\Carbon;
@@ -105,9 +107,9 @@ class UserService
             Mail::to($user->email)->send(new NewUserPasswordMail($user, $password, $emailSettings->new_user_welcome_text));
             $emailSent = true;
             $emailStatus = 'E-Mail mit Startkennwort wurde erfolgreich versendet.';
-            Log::debug('Willkommens-E-Mail versendet an '.$user->email);
+            Log::debug('Willkommens-E-Mail versendet', ['user_id' => $user->id]);
         } catch (\Throwable $e) {
-            Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user->email.': '.$e->getMessage());
+            Log::error('Willkommens-E-Mail fehlgeschlagen: '.$e->getMessage(), ['user_id' => $user->id]);
             $emailStatus = 'Warnung: E-Mail konnte nicht versendet werden. Bitte kontaktieren Sie den Administrator.';
         }
 
@@ -295,6 +297,24 @@ class UserService
             return;
         }
 
+        $before = $user->roles()->pluck('name')->sort()->values()->all();
+
+        try {
+            $this->applyRoles($user, $roleNames, $admin);
+        } finally {
+            $after = $user->roles()->pluck('name')->sort()->values()->all();
+            $user->unsetRelation('roles');
+            if ($before !== $after) {
+                SecurityLog::record('rbac.user_roles_changed', $user->id, [
+                    'before' => $before,
+                    'after' => $after,
+                ]);
+            }
+        }
+    }
+
+    private function applyRoles(User $user, array $roleNames, User $admin): void
+    {
         if ($admin->can('edit permission')) {
             $roles = Role::whereIn('name', $roleNames)->get()->unique();
             $user->roles()->sync($roles);
@@ -324,16 +344,30 @@ class UserService
             ->intersect(\App\Model\Module::lockedPermissionNames())
             ->all();
 
+        $before = $user->getDirectPermissions()->pluck('name')->sort()->values()->all();
+
         $user->syncPermissions(array_merge($permissions ?? [], $keep));
+
+        $after = $user->load('permissions')->getDirectPermissions()->pluck('name')->sort()->values()->all();
+        if ($before !== $after) {
+            SecurityLog::record('rbac.user_permissions_changed', $user->id, [
+                'added' => array_values(array_diff($after, $before)),
+                'removed' => array_values(array_diff($before, $after)),
+                'count_after' => count($after),
+            ]);
+        }
     }
 
     /**
-     * Passwort setzen (Admin-initiiert).
+     * Passwort setzen (Admin-initiiert). Bestehende Tokens und „Angemeldet bleiben“ des Kontos
+     * werden widerrufen, damit eine Übernahme nicht fortbesteht.
      */
     public function setPassword(User $user, string $newPassword): void
     {
         $user->password = Hash::make($newPassword);
         $user->save();
+
+        SecurityAccount::passwordChanged($user, 'account.password_set_by_admin');
     }
 
     /**
@@ -378,9 +412,9 @@ class UserService
             Mail::to($user->email)->send(new NewUserPasswordMail($user, $password, $emailSettings->new_user_welcome_text));
             $emailSent = true;
             $emailStatus = 'Willkommens-E-Mail wurde erfolgreich erneut versendet.';
-            Log::info('Willkommens-E-Mail erneut versendet an '.$user->email, ['user_id' => $user->id]);
+            Log::info('Willkommens-E-Mail erneut versendet', ['user_id' => $user->id]);
         } catch (\Throwable $e) {
-            Log::error('Erneutes Versenden der Willkommens-E-Mail fehlgeschlagen für '.$user->email.': '.$e->getMessage(), [
+            Log::error('Erneutes Versenden der Willkommens-E-Mail fehlgeschlagen: '.$e->getMessage(), [
                 'user_id' => $user->id,
             ]);
             $emailStatus = 'Fehler: E-Mail konnte nicht versendet werden. Bitte kontaktieren Sie den Administrator.';

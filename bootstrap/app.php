@@ -17,11 +17,22 @@ return Application::configure(basePath: dirname(__DIR__))
         // channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
+    // Echte Client-IP hinter Reverse-Proxy/Load-Balancer: TRUSTED_PROXIES (config/trustedproxy.php).
+    // Erst nach dem Laden der Konfiguration, denn beim Aufbau der Middleware ist .env noch nicht geladen.
+    // Ohne Angabe wird keinem Proxy vertraut (bisheriges Verhalten).
+    ->booted(function () {
+        $proxies = config('trustedproxy.proxies');
+        if (! empty($proxies)) {
+            \Illuminate\Http\Middleware\TrustProxies::at($proxies);
+        }
+    })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo('/home');
 
         $middleware->web([
+            // Nach Passwortänderung andere Web-Sitzungen beenden (vergleicht den Passwort-Hash in der Sitzung).
+            \App\Http\Middleware\AuthenticateSession::class,
             // Schülerkonten: Freigabeliste vor allen übrigen Prüfungen (docs/konzept-schuelerkonten.md §5)
             \App\Http\Middleware\RestrictStudentAccounts::class,
             \App\Http\Middleware\CheckNewsForUser::class,

@@ -109,6 +109,10 @@ class SecurityLog
     private static function isForbiddenKey(string $key): bool
     {
         $key = mb_strtolower($key);
+        // Reine Verweise/Kennzeichen (token_id, token_type …) sind keine Geheimnisse
+        if (preg_match('/_(id|ids|type|count)$/', $key)) {
+            return false;
+        }
         foreach (self::FORBIDDEN_KEYS as $forbidden) {
             if (str_contains($key, $forbidden)) {
                 return true;

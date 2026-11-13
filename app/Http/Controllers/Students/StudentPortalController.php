@@ -211,6 +211,7 @@ class StudentPortalController extends Controller
 
         $student->forceFill(['password' => Hash::make($request->input('password')), 'changePassword' => false])->save();
         StudentAccountLog::info('Passwort geändert', $student);
+        \App\Services\Security\AccountSecurity::passwordChanged($student, 'account.password_changed', null, true, ['client' => 'web']);
 
         return redirect()->route('student.profile')->with(['type' => 'success', 'Meldung' => 'Dein Passwort wurde geändert.']);
     }

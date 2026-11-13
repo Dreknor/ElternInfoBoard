@@ -244,6 +244,7 @@ class MessengerController extends LegacyMessengerController
         abort_unless($message->isVisibleTo($request->user()), 403);
         $media = $message->getFirstMedia('message-attachments');
         abort_unless($media && file_exists($media->getPath()), 404);
+        \App\Services\App\MediaAccess::logDownload($media);
 
         return UploadGuard::harden(response()->file($media->getPath(), [
             'Content-Type' => $media->mime_type,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Model\SearchLog;
+use App\Services\Security\SecurityLog;
 use Carbon\Carbon;
 use danielme85\LaravelLogToDB\LogToDB;
 use Illuminate\Http\Request;
@@ -168,6 +169,7 @@ class LogController extends Controller
     {
         $log = LogToDB::model()->findOrFail($id);
         $log->delete();
+        SecurityLog::record('logs.deleted', null, ['type' => 'application_log', 'log_id' => (int) $id, 'count' => 1]);
 
         return redirect()->back()->with('success', 'Log-Eintrag wurde gelöscht.');
     }
@@ -183,6 +185,7 @@ class LogController extends Controller
         $deletedCount = LogToDB::model()
             ->where('created_at', '<', $date)
             ->delete();
+        SecurityLog::record('logs.deleted', null, ['type' => 'application_log', 'older_than_days' => (int) $days, 'count' => (int) $deletedCount]);
 
         return redirect()->back()->with('success', "Es wurden {$deletedCount} Log-Einträge gelöscht, die älter als {$days} Tage waren.");
     }
@@ -196,6 +199,7 @@ class LogController extends Controller
         $date = Carbon::now()->subDays($days);
 
         $deletedCount = SearchLog::where('created_at', '<', $date)->delete();
+        SecurityLog::record('logs.deleted', null, ['type' => 'search_log', 'older_than_days' => (int) $days, 'count' => (int) $deletedCount]);
 
         return redirect()->back()->with('success', "Es wurden {$deletedCount} Sucheinträge gelöscht, die älter als {$days} Tage waren.");
     }

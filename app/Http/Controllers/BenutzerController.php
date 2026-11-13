@@ -114,6 +114,8 @@ class BenutzerController extends Controller implements HasMiddleware
                 'password' => Hash::make($request->password),
                 'changePassword' => false,
             ]);
+            // Tokens und „Angemeldet bleiben“ anderer Geräte beenden; andere Web-Sitzungen beendet AuthenticateSession.
+            \App\Services\Security\AccountSecurity::passwordChanged($user, 'account.password_changed', null, true, ['client' => 'web']);
         }
 
         // Benachrichtigungskanäle (Tab „Benachrichtigungen“): nicht angehakte Kästchen = aus
@@ -161,7 +163,11 @@ class BenutzerController extends Controller implements HasMiddleware
     public function deleteToken($token)
     {
         $user = auth()->user();
-        $user->tokens()->where('id', $token)->delete();
+        $existing = $user->tokens()->where('id', $token)->first();
+        if ($existing) {
+            \App\Services\Security\AccountSecurity::tokenRevoked($existing, 'user_revoked');
+            $existing->delete();
+        }
 
         return redirect()->back()->with([
             'type' => 'success',

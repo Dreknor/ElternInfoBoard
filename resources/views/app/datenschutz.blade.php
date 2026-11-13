@@ -51,6 +51,10 @@
             Erkrankung), Schickzeiten, Nachrichten im Messenger, Pflichtstunden, hochgeladene Fotos und Dateien, Kontaktangaben in Ihrem Profil.</li>
         <li><strong>Gerät:</strong> ein Gerätename (z. B. „Android – ElternInfo-App“) zur Anzeige Ihrer angemeldeten Geräte sowie – wenn Sie
             Mitteilungen erlauben – ein Push-Token.</li>
+        <li><strong>Sicherheitsprotokoll:</strong> Der Server Ihrer Schule protokolliert zur Erkennung unbefugter Zugriffe (Art. 32 DSGVO)
+            Anmeldungen, fehlgeschlagene Anmeldeversuche, Downloads und Exporte mit Ihrer Konto-ID, IP-Adresse und Browser-/App-Kennung, aber
+            ohne Inhalte. Die Einträge werden nach {{ config('security_log.retention_days') }} Tagen gelöscht, die IP-Adresse wird nach
+            {{ config('security_log.anonymize_ip_after_days') }} Tagen gekürzt. Eine Auswertung zur Leistungs- oder Verhaltenskontrolle findet nicht statt.</li>
     </ul>
 
     <h2>5. Speicherung auf dem Gerät</h2>

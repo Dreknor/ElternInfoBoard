@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use App\Services\Security\AccountSecurity;
+use App\Services\Security\AuthEventSubscriber;
+use App\Services\Security\SecurityLog;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -47,7 +49,6 @@ class AuthController extends Controller implements HasMiddleware
      */
     public function login(Request $request)
     {
-        Log::debug('Login attempt', ['email' => $request->email, 'device_name' => $request->device_name]);
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -60,45 +61,30 @@ class AuthController extends Controller implements HasMiddleware
         // Try to find user (including soft-deleted ones)
         $user = User::withTrashed()->whereRaw('LOWER(email) = ?', [$email])->first();
 
-        Log::debug('User lookup result', [
-            'email' => $email,
-            'user_found' => $user !== null,
-            'user_id' => $user?->id,
-            'user_deleted' => $user?->trashed(),
-            // password_hash_length wurde entfernt (keine Sicherheitsrelevanz, aber Info-Leak)
-        ]);
+        // Deaktivierte oder gelöschte Konten erhalten kein Token (wie die Web-Anmeldung und /api/v1/token).
+        // Protokoll ohne E-Mail-Adresse und Gerätenamen (SecurityLog).
+        $reason = match (true) {
+            ! $user => 'invalid_credentials',
+            $user->trashed() => 'deleted',
+            ! Hash::check($request->password, $user->password) => 'invalid_credentials',
+            $user->is_active === false => 'inactive',
+            default => null,
+        };
 
-        if (! $user) {
-            Log::warning('Login failed: User not found', ['email' => $email]);
+        if ($reason !== null) {
+            SecurityLog::record('auth.failed', $user?->id, [
+                'guard' => 'sanctum', 'method' => 'password', 'client' => 'legacy_api', 'reason' => $reason,
+            ] + ($user ? [] : AuthEventSubscriber::identifierContext($email)));
+
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        if ($user->trashed()) {
-            Log::warning('Login failed: User is soft-deleted', [
-                'email' => $email,
-                'user_id' => $user->id
-            ]);
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
-
-        // Deaktivierte Konten erhalten kein Token (wie die Web-Anmeldung und /api/v1/token)
-        if (! Hash::check($request->password, $user->password) || $user->is_active === false) {
-            Log::warning('Login failed: Invalid password', [
-                'email' => $email,
-                'user_id' => $user->id
-            ]);
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
-
-        Log::info('Login successful', ['email' => $email, 'user_id' => $user->id]);
+        SecurityLog::record('auth.login', $user->id, ['guard' => 'sanctum', 'method' => 'password', 'client' => 'legacy_api']);
 
         $token = $user->createToken($request->device_name);
+        AccountSecurity::tokenIssued($token);
         $minutes = config('sanctum.expiration');
 
         // Zusätzliche Felder sind abwärtskompatibel (ältere Apps lesen nur `token`).
@@ -122,6 +108,7 @@ class AuthController extends Controller implements HasMiddleware
      */
     public function logout(Request $request)
     {
+        AccountSecurity::tokenRevoked($request->user()->currentAccessToken(), 'logout');
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out']);

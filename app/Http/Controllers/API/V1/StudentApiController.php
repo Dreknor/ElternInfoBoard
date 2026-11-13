@@ -9,6 +9,9 @@ use App\Model\Termin;
 use App\Model\User;
 use App\Model\UserDevice;
 use App\Model\Vertretung;
+use App\Services\Security\AccountSecurity;
+use App\Services\Security\AuthEventSubscriber;
+use App\Services\Security\SecurityLog;
 use App\Services\Students\StudentAccountLog;
 use App\Services\Students\StudentContext;
 use App\Services\Students\StudentPostQuery;
@@ -46,10 +49,16 @@ class StudentApiController extends Controller
         $valid = Hash::check($data['password'], $student?->password ?? Hash::make(Str::random(32)));
 
         if (! $student || ! $valid || $student->is_active === false) {
+            SecurityLog::record('auth.failed', $student?->id, [
+                'guard' => 'sanctum', 'method' => 'student_password', 'client' => 'app',
+                'reason' => ! $student || ! $valid ? 'invalid_credentials' : 'inactive',
+            ] + ($student ? [] : AuthEventSubscriber::identifierContext($data['username'])));
+
             throw ValidationException::withMessages(['username' => [self::FAILED]]);
         }
 
         StudentAccountLog::info('Schülerkonto: App-Login', $student);
+        SecurityLog::record('auth.login', $student->id, ['guard' => 'sanctum', 'method' => 'student_password', 'client' => 'app']);
 
         return self::tokenResponse($student, $data['device_name']);
     }
@@ -68,11 +77,16 @@ class StudentApiController extends Controller
 
         $student = $accounts->redeemCode($data['username'], $data['code'], $data['password']);
         if ($student === null) {
+            SecurityLog::record('auth.failed', null, ['guard' => 'sanctum', 'method' => 'student_code', 'client' => 'app', 'reason' => 'invalid_code']
+                + AuthEventSubscriber::identifierContext($data['username']));
+
             throw ValidationException::withMessages(['code' => ['Der Code ist falsch oder abgelaufen.']]);
         }
         if ($student->is_active === false) {
             throw ValidationException::withMessages(['code' => ['Dein Passwort ist gespeichert, aber dein Zugang ist noch nicht freigeschaltet.']]);
         }
+
+        SecurityLog::record('auth.login', $student->id, ['guard' => 'sanctum', 'method' => 'student_code', 'client' => 'app']);
 
         return self::tokenResponse($student, $data['device_name']);
     }
@@ -82,20 +96,21 @@ class StudentApiController extends Controller
     {
         $student = $request->user();
         $current = $student->currentAccessToken();
-        $response = self::tokenResponse($student, $current->name ?? 'ElternInfo-App');
+        $response = self::tokenResponse($student, $current->name ?? 'ElternInfo-App', $current);
         $current?->delete();
 
         return $response;
     }
 
     /** Token mit Fähigkeit `student`, Laufzeit StudentAccounts::TOKEN_DAYS. */
-    public static function tokenResponse(User $student, string $deviceName): JsonResponse
+    public static function tokenResponse(User $student, string $deviceName, mixed $replaces = null): JsonResponse
     {
         $token = $student->createToken(
             mb_substr($deviceName, 0, 100),
             [StudentAccounts::TOKEN_ABILITY],
             now()->addDays(StudentAccounts::TOKEN_DAYS)
         );
+        $replaces !== null ? AccountSecurity::tokenRefreshed($token, $replaces) : AccountSecurity::tokenIssued($token);
 
         return response()->json(['data' => [
             'token' => $token->plainTextToken,
@@ -108,6 +123,7 @@ class StudentApiController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        AccountSecurity::tokenRevoked($request->user()->currentAccessToken(), 'logout');
         $request->user()->currentAccessToken()?->delete();
 
         return response()->json(['message' => 'Abgemeldet.']);
@@ -276,6 +292,8 @@ class StudentApiController extends Controller
 
         $student->forceFill(['password' => Hash::make($request->input('password')), 'changePassword' => false])->save();
         StudentAccountLog::info('Passwort geändert (App)', $student);
+        $current = $student->currentAccessToken();
+        AccountSecurity::passwordChanged($student, 'account.password_changed', $current instanceof \Laravel\Sanctum\PersonalAccessToken ? $current->id : null, true, ['client' => 'app']);
 
         return response()->json(['message' => 'Dein Passwort wurde geändert.']);
     }

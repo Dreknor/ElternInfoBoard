@@ -13,6 +13,8 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Services\Auth\SsoStudentDetector;
+use App\Services\Security\AuthEventSubscriber;
+use App\Services\Security\SecurityLog;
 use App\Settings\KeycloakSetting;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
@@ -59,6 +61,10 @@ class LoginController extends Controller implements HasMiddleware
             $user = $this->loginViaPasswordLessLink($request);
 
             if (! $user or ! $user->can('allow password-less-login')) {
+                $known = $user?->id ?? User::where('email', (string) $request->input('email'))->value('id');
+                SecurityLog::record('auth.magic_link.rejected', $known, $known === null
+                    ? AuthEventSubscriber::identifierContext((string) $request->input('email'))
+                    : []);
 
                 return redirect()->route('login')
                     ->withErrors(['email' => 'Benutzer existiert nicht oder hat keine Berechtigung für den Passwortlosen Login.'])
@@ -106,6 +112,7 @@ class LoginController extends Controller implements HasMiddleware
             $url = $generator->generate();
 
             $user->notify(new SendPasswordLessLinkNotification($url));
+            SecurityLog::record('auth.magic_link.sent', $user->id, ['channel' => 'web']);
 
             return $user;
         }
@@ -153,7 +160,7 @@ class LoginController extends Controller implements HasMiddleware
 
             return redirect()->route('login')->with([
                 'type' => 'danger',
-                'Meldung' => 'Keycloak-Verbindung fehlgeschlagen: ' . $e->getMessage(),
+                'Meldung' => 'Die Verbindung zur Schulanmeldung ist fehlgeschlagen. Bitte später erneut versuchen.',
             ]);
         }
     }
@@ -174,15 +181,11 @@ class LoginController extends Controller implements HasMiddleware
         }
 
         try {
-            Log::info('Keycloak callback received', request()->query());
+            // Keine Query-Parameter loggen: `code`/`state` sind Anmeldegeheimnisse.
+            Log::info('Keycloak callback received', ['has_error' => request()->query->has('error')]);
 
             // Get user from KeyCloak
             $keycloakUser = Socialite::driver('keycloak')->user();
-
-            Log::info('Keycloak user received', [
-                'email' => $keycloakUser->email ?? 'N/A',
-                'name' => $keycloakUser->name ?? 'N/A',
-            ]);
 
         } catch (\Exception $e) {
             Log::error('Keycloak callback error', [
@@ -191,9 +194,11 @@ class LoginController extends Controller implements HasMiddleware
                 'line' => $e->getLine(),
             ]);
 
+            SecurityLog::record('auth.failed', null, ['method' => 'keycloak', 'reason' => 'idp_error']);
+
             return redirect()->route('login')->with([
                 'type' => 'danger',
-                'Meldung' => 'Login fehlgeschlagen: ' . $e->getMessage(),
+                'Meldung' => 'Die Anmeldung ist fehlgeschlagen. Bitte erneut versuchen.',
             ]);
         }
 
@@ -232,6 +237,7 @@ class LoginController extends Controller implements HasMiddleware
 
         if ($existingUser) {
             // Login existing user
+            AuthEventSubscriber::expect('keycloak');
             auth()->login($existingUser);
             request()->session()->forget('passwordless_login');
 
@@ -266,10 +272,7 @@ class LoginController extends Controller implements HasMiddleware
                 }
             }
 
-            Log::info('Creating new user from Keycloak', [
-                'name' => $name,
-                'email' => $keycloakUser->email,
-            ]);
+            Log::info('Creating new user from Keycloak');
 
             // Create new user
             $newUser = User::create([
@@ -282,12 +285,13 @@ class LoginController extends Controller implements HasMiddleware
                 'lastEmail' => now(),
             ]);
 
+            SecurityLog::record('account.created_via_sso', $newUser->id, ['method' => 'keycloak']);
+            AuthEventSubscriber::expect('keycloak');
             auth()->login($newUser);
             request()->session()->forget('passwordless_login');
 
             Log::info('Keycloak login successful (new user)', [
                 'user_id' => $newUser->id,
-                'email' => $newUser->email,
             ]);
         }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Model\Module;
+use App\Services\Security\SecurityLog;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -41,8 +42,20 @@ class RolesController extends Controller
 
         foreach (Role::all() as $role) {
             // Rechte gesperrter Module stehen nicht im Formular und bleiben unverändert.
+            $before = $role->permissions->pluck('name')->sort()->values()->all();
             $keep = $role->permissions->pluck('name')->intersect($hidden)->all();
             $role->syncPermissions(array_merge((array) $request->input($role->name, []), $keep));
+
+            $after = $role->load('permissions')->permissions->pluck('name')->sort()->values()->all();
+            if ($before !== $after) {
+                SecurityLog::record('rbac.role_changed', null, [
+                    'action' => 'permissions_synced',
+                    'role_id' => $role->id,
+                    'role' => $role->name,
+                    'added' => array_values(array_diff($after, $before)),
+                    'removed' => array_values(array_diff($before, $after)),
+                ]);
+            }
         }
 
         return redirect()->back()->with([
@@ -56,7 +69,10 @@ class RolesController extends Controller
      */
     public function store(Request $request)
     {
-        Role::firstOrCreate(['name' => $request->name]);
+        $role = Role::firstOrCreate(['name' => $request->name]);
+        if ($role->wasRecentlyCreated) {
+            SecurityLog::record('rbac.role_changed', null, ['action' => 'role_created', 'role_id' => $role->id, 'role' => $role->name]);
+        }
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -69,7 +85,10 @@ class RolesController extends Controller
      */
     public function storePermission(Request $request)
     {
-        Permission::firstOrCreate(['name' => $request->name]);
+        $permission = Permission::firstOrCreate(['name' => $request->name]);
+        if ($permission->wasRecentlyCreated) {
+            SecurityLog::record('rbac.role_changed', null, ['action' => 'permission_created', 'permission_id' => $permission->id, 'permission' => $permission->name]);
+        }
 
         return redirect()->back()->with([
             'type' => 'success',

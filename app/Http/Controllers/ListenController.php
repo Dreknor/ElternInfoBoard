@@ -402,6 +402,7 @@ class ListenController extends Controller
     public function pdf(Liste $liste)
     {
         if (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste')) {
+            \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'liste', 'format' => 'print', 'liste_id' => $liste->id]);
 
             if ($liste->type == 'termin') {
                 return view('listen.listenTerminExport', [
@@ -564,6 +565,8 @@ class ListenController extends Controller
 
         $filename = Str::slug($liste->listenname, '-').'.ics';
 
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'liste', 'format' => 'ics', 'liste_id' => $liste->id, 'rows' => $termine->count()]);
+
         return response($icalObject->get())
             ->header('Content-Type', 'text/calendar; charset=utf-8')
             ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
@@ -585,6 +588,8 @@ class ListenController extends Controller
         } else {
             $listentermine = $liste->eintragungen;
         }
+
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'liste', 'format' => 'xlsx', 'liste_id' => $liste->id, 'rows' => $listentermine->count()]);
 
         return Excel::download(
             new ListenExport($listentermine, $liste),

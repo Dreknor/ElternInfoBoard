@@ -119,8 +119,8 @@ class MeController extends Controller
         $user = $request->user();
         $user->update(['password' => Hash::make($request->password), 'changePassword' => false]);
 
-        // Andere Sitzungen (Tokens) beenden, das aktuelle bleibt.
-        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+        // Andere Sitzungen (Tokens, „Angemeldet bleiben“) beenden, das aktuelle Token bleibt.
+        \App\Services\Security\AccountSecurity::passwordChanged($user, 'account.password_changed', $user->currentAccessToken()->id, true, ['client' => 'app']);
 
         return response()->json(['message' => 'Passwort geändert.']);
     }
@@ -146,7 +146,11 @@ class MeController extends Controller
     /** Einzelnes Gerät (Token) abmelden. */
     public function destroyToken(Request $request, int $id): JsonResponse
     {
-        $request->user()->tokens()->where('id', $id)->delete();
+        $token = $request->user()->tokens()->where('id', $id)->first();
+        if ($token) {
+            \App\Services\Security\AccountSecurity::tokenRevoked($token, 'user_revoked');
+            $token->delete();
+        }
 
         return response()->json(['message' => 'Gerät abgemeldet.']);
     }
