@@ -212,9 +212,7 @@ class CareController extends Controller implements HasMiddleware
 
                     Log::info('Kind verspätet abgeholt', [
                         'child_id' => $child->id,
-                        'child_name' => $child->first_name.' '.$child->last_name,
                         'user_id' => $user->id,
-                        'user_name' => $user->name,
                     ]);
                 }
             } catch (\Exception $e) {

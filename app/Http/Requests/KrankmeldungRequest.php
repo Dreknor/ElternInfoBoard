@@ -15,6 +15,16 @@ class KrankmeldungRequest extends FormRequest
     }
 
     /**
+     * „keine genannte“ wird im Formular als 0 gesendet.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (in_array($this->input('disease_id'), [0, '0', ''], true)) {
+            $this->merge(['disease_id' => null]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      */
     public function rules(): array
@@ -42,11 +52,21 @@ class KrankmeldungRequest extends FormRequest
             'ende' => [
                 'required',
                 'date_format:Y-m-d',
+                'after_or_equal:start',
             ],
-            'disease' => [
+            // Feldname wie im Formular und in der Tabelle (vorher „disease“ – die Krankheit
+            // landete dadurch nie in der Krankmeldung).
+            'disease_id' => [
                 'nullable',
                 'exists:diseases,id',
             ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'ende.after_or_equal' => 'Das Ende darf nicht vor dem Beginn liegen.',
         ];
     }
 }
