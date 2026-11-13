@@ -122,6 +122,11 @@ class DashboardController extends Controller implements HasMiddleware
                         ->whereDate('start', '<=', Carbon::today())
                         ->whereDate('ende', '>=', Carbon::today());
                 },
+                // Notiz für heute (Schnellerfassung auf der Kinder-Karte)
+                'notice' => function ($query) {
+                    $query->select(['id', 'child_id', 'date', 'notice'])
+                        ->whereDate('date', Carbon::today());
+                },
                 // Tagesaktuelle und regelmäßige (wochentagsbasierte) Schickzeiten für heute;
                 // die Auswahl übernimmt Child::getSchickzeitenForToday().
                 'schickzeiten' => function ($query) {
@@ -234,6 +239,7 @@ class DashboardController extends Controller implements HasMiddleware
             'authorFeedbackStats' => $authorFeedbackStats,
             'unreadConversations' => $unreadConversations,
             'dashboardDiseasesWidget' => $dashboardDiseasesWidget,
+            'schickzeitenSetting' => $careChildren->isNotEmpty() ? new \App\Settings\SchickzeitenSetting : null,
         ]);
     }
 

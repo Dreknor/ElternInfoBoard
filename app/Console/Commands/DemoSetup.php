@@ -919,7 +919,7 @@ class DemoSetup extends Command
                     'weekday' => $sz['weekday'],
                     'specific_date' => null,
                     'time' => $sz['time'],
-                    'type' => 'regular',
+                    'type' => 'genau',
                     'changedBy' => $parent->id,
                     'created_at' => now(),
                     'updated_at' => now(),

@@ -846,6 +846,14 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         }
 
+        // Formular auf der Startseite: dorthin zurück
+        if ($request->boolean('redirect_back')) {
+            return redirect()->back()->with([
+                'type' => 'success',
+                'Meldung' => 'Schickzeit gespeichert',
+            ]);
+        }
+
         return redirect(url('schickzeiten'))->with([
             'type' => 'success',
             'Meldung' => 'Zeiten gespeichert',

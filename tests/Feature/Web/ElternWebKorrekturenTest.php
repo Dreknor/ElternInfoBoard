@@ -43,7 +43,7 @@ class ElternWebKorrekturenTest extends TestCase
     {
         $group = Group::factory()->create(['owner_id' => null]);
         $this->parent->groups()->attach($group);
-        $post = Post::factory()->create(['released' => 1, 'read_receipt' => 1]);
+        $post = Post::factory()->create(['released' => 1, 'read_receipt' => 1, 'external' => 0]);
         $post->groups()->attach($group);
 
         $this->actingAs($this->parent)->post('post/readReceipt', ['post_id' => $post->id])->assertRedirect();
@@ -54,7 +54,7 @@ class ElternWebKorrekturenTest extends TestCase
     #[Test]
     public function read_receipt_is_rejected_for_foreign_or_missing_post(): void
     {
-        $post = Post::factory()->create(['released' => 1, 'read_receipt' => 1]);
+        $post = Post::factory()->create(['released' => 1, 'read_receipt' => 1, 'external' => 0]);
         $post->groups()->attach(Group::factory()->create(['owner_id' => null]));
 
         $this->actingAs($this->parent)->post('post/readReceipt', ['post_id' => $post->id])->assertSessionHas('type', 'danger');
