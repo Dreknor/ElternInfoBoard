@@ -58,10 +58,9 @@ class DashboardSchnellerfassungTest extends TestCase
     {
         $this->withoutVite()->actingAs($this->parent)->get('/dashboard')
             ->assertOk()
-            ->assertSee('Für heute erfassen')
-            ->assertSee('Krankmelden')
-            ->assertSee('Schickzeit für heute')
-            ->assertSee('Notiz für heute');
+            ->assertSee('Krankmeldung senden')
+            ->assertSee('Schickzeit speichern')
+            ->assertSee('Notiz speichern');
     }
 
     #[Test]
@@ -72,9 +71,9 @@ class DashboardSchnellerfassungTest extends TestCase
 
         $this->withoutVite()->actingAs($this->parent)->get('/dashboard')
             ->assertOk()
-            ->assertDontSee('Krankmelden')
+            ->assertDontSee('Krankmeldung senden')
             ->assertDontSee('Schickzeit speichern')
-            ->assertSee('Notiz für heute');
+            ->assertSee('Notiz speichern');
     }
 
     #[Test]
@@ -102,7 +101,7 @@ class DashboardSchnellerfassungTest extends TestCase
 
         $this->assertSame('Oma holt ab', ChildNotice::where('child_id', $this->child->id)->value('notice'));
 
-        $this->withoutVite()->actingAs($this->parent)->get('/dashboard')->assertSee('Oma holt ab')->assertSee('Notiz ändern');
+        $this->withoutVite()->actingAs($this->parent)->get('/dashboard')->assertSee('Oma holt ab')->assertSee('Leer speichern entfernt die Notiz.');
 
         $this->actingAs($this->parent)->from('/dashboard')->post(route('child.notice.store', $this->child), [
             'date' => today()->toDateString(),
@@ -142,7 +141,7 @@ class DashboardSchnellerfassungTest extends TestCase
         Cache::flush();
         $this->withoutVite()->actingAs($this->parent)->get('/dashboard')
             ->assertSee('Krankgemeldet')
-            ->assertDontSee('Krankmelden')
+            ->assertDontSee('Krankmeldung senden')
             ->assertDontSee('Schickzeit speichern');
     }
 }

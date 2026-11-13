@@ -208,6 +208,6 @@ class ElternWebKorrekturenTest extends TestCase
         $this->withoutVite()->actingAs($this->parent)->get('/dashboard')
             ->assertOk()
             ->assertSee('Nicht angemeldet')
-            ->assertSee('Genau 15:30 Uhr');
+            ->assertSee('Schickzeit genau 15:30 Uhr');
     }
 }
