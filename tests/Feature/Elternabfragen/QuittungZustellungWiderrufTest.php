@@ -182,6 +182,8 @@ class QuittungZustellungWiderrufTest extends ElternabfragenTestCase
             ->assertSessionHas('receipt_delivery', 'mail');
 
         $assignment->refresh();
+        $this->assertSame('Einwilligung widerrufen', $assignment->displayLabel());
+        $this->get(route('elternabfragen.show', $assignment))->assertSee('Einwilligung widerrufen');
         $current = $assignment->currentResponse;
         $this->assertSame(2, $current->version);
         $this->assertSame('denied', $current->answers['foto']);
@@ -291,7 +293,9 @@ class QuittungZustellungWiderrufTest extends ElternabfragenTestCase
             ->assertJsonPath('data.response.answers.video', 'denied')
             ->assertJsonPath('data.withdrawal.fields', [['key' => 'foto', 'label' => 'Fotos']])
             ->assertJsonCount(2, 'data.receipts')
-            ->assertJsonPath('data.receipts.0.kind', 'withdrawal');
+            ->assertJsonPath('data.receipts.0.kind', 'withdrawal')
+            ->assertJsonPath('data.status', 'corrected') // Statuswert bleibt (ältere App-Versionen)
+            ->assertJsonPath('data.status_label', 'Einwilligung widerrufen');
         $withdrawal = InquiryReceipt::where('kind', 'withdrawal')->sole();
         $result->assertJsonPath('receipt.uuid', $withdrawal->uuid);
 

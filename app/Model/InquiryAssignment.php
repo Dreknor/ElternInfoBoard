@@ -196,8 +196,30 @@ class InquiryAssignment extends Model
             }
         }
 
+        if ($this->status === InquiryAssignmentStatus::Corrected && $this->isWithdrawn()) {
+            return 'Einwilligung widerrufen';
+        }
+
         return $this->status->label();
     }
+
+    /**
+     * Gültige Antwort ist ein Widerruf von Einwilligungen. Nur Anzeige: Der Status bleibt
+     * „corrected“, damit Filter, Statistik und ältere App-Versionen unverändert funktionieren.
+     */
+    public function isWithdrawn(): bool
+    {
+        if ($this->current_response_id === null) {
+            return false;
+        }
+
+        return $this->withdrawnCache[$this->current_response_id] ??= \App\Model\InquiryReceipt::where('response_id', $this->current_response_id)
+            ->where('kind', \App\Enums\InquiryReceiptKind::Withdrawal->value)
+            ->exists();
+    }
+
+    /** @var array<int, bool> */
+    private array $withdrawnCache = [];
 
     public function displayColor(): string
     {

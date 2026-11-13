@@ -16,7 +16,7 @@
         <div class="lg:col-span-2 space-y-6 min-w-0">
             <section class="ea-card">
                 <div class="ea-card-header flex-wrap">
-                    <x-elternabfragen.badge :color="$assignment->status->color()" dot class="text-sm">{{ $assignment->status->label() }}</x-elternabfragen.badge>
+                    <x-elternabfragen.badge :color="$assignment->status->color()" dot class="text-sm">{{ $assignment->isWithdrawn() ? 'Einwilligung widerrufen' : $assignment->status->label() }}</x-elternabfragen.badge>
                     <span class="text-sm ea-muted"><i class="far fa-clock" aria-hidden="true"></i> Frist: {{ $assignment->effectiveDeadline()->format('d.m.Y H:i') }}{{ $assignment->extended_until ? ($assignment->reopened_at ? ' (individuell)' : ' (Nachfrist)') : '' }}</span>
                     @if($assignment->reopened_at)<span class="text-sm ea-muted">· Neu gestartet am {{ $assignment->reopened_at->format('d.m.Y H:i') }}</span>@endif
                     @if($assignment->correction_until)<span class="text-sm ea-muted">· Korrektur freigegeben bis {{ $assignment->correction_until->format('d.m.Y H:i') }}</span>@endif
