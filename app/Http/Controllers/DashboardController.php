@@ -239,6 +239,8 @@ class DashboardController extends Controller implements HasMiddleware
             'authorFeedbackStats' => $authorFeedbackStats,
             'unreadConversations' => $unreadConversations,
             'dashboardDiseasesWidget' => $dashboardDiseasesWidget,
+            // Freigabe der ElternInfo-App: Hinweis nur für Admins
+            'appServerNotice' => auth()->user()->can('edit settings') ? app(\App\Services\App\AppServerList::class)->adminNotice() : null,
             'schickzeitenSetting' => $careChildren->isNotEmpty() ? new \App\Settings\SchickzeitenSetting : null,
         ]);
     }
