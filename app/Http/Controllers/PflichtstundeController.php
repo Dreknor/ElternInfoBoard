@@ -426,6 +426,8 @@ class PflichtstundeController extends Controller implements HasMiddleware
             $endDate = \Carbon\Carbon::createFromFormat('Y-m-d', $endInput)->endOfDay();
             $label = $startDate->format('d.m.Y').' - '.$endDate->format('d.m.Y');
 
+            \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'pflichtstunden', 'format' => 'xlsx']);
+
             return Excel::download(
                 new PflichtstundenExport(null, $startDate, $endDate, $label),
                 'pflichtstunden_abrechnung_'.$startDate->format('Y-m-d').'_'.$endDate->format('Y-m-d').'_'.date('Y-m-d').'.xlsx'
@@ -433,6 +435,8 @@ class PflichtstundeController extends Controller implements HasMiddleware
         }
 
         $year = $request->get('year', null);
+
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'pflichtstunden', 'format' => 'xlsx']);
 
         return Excel::download(
             new PflichtstundenExport($year),
@@ -478,6 +482,8 @@ class PflichtstundeController extends Controller implements HasMiddleware
         $filename = 'pflichtstunden_report_'.
             $periodStart->format('Y-m-d').'_'.$periodEnd->format('Y-m-d').
             ($anonymized ? '_anonymisiert' : '').'.pdf';
+
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'pflichtstunden_report', 'format' => 'pdf', 'anonymized' => $anonymized]);
 
         return $pdf->download($filename);
     }

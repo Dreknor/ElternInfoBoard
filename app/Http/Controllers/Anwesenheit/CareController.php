@@ -212,9 +212,7 @@ class CareController extends Controller implements HasMiddleware
 
                     Log::info('Kind verspätet abgeholt', [
                         'child_id' => $child->id,
-                        'child_name' => $child->first_name.' '.$child->last_name,
                         'user_id' => $user->id,
-                        'user_name' => $user->name,
                     ]);
                 }
             } catch (\Exception $e) {
@@ -621,6 +619,8 @@ class CareController extends Controller implements HasMiddleware
             ->pluck('date')
             ->unique();
 
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'anwesenheitsabfrage', 'format' => 'xlsx', 'rows' => $dates->count()]);
+
         return Excel::download(new AnwesenheitsAbfrageExport($request->date_start, $request->date_end, $dates), 'Anwesenheitsabfrage.xlsx');
 
     }
@@ -855,6 +855,8 @@ class CareController extends Controller implements HasMiddleware
             . '_bis_'
             . Carbon::parse($request->date_end)->format('d.m.Y')
             . '.pdf';
+
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'ferienplan', 'format' => 'pdf', 'rows' => $checkIns->count()]);
 
         return $pdf->download($filename);
     }

@@ -266,6 +266,13 @@
         </div>
     </div>
 
+    <!-- Angeheftete Links (Modul „Links“) -->
+    @if(isset($dashboardLinks) && $dashboardLinks->isNotEmpty())
+    <div class="row">
+        @include('dashboard.components.links')
+    </div>
+    @endif
+
     <!-- Schnellzugriff -->
     <div class="row">
         <div class="col-12">

@@ -16,20 +16,22 @@ use App\Model\VertretungsplanWeek;
 use App\Services\App\Family;
 use App\Services\App\KrankmeldungService;
 use App\Services\FamilyWeeklyService;
+use App\Services\StundenplanDataProvider;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 /**
- * @group App: Familie
+ * @group Familie
  */
 class ParentController extends ApiController
 {
     /**
-     * Kind krankmelden – B-40 (nur eigene Kinder, Datum `Y-m-d`, idempotent).
+     * Kind krankmelden (nur eigene Kinder, Datum `Y-m-d`, idempotent).
      *
      * @bodyParam child_id int required
      * @bodyParam start date required Example: 2026-09-25
@@ -73,7 +75,7 @@ class ParentController extends ApiController
     }
 
     /**
-     * Einstellungen je Kind ändern – B-42 (Benachrichtigung bei Check-in/-out).
+     * Einstellungen je Kind ändern (Benachrichtigung bei Check-in/-out).
      *
      * @bodyParam notification boolean required
      */
@@ -87,11 +89,11 @@ class ParentController extends ApiController
     }
 
     /**
-     * Stundenplan eines Kindes für eine Woche – B-43.
+     * Stundenplan eines Kindes für eine Woche.
      *
      * @queryParam week string ISO-Woche `YYYY-Www`. Example: 2026-W40
      */
-    public function stundenplan(Request $request, Child $child, FamilyWeeklyService $weekly): JsonResponse
+    public function stundenplan(Request $request, Child $child, FamilyWeeklyService $weekly, StundenplanDataProvider $provider): JsonResponse
     {
         $user = $request->user();
         abort_unless(Family::ownsChild($user, $child), 403);
@@ -105,8 +107,13 @@ class ParentController extends ApiController
         $data = $weekly->getWeeklyData($user, $weekStart);
         $entry = $data['children']->first(fn ($c) => $c['child']->id === $child->id);
 
+        $klasse = $entry['klasse'] ?? null;
+
         return response()->json(['data' => [
-            'klasse' => $entry['klasse'] ?? null,
+            'klasse' => $klasse,
+            // false: Klasse nicht im Stundenplan gefunden – die App bietet die Auswahl an.
+            'klasse_gefunden' => $klasse !== null && in_array($klasse, array_column($provider->klassen(), 'kurzform'), true),
+            'klasse_auswahl' => $child->stundenplan_klasse,
             'week_start' => $data['week_start']->toDateString(),
             'days' => collect($entry['days'] ?? [])->map(fn ($d, $day) => [
                 'day' => $day,
@@ -120,7 +127,36 @@ class ParentController extends ApiController
     }
 
     /**
-     * Arbeitsgemeinschaften, für die die eigenen Kinder in Frage kommen – B-45.
+     * Klassen des aktiven Stundenplans (Auswahl, wenn die Klasse eines Kindes
+     * nicht über seine Gruppen gefunden wird).
+     */
+    public function stundenplanKlassen(StundenplanDataProvider $provider): JsonResponse
+    {
+        return response()->json(['data' => $provider->klassen()]);
+    }
+
+    /**
+     * Stundenplan-Klasse eines Kindes festlegen; `null` hebt die Auswahl auf
+     * (dann gilt wieder die Zuordnung über die Gruppen).
+     *
+     * @bodyParam klasse string Kurzform aus `parent/stundenplan/klassen`. Example: 1Frue
+     */
+    public function updateStundenplanKlasse(Request $request, Child $child, StundenplanDataProvider $provider): JsonResponse
+    {
+        abort_unless(Family::mayManage($request->user(), $child), 403, 'Sie sind für dieses Kind nicht berechtigt.');
+        $data = $request->validate(['klasse' => ['present', 'nullable', 'string', 'max:50']]);
+        $klasse = $data['klasse'];
+        if ($klasse !== null && ! in_array($klasse, array_column($provider->klassen(), 'kurzform'), true)) {
+            throw ValidationException::withMessages(['klasse' => 'Diese Klasse gibt es im Stundenplan nicht.']);
+        }
+
+        $child->update(['stundenplan_klasse' => $klasse]);
+
+        return response()->json(['data' => ['klasse_auswahl' => $klasse], 'message' => 'Klasse gespeichert.']);
+    }
+
+    /**
+     * Arbeitsgemeinschaften, für die die eigenen Kinder in Frage kommen.
      */
     public function ags(Request $request): JsonResponse
     {
@@ -208,7 +244,7 @@ class ParentController extends ApiController
     }
 
     /**
-     * Reinigungsplan der Familie – B-51.
+     * Reinigungsplan der Familie.
      */
     public function reinigung(Request $request): JsonResponse
     {

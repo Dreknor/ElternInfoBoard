@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Model\listen_termine;
 use App\Model\Termin;
 use App\Model\User;
+use App\Settings\GeneralSetting;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Components\Event;
 
@@ -27,7 +30,8 @@ class ICalController extends Controller
             $prefix = ($user->calendar_prefix != null) ? '('.$user->calendar_prefix.') ' : '';
 
             if ($user->releaseCalendar) {
-                $Termine = $user->termine;
+                // Ausgeblendete Termine fehlen auch im Kalender-Abo (B-102)
+                $Termine = $user->visibleTermine()->notHiddenFor($user)->get();
 
                 // Termine aus Listen holen
                 // Listentermine der ganzen Familie (FamilyResolver)
@@ -97,6 +101,8 @@ class ICalController extends Controller
                         ->fullDay());
                 }
 
+                $this->logFetch($user);
+
                 return response($icalObject->get(), 200, [
                     'Content-Type' => 'text/calendar; charset=utf-8',
                     'Content-Disposition' => 'attachment; filename="'.config('app.name').'.ics"',
@@ -111,10 +117,114 @@ class ICalController extends Controller
     }
 
     /**
+     * Sicherheitsprotokoll für den anmeldefreien Abruf: Kalender-Clients pollen mehrmals täglich,
+     * daher höchstens ein Eintrag je Konto und IP-Adresse und Tag.
+     */
+    private function logFetch(User $user): void
+    {
+        try {
+            $key = 'ical-fetch:'.$user->id.':'.hash('sha256', (string) request()->ip()).':'.now()->format('Y-m-d');
+            if (! \Illuminate\Support\Facades\Cache::add($key, 1, now()->endOfDay())) {
+                return;
+            }
+        } catch (\Throwable) {
+            return;
+        }
+
+        \App\Services\Security\SecurityLog::record('ical.fetch', $user->id);
+    }
+
+    /**
+     * Öffentliche Termine als HTML-Seite (ohne Anmeldung) inkl. schema.org-Event-Daten (JSON-LD).
+     */
+    public function publicHtml(): View
+    {
+        $settings = app(GeneralSetting::class);
+        abort_unless($settings->public_termine_enabled, 404);
+
+        $termine = Termin::query()
+            ->where('public', 1)
+            ->where('ende', '>=', Carbon::today())
+            ->orderBy('start')
+            ->get();
+
+        $pageUrl = route('termine.public');
+
+        return view('termine.public', [
+            'termineNachMonat' => $termine->groupBy(
+                fn (Termin $termin) => $termin->start->timezone('Europe/Berlin')->locale('de')->isoFormat('MMMM YYYY')
+            ),
+            'icsUrl' => url('ical/publicEvents'),
+            'pageUrl' => $pageUrl,
+            'jsonLd' => $this->publicJsonLd($termine, $settings, $pageUrl),
+        ]);
+    }
+
+    /**
+     * Strukturierte Daten nach schema.org/Event, damit Suchmaschinen (Google) die Termine
+     * als Veranstaltungen erkennen. Google verlangt für Rich Results einen Ort mit Adresse –
+     * dieser kommt aus den allgemeinen Einstellungen.
+     */
+    private function publicJsonLd(Collection $termine, GeneralSetting $settings, string $pageUrl): array
+    {
+        $appName = $settings->app_name ?: config('app.name');
+
+        $organizer = [
+            '@type' => 'Organization',
+            'name' => $appName,
+            'url' => url('/'),
+        ];
+
+        $location = [
+            '@type' => 'Place',
+            'name' => $settings->public_termine_location_name ?: $appName,
+        ];
+        $address = array_filter([
+            'streetAddress' => $settings->public_termine_location_street,
+            'postalCode' => $settings->public_termine_location_postal_code,
+            'addressLocality' => $settings->public_termine_location_city,
+        ]);
+        if ($address !== []) {
+            $location['address'] = ['@type' => 'PostalAddress'] + $address + ['addressCountry' => 'DE'];
+        }
+
+        $logo = ($settings->logo ?? 'logo.png') === 'logo.png'
+            ? asset('img/logo.png')
+            : url('storage/img/'.$settings->logo);
+
+        $events = $termine->map(function (Termin $termin) use ($organizer, $location, $logo, $pageUrl) {
+            $start = $termin->start->timezone('Europe/Berlin');
+            $ende = $termin->ende->timezone('Europe/Berlin');
+
+            return [
+                '@type' => 'Event',
+                '@id' => $pageUrl.'#termin-'.$termin->id,
+                'name' => $termin->terminname,
+                'url' => $pageUrl.'#termin-'.$termin->id,
+                // Ganztägige Termine nur mit Datum, sonst ISO 8601 mit Zeitzonen-Offset
+                'startDate' => $termin->fullDay ? $start->toDateString() : $start->toIso8601String(),
+                'endDate' => $termin->fullDay ? $ende->toDateString() : $ende->toIso8601String(),
+                'eventStatus' => 'https://schema.org/EventScheduled',
+                'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
+                'location' => $location,
+                'organizer' => $organizer,
+                'image' => [$logo],
+            ];
+        })->values()->all();
+
+        return [
+            '@context' => 'https://schema.org',
+            '@graph' => $events,
+        ];
+    }
+
+    /**
      * @return Response
      */
     public function publicICal()
     {
+        abort_unless(app(GeneralSetting::class)->public_termine_enabled, 404);
+
         $Termine = Termin::where('public', 1)->get();
         $Termine = $Termine->unique('id');
         $Termine = $Termine->sortBy('start');

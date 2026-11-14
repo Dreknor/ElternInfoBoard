@@ -36,7 +36,7 @@ Route::middleware('throttle:external-api')->group(function () {
      * Stundenplan Import API (API-Key-Auth)
      */
     Route::post('stundenplan/import', [\App\Http\Controllers\API\StundenplanImportController::class, 'import']);
-    Route::get('stundenplan/status', [\App\Http\Controllers\API\StundenplanImportController::class, 'status']);
+    Route::get('stundenplan/status', [\App\Http\Controllers\API\StundenplanImportController::class, 'apiStatus']);
 });
 
 /*

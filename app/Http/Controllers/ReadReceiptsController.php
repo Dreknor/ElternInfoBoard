@@ -18,9 +18,20 @@ class ReadReceiptsController extends Controller
 {
     public function store(Request $request)
     {
+        $request->validate(['post_id' => 'required|integer']);
+
+        // Nur bestehende Beiträge, die der Nutzer sehen darf (wie in der API, B-13).
+        $post = Post::find($request->integer('post_id'));
+        if (! $post || $request->user()->cannot('view', $post)) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Diese Nachricht ist nicht verfügbar.',
+            ]);
+        }
+
         $receipt = ReadReceipts::firstOrCreate(
             [
-                'post_id' => $request->post_id,
+                'post_id' => $post->id,
                 'user_id' => auth()->id(),
             ],
             [
@@ -81,7 +92,7 @@ class ReadReceiptsController extends Controller
         $posts = Post::query()
             ->where('read_receipt', '1')
             ->where('released', '1')
-            ->with('users')
+            ->with(['users', 'recipientUsers'])
             ->with('receipts')
             ->get();
 
@@ -101,7 +112,7 @@ class ReadReceiptsController extends Controller
                 continue;
             }
 
-            $users = $post->users->unique('id');
+            $users = $post->recipients();
             $receipts = $post->receipts;
 
             foreach ($users as $user) {
@@ -172,7 +183,7 @@ class ReadReceiptsController extends Controller
         $posts = Post::query()
             ->where('read_receipt', '1')
             ->where('released', '1')
-            ->with('users')
+            ->with(['users', 'recipientUsers'])
             ->with('receipts')
             ->get();
 
@@ -190,7 +201,7 @@ class ReadReceiptsController extends Controller
                 continue;
             }
 
-            $users = $post->users->unique('id');
+            $users = $post->recipients();
             $receipts = $post->receipts;
 
             foreach ($users as $user) {

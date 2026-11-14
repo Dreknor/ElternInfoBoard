@@ -113,7 +113,7 @@ class CleanupSchickzeitenNonCareChildren extends Command
                     $progressBar->advance();
                 }
 
-                Log::info("Schickzeiten für Kind {$child->first_name} {$child->last_name} (ID: {$child->id}) gelöscht – Kind ist nicht mehr im Care-Modul.");
+                Log::info("Schickzeiten für Kind (ID: {$child->id}) gelöscht – Kind ist nicht mehr im Care-Modul.");
             }
 
             $progressBar->finish();

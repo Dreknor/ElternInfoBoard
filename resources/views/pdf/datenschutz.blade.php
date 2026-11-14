@@ -244,7 +244,7 @@
         <tbody>
             @foreach($user->children_rel as $child)
                 <tr>
-                    <td>{{ $child->first_name }} {{ $child->last_name }}</td>
+                    <td>{{ $child->first_name }} {{ $child->last_name }}@if(\App\Support\StudentAccounts::enabled() && $child->studentAccount)<br><small>Schülerkonto: {{ $child->studentAccount->username }} ({{ $child->studentAccount->is_active ? 'aktiv' : 'gesperrt' }})</small>@endif</td>
                     <td>{{ $child->group?->name ?? '–' }}</td>
                     <td>
                         {{ $child->pivot->relationType()->label() }}:
@@ -630,6 +630,30 @@
                     <td>Stufe {{ $log->level }}</td>
                     <td>{{ $log->channel }}</td>
                     <td>{{ $log->sent_at->format('d.m.Y H:i') }} Uhr</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@endif
+
+{{-- ===== SICHERHEITSPROTOKOLL ===== --}}
+@if(!empty($securityEvents))
+    <div class="section-header" style="background:#475569;">Sicherheitsprotokoll</div>
+    <div style="padding:4px 8px;font-size:8px;background:#f1f5f9;color:#334155;border-bottom:1px solid #cbd5e1;">
+        Einträge zu Ihrem Konto (Anmeldungen, Downloads, sicherheitsrelevante Vorgänge). Zweck: Aufklärung von Sicherheitsvorfällen.
+        Aufbewahrung {{ config('security_log.retention_days') }} Tage; die IP-Adresse wird nach {{ config('security_log.anonymize_ip_after_days') }} Tagen gekürzt und der User-Agent entfernt.
+    </div>
+    <table>
+        <thead><tr><th>Zeitpunkt</th><th>Ereignis</th><th>IP-Adresse</th><th>User-Agent</th><th>Kontext</th><th>Durch andere Person</th></tr></thead>
+        <tbody>
+            @foreach($securityEvents as $entry)
+                <tr>
+                    <td>{{ \Carbon\Carbon::parse($entry['zeitpunkt'])->format('d.m.Y H:i') }} Uhr</td>
+                    <td>{{ $entry['ereignis'] }}</td>
+                    <td>{{ $entry['ip_adresse'] ?? '–' }}</td>
+                    <td>{{ $entry['user_agent'] ? \Illuminate\Support\Str::limit($entry['user_agent'], 60) : '–' }}</td>
+                    <td>@if($entry['kontext']){{ collect($entry['kontext'])->map(fn ($v, $k) => $k.'='.(is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : $v))->implode(', ') }}@else–@endif</td>
+                    <td>{{ $entry['durch_andere_person_ausgeloest'] ? 'ja' : 'nein' }}</td>
                 </tr>
             @endforeach
         </tbody>

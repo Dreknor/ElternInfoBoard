@@ -38,6 +38,19 @@ class NativePushService
         return [$title, mb_strimwidth(strip_tags($message), 0, 180, '…')];
     }
 
+    /**
+     * Android-Kanal je Ton-Wahl (B-101). Die App legt `mitteilungen_ton`/`mitteilungen_still` an;
+     * ältere App-Versionen (`sound` = null) kennen nur `default`.
+     */
+    public static function androidChannel(UserDevice $device): string
+    {
+        return match ($device->sound) {
+            true => 'mitteilungen_ton',
+            false => 'mitteilungen_still',
+            default => 'default',
+        };
+    }
+
     /** Nur an Nutzer, die App-Push für die Kategorie zulassen (Einstellungen → Benachrichtigungen). */
     public function send(array $userIds, string $title, string $message, ?string $url, string $type): void
     {
@@ -55,13 +68,13 @@ class NativePushService
             $result = match ($device->provider) {
                 UserDevice::PROVIDER_APNS => $this->apns->isConfigured()
                     ? $this->apns->send($device->token, [
-                        'aps' => ['alert' => ['title' => $title, 'body' => $body], 'sound' => 'default'],
+                        'aps' => ['alert' => ['title' => $title, 'body' => $body]] + ($device->sound === false ? [] : ['sound' => 'default']),
                         'type' => $data['type'],
                         'id' => $data['id'],
                     ])
                     : null,
                 UserDevice::PROVIDER_FCM => $this->fcm->isConfigured()
-                    ? $this->fcm->send($device->token, $title, $body, $data)
+                    ? $this->fcm->send($device->token, $title, $body, $data, self::androidChannel($device))
                     : null,
                 default => null,
             };

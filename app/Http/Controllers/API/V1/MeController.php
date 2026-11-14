@@ -11,6 +11,7 @@ use App\Services\App\Family;
 use App\Services\App\MessengerUnread;
 use App\Services\App\Modules;
 use App\Services\App\TodoService;
+use App\Services\IntegrationTokens;
 use App\Services\Notifications\NotificationPreferences;
 use App\Services\ThemeService;
 use App\Settings\GeneralSetting;
@@ -21,12 +22,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 /**
- * @group App: Profil
+ * @group Profil
  */
 class MeController extends Controller
 {
     /**
-     * Alles für den App-Start in einer Anfrage (B-02).
+     * Alles für den App-Start in einer Anfrage.
      *
      * Nutzer, Rechte, Module, Kinder, Zähler, Einstellungen, Theme und Logos.
      */
@@ -57,6 +58,8 @@ class MeController extends Controller
             'icon_url' => InstanceController::imageUrl($general->favicon, 'app_logo.png'),
             'school_name' => $general->app_name ?: config('app.name'),
             'ical_url' => $user->releaseCalendar ? url($user->uuid.'/ical') : null,
+            // Instanzspezifischer Chat (null, wenn nicht freigeschaltet/angeboten)
+            'chat' => app(\App\Services\CustomScripts\CustomScriptRenderer::class)->appChat(),
         ]]);
     }
 
@@ -69,7 +72,7 @@ class MeController extends Controller
     }
 
     /**
-     * Profil ändern (B-70).
+     * Profil ändern.
      *
      * Name und E-Mail ändert die Schule; hier nur Kontakt- und Benachrichtigungseinstellungen.
      */
@@ -116,8 +119,8 @@ class MeController extends Controller
         $user = $request->user();
         $user->update(['password' => Hash::make($request->password), 'changePassword' => false]);
 
-        // Andere Sitzungen (Tokens) beenden, das aktuelle bleibt.
-        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+        // Andere Sitzungen (Tokens, „Angemeldet bleiben“) beenden, das aktuelle Token bleibt.
+        \App\Services\Security\AccountSecurity::passwordChanged($user, 'account.password_changed', $user->currentAccessToken()->id, true, ['client' => 'app']);
 
         return response()->json(['message' => 'Passwort geändert.']);
     }
@@ -135,18 +138,27 @@ class MeController extends Controller
             'last_used_at' => $t->last_used_at?->toIso8601String(),
             'created_at' => $t->created_at?->toIso8601String(),
             'current' => $t->id === $current,
+            'integration' => IntegrationTokens::isIntegration($t),
+            'expires_at' => $t->expires_at?->toIso8601String(),
         ])]);
     }
 
+    /** Einzelnes Gerät (Token) abmelden. */
     public function destroyToken(Request $request, int $id): JsonResponse
     {
-        $request->user()->tokens()->where('id', $id)->delete();
+        $token = $request->user()->tokens()->where('id', $id)->first();
+        if ($token) {
+            \App\Services\Security\AccountSecurity::tokenRevoked($token, 'user_revoked');
+            $token->delete();
+        }
 
         return response()->json(['message' => 'Gerät abgemeldet.']);
     }
 
     /**
-     * Push-Gerät registrieren (B-04). Ein Token gehört immer genau einem Nutzer.
+     * Push-Gerät registrieren.
+     *
+     * Ein Token gehört immer genau einem Nutzer.
      */
     public function storeDevice(Request $request): JsonResponse
     {
@@ -156,6 +168,8 @@ class MeController extends Controller
             'platform' => 'nullable|string|max:20',
             'device_name' => 'nullable|string|max:255',
             'app_version' => 'nullable|string|max:20',
+            // Ton bei Mitteilungen (B-101); ältere App-Versionen senden das Feld nicht.
+            'sound' => 'nullable|boolean',
         ]);
 
         UserDevice::updateOrCreate(
@@ -166,6 +180,7 @@ class MeController extends Controller
         return response()->json(['message' => 'Gerät registriert.'], 201);
     }
 
+    /** Push-Gerät abmelden. */
     public function destroyDevice(Request $request, string $token): JsonResponse
     {
         UserDevice::where('user_id', $request->user()->id)->where('token', $token)->delete();
@@ -174,7 +189,9 @@ class MeController extends Controller
     }
 
     /**
-     * Benachrichtigungskanäle je Kategorie. `channels.<kanal>` = null: Kanal für diese Kategorie nicht verfügbar.
+     * Benachrichtigungskanäle je Kategorie.
+     *
+     * `channels.<kanal>` = null: Kanal für diese Kategorie nicht verfügbar.
      * `digest`: Rhythmus der E-Mail-Zusammenfassung für neue Nachrichten.
      */
     public function notificationSettings(Request $request): JsonResponse
@@ -186,6 +203,8 @@ class MeController extends Controller
     }
 
     /**
+     * Benachrichtigungskanäle ändern.
+     *
      * @bodyParam categories object Je Kategorie die Kanäle, z. B. {"nachrichten": {"app": true, "mail": false}}.
      * @bodyParam digest string daily|weekly
      */
@@ -210,7 +229,7 @@ class MeController extends Controller
     }
 
     /**
-     * Datenschutz-Auskunft: gespeicherte Daten als JSON (B-71).
+     * Datenschutz-Auskunft: gespeicherte Daten als JSON.
      */
     public function datenschutz(Request $request): JsonResponse
     {

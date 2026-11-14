@@ -345,7 +345,7 @@
     </form>
 
     {{-- ================================================================
-         Verknüpfungsvorschläge (Initial-Linking-Workflow, TODO-08)
+         Verknüpfungsvorschläge (Initial-Linking-Workflow)
     ================================================================ --}}
     @include('settings.tabs._ucs-link-candidates')
 

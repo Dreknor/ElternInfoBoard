@@ -48,7 +48,9 @@ class FamilyWeeklyService
         // was beim FileCache-Serialize zu Problemen führt (insb. mit Sanctum-Mock-Tokens in Tests).
         $children->each(fn (Child $child) => $child->setRelations([]));
 
-        $cacheKey = "family_weekly_{$user->id}_{$weekStart->format('Y-W')}";
+        // Gewählte Stundenplan-Klassen im Schlüssel: eine Änderung in der App wirkt sofort.
+        $klassen = md5($children->map(fn (Child $c) => $c->id.':'.$c->stundenplan_klasse)->implode(','));
+        $cacheKey = "family_weekly_{$user->id}_{$weekStart->format('Y-W')}_{$klassen}";
 
         return Cache::remember($cacheKey, 300, function () use ($children, $weekStart, $weekEnd) {
             $holidays       = Holiday::betweenDates($weekStart, $weekEnd)->get();
@@ -64,7 +66,7 @@ class FamilyWeeklyService
                 'week_start' => $weekStart,
                 'week_end'   => $weekEnd,
                 'week_label' => 'KW ' . $weekStart->isoWeek() . ': ' .
-                                $weekStart->format('d.') . '–' . $weekEnd->format('d. F Y'),
+                                $weekStart->format('d.') . '–' . $weekEnd->translatedFormat('d. F Y'),
             ];
         });
     }
@@ -79,7 +81,7 @@ class FamilyWeeklyService
         ?array $stundenplanData,
         Collection $holidays,
     ): array {
-        $klasseKurzform = $this->getKlasseKurzform($child);
+        $klasseKurzform = $this->getKlasseKurzform($child, $stundenplanData);
 
         $days = [];
         for ($i = 0; $i < 5; $i++) {
@@ -114,9 +116,16 @@ class FamilyWeeklyService
 
     /**
      * Ermittelt die Klassen-Kurzform (für Stundenplan-Lookup).
+     *
+     * Bevorzugt die Klasse, die im Stundenplan tatsächlich vorkommt; sonst der
+     * Gruppenname (Vertretungen können auch ohne importierten Stundenplan existieren).
      */
-    private function getKlasseKurzform(Child $child): ?string
+    private function getKlasseKurzform(Child $child, ?array $stundenplanData): ?string
     {
+        if ($stundenplanData && ($kurzform = $this->stundenplanProvider->klassenForChild($child, $stundenplanData)[0] ?? null)) {
+            return $kurzform;
+        }
+
         $groupId = $child->class_id ?? $child->group_id;
         if (! $groupId) {
             return null;
@@ -278,7 +287,7 @@ class FamilyWeeklyService
             'week_start' => $weekStart,
             'week_end'   => $weekEnd,
             'week_label' => 'KW ' . $weekStart->isoWeek() . ': ' .
-                            $weekStart->format('d.') . '–' . $weekEnd->format('d. F Y'),
+                            $weekStart->format('d.') . '–' . $weekEnd->translatedFormat('d. F Y'),
         ];
     }
 }

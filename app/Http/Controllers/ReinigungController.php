@@ -21,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
@@ -82,7 +83,7 @@ class ReinigungController extends Controller implements HasMiddleware
 
     public function autoCreateStart($bereich)
     {
-        $task = ReinigungsTask::all();
+        $task = ReinigungsTask::query()->orderBy('task')->get();
         $reinigungSetting = new ReinigungSetting;
 
         $bereichGroups = Group::query();
@@ -108,6 +109,7 @@ class ReinigungController extends Controller implements HasMiddleware
             'bereichName' => $bereich,
             'aufgaben' => $task,
             'roles' => Role::all(),
+            'skipHolidays' => $reinigungSetting->skip_holidays,
         ]);
     }
 
@@ -185,12 +187,14 @@ class ReinigungController extends Controller implements HasMiddleware
         $date = $start->copy();
 
         // Vorschlag 2 - Ferienausschluss: nur aktiv, wenn per Setting eingeschaltet.
-        $holidayService = $reinigungSetting->skip_holidays ? new HolidayService : null;
+        // Maßgeblich ist die ganze Woche (Mehrheit der Schultage Mo–Fr), nicht nur
+        // der Montag - sonst würden z. B. Weihnachtsferien ab Mittwoch nicht erkannt.
+        $holidayService = $reinigungSetting->skip_holidays ? app(HolidayService::class) : null;
 
         $created = collect();
 
         while ($date->lte($ende)) {
-            if ($holidayService and $holidayService->isHoliday($date)) {
+            if ($holidayService and $holidayService->holidayForWeek($date)) {
                 $date->addWeek();
 
                 continue;
@@ -248,6 +252,8 @@ class ReinigungController extends Controller implements HasMiddleware
     public function export($bereich)
     {
         if (auth()->user()->can('edit reinigung')) {
+            \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'reinigung', 'format' => 'xlsx']);
+
             return Excel::download(new ReinigungExport($bereich), Carbon::now()->format('Y-m-d').'_'.$bereich.'_Reinigung.xlsx');
         }
 
@@ -334,14 +340,43 @@ class ReinigungController extends Controller implements HasMiddleware
         }
 
         return view('reinigung.show', [
+            'ferienWochen' => $ferienWochen = $this->ferienWochen($datum, $ende),
+            // Hinweis für die Verwaltung: ohne geladene Ferien kann nichts markiert werden
+            'ferienFehlen' => $ferienWochen === [] && ! \App\Model\Holiday::query()
+                ->where('bundesland', (new \App\Settings\CareSetting)->bundesland)
+                ->whereDate('end', '>=', now())
+                ->exists(),
+            'ferienAuslassen' => (bool) $reinigungSetting->skip_holidays,
             'Bereiche' => $Bereiche,
             'Familien' => $Reinigung,
             'datum' => $datum,
             'user' => $user,
             'ende' => $ende,
-            'aufgaben' => ReinigungsTask::all(),
+            'aufgaben' => ReinigungsTask::query()->orderBy('task')->get(),
             'combinedMode' => $combined,
         ]);
+    }
+
+    /**
+     * Ferienwochen im Zeitraum als [Montag (Y-m-d) => Ferienname].
+     * Wird immer ermittelt, damit Ferienwochen im Plan markiert sind - unabhängig
+     * davon, ob sie beim automatischen Befüllen ausgelassen werden (skip_holidays).
+     *
+     * @return array<string, string>
+     */
+    protected function ferienWochen(Carbon $von, Carbon $bis): array
+    {
+        $holidayService = app(HolidayService::class);
+        $wochen = [];
+
+        for ($woche = $von->copy()->startOfWeek(); $woche->lte($bis); $woche->addWeek()) {
+            $holiday = $holidayService->holidayForWeek($woche);
+            if ($holiday) {
+                $wochen[$woche->format('Y-m-d')] = Str::ucfirst((string) $holiday->name);
+            }
+        }
+
+        return $wochen;
     }
 
     /**
@@ -397,7 +432,7 @@ class ReinigungController extends Controller implements HasMiddleware
             ->orderBy('datum')
             ->get();
 
-        $Aufgaben = ReinigungsTask::all();
+        $Aufgaben = ReinigungsTask::query()->orderBy('task')->get();
 
         return view('reinigung.edit', [
             'Bereich' => $Bereich,

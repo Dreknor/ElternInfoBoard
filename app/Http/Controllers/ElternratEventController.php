@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Services\Notifications\NotificationAccess;
 use App\Services\Notifications\NotificationCategory;
 use App\Services\Notifications\NotificationPreferences;
 
@@ -75,7 +76,55 @@ class ElternratEventController extends Controller implements HasMiddleware
 
         return redirect()->route('elternrat.events.index')->with([
             'type' => 'success',
-            'meldung' => 'Termin erstellt',
+            'Meldung' => 'Termin erstellt',
+        ]);
+    }
+
+    /**
+     * Formular zum Bearbeiten eines Termins
+     */
+    public function edit(ElternratEvent $event)
+    {
+        if (! $event->canBeManagedBy(auth()->user())) {
+            return redirect()->route('elternrat.events.index')->with([
+                'type' => 'danger',
+                'Meldung' => 'Keine Berechtigung',
+            ]);
+        }
+
+        return view('elternrat.events.create', ['event' => $event]);
+    }
+
+    /**
+     * Termin aktualisieren
+     */
+    public function update(Request $request, ElternratEvent $event)
+    {
+        if (! $event->canBeManagedBy($request->user())) {
+            return redirect()->route('elternrat.events.index')->with([
+                'type' => 'danger',
+                'Meldung' => 'Keine Berechtigung',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+            'location' => 'nullable|string|max:255',
+            'send_reminder' => 'boolean',
+            'reminder_hours' => 'integer|min:1|max:168',
+        ]);
+
+        // Checkbox: nicht gesendet = aus
+        $validated['send_reminder'] = $request->boolean('send_reminder');
+
+        $event->update($validated);
+
+        return redirect()->route('elternrat.events.index')->with([
+            'type' => 'success',
+            'Meldung' => 'Termin aktualisiert',
         ]);
     }
 
@@ -99,7 +148,7 @@ class ElternratEventController extends Controller implements HasMiddleware
 
         return back()->with([
             'type' => 'success',
-            'meldung' => 'Teilnahmestatus aktualisiert',
+            'Meldung' => 'Teilnahmestatus aktualisiert',
         ]);
     }
 
@@ -108,18 +157,18 @@ class ElternratEventController extends Controller implements HasMiddleware
      */
     public function destroy(ElternratEvent $event)
     {
-        if (auth()->user()->can('delete elternrat file') || $event->created_by === auth()->id()) {
+        if ($event->canBeManagedBy(auth()->user())) {
             $event->delete();
 
             return redirect()->route('elternrat.events.index')->with([
                 'type' => 'success',
-                'meldung' => 'Termin gelöscht',
+                'Meldung' => 'Termin gelöscht',
             ]);
         }
 
         return back()->with([
             'type' => 'danger',
-            'meldung' => 'Keine Berechtigung',
+            'Meldung' => 'Keine Berechtigung',
         ]);
     }
 
@@ -153,7 +202,8 @@ class ElternratEventController extends Controller implements HasMiddleware
 
                 // Sende Erinnerung an alle Mitglieder
                 foreach ($users as $user) {
-                    if ($user->email && NotificationPreferences::allows($user, NotificationCategory::ELTERNRAT, 'mail')) {
+                    if ($user->email && NotificationAccess::allows($user, 'elternrat')
+                        && NotificationPreferences::allows($user, NotificationCategory::ELTERNRAT, 'mail')) {
                         try {
                             Mail::to($user->email)->send(
                                 new EventReminderMail($event, (int) $hoursUntilEvent)

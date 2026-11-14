@@ -8,6 +8,8 @@ use App\Model\Post;
 use App\Model\Reinigung;
 use App\Model\Termin;
 use App\Repositories\GroupsRepository;
+use App\Services\IndividualRecipients;
+use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
@@ -35,48 +37,101 @@ class TerminController extends Controller implements HasMiddleware
     }
 
     /**
+     * Dürfen Termine laut Einstellung veröffentlicht werden?
+     */
+    private function publicAllowed(): bool
+    {
+        return app(GeneralSetting::class)->public_termine_enabled;
+    }
+
+    /**
      * Display a listing of all termine.
      *
      * @return View
      */
     public function index()
     {
-        if (auth()->user()->can('view all')) {
-            $termine = Termin::query()
-                ->with('groups')
-                ->where(function ($query) {
-                    $query->where('start', '>=', Carbon::today())
-                        ->orWhere('ende', '>=', Carbon::today());
-                })
-                ->orderBy('start')
-                ->get();
-        } else {
-            $termine = Termin::query()
-                ->with('groups')
-                ->where(function ($query) {
-                    $query->where('start', '>=', Carbon::today())
-                        ->orWhere('ende', '>=', Carbon::today());
-                })
-                ->whereHas('groups', function ($query) {
-                    $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
-                })
-                ->orderBy('start')
-                ->get();
+        $user = auth()->user();
+        // B-102: ausgeblendete Termine nur auf Wunsch (?ausgeblendet=1) zeigen, dann zum Wieder-Einblenden.
+        $showHidden = request()->boolean('ausgeblendet');
+
+        $query = Termin::query()
+            ->with(['groups', 'recipientUsers'])
+            ->where(function ($query) {
+                $query->where('start', '>=', Carbon::today())
+                    ->orWhere('ende', '>=', Carbon::today());
+            })
+            ->orderBy('start');
+
+        if (! $user->can('view all')) {
+            $query->forRecipient($user);
+        }
+
+        $hiddenIds = $user->hiddenTermine()->pluck('termine.id')->all();
+        $termine = $query->get();
+        $hiddenCount = $termine->whereIn('id', $hiddenIds)->count();
+        if (! $showHidden) {
+            $termine = $termine->whereNotIn('id', $hiddenIds);
         }
 
         // Eigene Reinigungsdienste der Familie als (nicht gespeicherte) Wochentermine ergänzen
         $termine = $termine
-            ->concat(Reinigung::upcomingForFamily(auth()->user())->map->toTermin())
+            ->concat(Reinigung::upcomingForFamily($user)->map->toTermin())
             ->sortBy('start')
             ->values();
 
         return view('termine.index', [
             'termine' => $termine,
+            'hiddenIds' => $hiddenIds,
+            'hiddenCount' => $hiddenCount,
+            'showHidden' => $showHidden,
         ]);
+    }
+
+    /**
+     * Termin für sich ausblenden (B-102) – gilt auch in der App und im Kalender-Abo.
+     */
+    public function hide(int $termin): RedirectResponse
+    {
+        $model = $this->visibleTermin($termin);
+        auth()->user()->hiddenTermine()->syncWithoutDetaching([$model->id]);
+        Cache::forget('termine'.auth()->id());
+
+        return back()->with([
+            'type' => 'success',
+            'Meldung' => 'Der Termin „'.$model->terminname.'“ wird Ihnen nicht mehr angezeigt.',
+        ]);
+    }
+
+    /**
+     * Ausgeblendeten Termin wieder anzeigen (B-102).
+     */
+    public function unhide(int $termin): RedirectResponse
+    {
+        $model = $this->visibleTermin($termin);
+        auth()->user()->hiddenTermine()->detach($model->id);
+        Cache::forget('termine'.auth()->id());
+
+        return back()->with([
+            'type' => 'success',
+            'Meldung' => 'Der Termin „'.$model->terminname.'“ wird wieder angezeigt.',
+        ]);
+    }
+
+    private function visibleTermin(int $id): Termin
+    {
+        $query = Termin::query()->whereKey($id);
+        if (! auth()->user()->can('view all')) {
+            $query->forRecipient(auth()->user());
+        }
+
+        return $query->firstOrFail();
     }
 
     public function edit(Termin $termine)
     {
+        // Gleiche Berechtigung wie update() – vorher konnte jedes Konto jeden Termin samt Empfängern einsehen
+        abort_unless(auth()->user()->can('edit termin'), 403, 'Berechtigung fehlt');
 
         $groups = Cache::remember('groups', now()->addDay(), function () {
             return Group::active()->get();
@@ -108,15 +163,17 @@ class TerminController extends Controller implements HasMiddleware
         }
 
         try {
-            $termine->update(
+            $termine->fill(
                 [
                     'terminname' => $request->terminname,
                     'start' => $start,
                     'ende' => $ende,
                     'fullDay' => $request->fullDay,
-                    'public' => $request->public,
+                    'public' => $this->publicAllowed() && $request->boolean('public'),
                 ]
             );
+            \App\Support\AudienceField::apply($termine, $request);
+            $termine->save();
         } catch (\Exception $e) {
 
             Log::error('Termin: Fehler beim Aktualisieren des Termins: '.$e->getMessage());
@@ -130,6 +187,7 @@ class TerminController extends Controller implements HasMiddleware
         try {
             $gruppen = $this->grousRepository->getGroups($request->input('gruppen'));
             $termine->groups()->sync($gruppen);
+            IndividualRecipients::sync($termine, $request);
 
         } catch (\Exception $e) {
 
@@ -248,24 +306,28 @@ class TerminController extends Controller implements HasMiddleware
                 'start' => $start,
                 'ende' => $ende,
                 'fullDay' => $request->fullDay,
-                'public' => $request->public,
+                'public' => $this->publicAllowed() && $request->boolean('public'),
             ]);
+            \App\Support\AudienceField::apply($termin, $request);
             $termin->save();
 
             $gruppen = $request->input('gruppen');
             $gruppen = $this->grousRepository->getGroups($gruppen);
 
             $termin->groups()->attach($gruppen);
+            IndividualRecipients::sync($termin, $request);
 
-            $users = $termin->users;
+            // „nur für Schüler“: Eltern werden nicht benachrichtigt
+            if (! $termin->isStudentOnly()) {
+                $users = $termin->recipients();
 
-            $users->unique('id');
-
-            $termin->notify(
-                users: $users,
-                title: 'Neuer Termin',
-                message: 'Neuer Termin: '.$termin->terminname,
-                type: 'Termine');
+                $termin->notify(
+                    users: $users,
+                    title: 'Neuer Termin',
+                    message: 'Neuer Termin: '.$termin->terminname,
+                    type: 'Termine');
+            }
+            \App\Services\Students\StudentNotifier::terminCreated($termin);
 
             Cache::forget('termine'.auth()->id());
         } catch (\Exception $e) {
@@ -295,6 +357,7 @@ class TerminController extends Controller implements HasMiddleware
         Gate::authorize('delete', $termine);
 
         $termine->groups()->detach();
+        $termine->recipientUsers()->detach();
         $termine->delete();
 
         Cache::forget('termine'.auth()->id());

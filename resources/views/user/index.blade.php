@@ -29,6 +29,13 @@
                             <span class="md:hidden hidden sm:inline">Verein</span>
                         </a>
                     @endcan
+                    {{-- Schülerkonten: eigener Reiter, nur bei aktivem Modul (docs/konzept-schuelerkonten.md §1.1) --}}
+                    @if(\App\Support\StudentAccounts::enabled())
+                        <a href="{{ route('schuelerkonten.index') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-user-graduate"></i>
+                            <span class="hidden sm:inline">Schülerkonten</span>
+                        </a>
+                    @endif
                     @can('manage families')
                         <a href="{{ route('families.index') }}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-house-user"></i>
@@ -187,8 +194,7 @@
                                                 @csrf
                                                 @method('delete')
                                                 <button type="submit"
-                                                        class="btn btn-sm btn-danger user_ajax-delete"
-                                                        data-id="{{ $user->id }}"
+                                                        class="btn btn-sm btn-danger"
                                                         title="Benutzer löschen"
                                                         onclick="return confirm('Benutzer {{ addslashes($user->name) }} wirklich löschen?')">
                                                     <i class="fas fa-user-slash"></i>
@@ -322,33 +328,5 @@
 </div>
 
 @endsection
-
-@push('js')
-@can('edit user')
-<script src="{{ asset('js/plugins/sweetalert2.all.min.js') }}"></script>
-<script>
-    $('.user_ajax-delete').on('click', function (e) {
-        e.preventDefault();
-        var form = $(this).closest('form');
-        var name = $(this).closest('tr').find('td:nth-child(2)').text().trim()
-                || $(this).closest('.rounded-lg').find('.font-semibold').first().text().trim();
-
-        swal.fire({
-            title: "Benutzer wirklich entfernen?",
-            text: name ? '"' + name + '" wird gelöscht.' : '',
-            icon: "warning",
-            showCancelButton: true,
-            cancelButtonText: "Abbrechen",
-            confirmButtonText: "Ja, löschen",
-            confirmButtonColor: "#dc2626"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
-        });
-    });
-</script>
-@endcan
-@endpush
 
 

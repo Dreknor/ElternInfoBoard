@@ -3,9 +3,12 @@
 namespace App\Model;
 
 use App\Enums\GuardianRight;
+use App\Model\Scopes\ExcludeStudentAccounts;
 use App\Services\Family\FamilyResolver;
+use App\Services\Push\WebPushRouting;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Traits\Reacts;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,7 +37,12 @@ class User extends Authenticatable implements Auditable
     use HasFactory;
     use HasPushSubscriptions;
     use HasRelationships;
-    use HasRoles;
+    use HasRoles {
+        assignRole as protected traitAssignRole;
+        syncRoles as protected traitSyncRoles;
+        givePermissionTo as protected traitGivePermissionTo;
+        syncPermissions as protected traitSyncPermissions;
+    }
     use Notifiable;
     use \OwenIt\Auditing\Auditable;
     use Reacts;
@@ -45,6 +53,77 @@ class User extends Authenticatable implements Auditable
     {
         parent::boot();
         static::creating(fn ($foo) => $foo->uuid = Str::uuid());
+
+        // Schülerkonten fehlen in jeder Nutzerabfrage (docs/konzept-schuelerkonten.md §5).
+        static::addGlobalScope(new ExcludeStudentAccounts);
+
+        // Schülerkonten haben nie E-Mail, Benachrichtigungen, Kopie oder Messenger-Sichtbarkeit (§3, §5).
+        static::saving(function (self $user) {
+            if ($user->isStudent()) {
+                $user->email = null;
+                $user->benachrichtigung = 'off';
+                $user->sendCopy = 0;
+                $user->messenger_discoverable = false;
+                $user->track_login = false;
+                $user->changeSettings = false;
+                $user->publicMail = null;
+                $user->publicPhone = null;
+                $user->phone = null;
+                $user->sorg2 = null;
+                $user->family_id = null;
+            }
+        });
+    }
+
+    /**
+     * Schülerkonten bekommen nie Rollen oder Rechte (docs/konzept-schuelerkonten.md §5.2).
+     * Die Sperre greift für jeden Aufrufer, nicht nur für die Verwaltungsmasken.
+     */
+    public function assignRole(...$roles)
+    {
+        $this->guardStudentPermissions();
+
+        return $this->traitAssignRole(...$roles);
+    }
+
+    public function syncRoles(...$roles)
+    {
+        $this->guardStudentPermissions(! empty(array_filter(\Illuminate\Support\Arr::flatten($roles))));
+
+        return $this->traitSyncRoles(...$roles);
+    }
+
+    public function givePermissionTo(...$permissions)
+    {
+        $this->guardStudentPermissions();
+
+        return $this->traitGivePermissionTo(...$permissions);
+    }
+
+    public function syncPermissions(...$permissions)
+    {
+        $this->guardStudentPermissions(! empty(array_filter(\Illuminate\Support\Arr::flatten($permissions))));
+
+        return $this->traitSyncPermissions(...$permissions);
+    }
+
+    private function guardStudentPermissions(bool $granting = true): void
+    {
+        if ($granting && $this->isStudent()) {
+            throw new \LogicException('Schülerkonten erhalten keine Rollen oder Rechte.');
+        }
+    }
+
+    /** Schülerkonten bekommen nie Mails (docs/konzept-schuelerkonten.md §3). */
+    public function routeNotificationForMail($notification = null): ?string
+    {
+        return $this->isStudent() ? null : $this->email;
+    }
+
+    /** Browser-Abos ohne die Geräte, auf denen die App bereits Push erhält (sonst doppelte Mitteilungen). */
+    public function routeNotificationForWebPush(): EloquentCollection
+    {
+        return WebPushRouting::subscriptionsFor($this);
     }
 
     /**
@@ -57,6 +136,7 @@ class User extends Authenticatable implements Auditable
         'is_active', 'deactivated_at', 'messenger_discoverable',
         'ucs_uuid', 'ucs_username', 'ucs_oidc_sub', 'ucs_school', 'ucs_synced_at', 'ucs_source',
         'family_id',
+        'account_type', 'username',
     ];
 
     /**
@@ -65,7 +145,7 @@ class User extends Authenticatable implements Auditable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password', 'remember_token', 'student_code_hash',
     ];
 
     /**
@@ -82,11 +162,55 @@ class User extends Authenticatable implements Auditable
             'last_online_at' => 'datetime',
             'track_login' => 'boolean',
             'changeSettings' => 'boolean',
-            'is_active' => 'boolean',        // TODO-2.5
-            'deactivated_at' => 'datetime',  // TODO-2.5
+            'is_active' => 'boolean',
+            'deactivated_at' => 'datetime',
             'messenger_discoverable' => 'boolean',
             'ucs_synced_at' => 'datetime',
+            'student_code_expires_at' => 'datetime',
+            'student_consent_at' => 'datetime',
         ];
+    }
+
+    /** Kontoart: normales Konto (Eltern, Mitarbeitende, Verwaltung). */
+    public const ACCOUNT_STANDARD = 'standard';
+
+    /** Kontoart: Schülerkonto (docs/konzept-schuelerkonten.md §3). */
+    public const ACCOUNT_STUDENT = 'student';
+
+    /**
+     * Ist das ein Schülerkonto? Die einzige Abfrage der Kontoart im restlichen Code.
+     */
+    public function isStudent(): bool
+    {
+        return $this->account_type === self::ACCOUNT_STUDENT;
+    }
+
+    /**
+     * Nur normale Konten. Entspricht dem globalen Scope ExcludeStudentAccounts; bleibt für
+     * Abfragen, die globale Scopes aufheben (`withoutGlobalScopes()`).
+     */
+    public function scopeWithoutStudents(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('account_type'), '!=', self::ACCOUNT_STUDENT);
+    }
+
+    /** Normale Konten und Schülerkonten (nur Anmeldung, Schülerverwaltung, Schüleransicht). */
+    public function scopeWithStudents(Builder $query): Builder
+    {
+        return $query->withoutGlobalScope(ExcludeStudentAccounts::class);
+    }
+
+    /** Nur Schülerkonten. */
+    public function scopeStudents(Builder $query): Builder
+    {
+        return $query->withoutGlobalScope(ExcludeStudentAccounts::class)
+            ->where($query->qualifyColumn('account_type'), self::ACCOUNT_STUDENT);
+    }
+
+    /** Das Kind, zu dem dieses Schülerkonto gehört (`children.user_id`). */
+    public function studentChild(): HasOne
+    {
+        return $this->hasOne(Child::class, 'user_id');
     }
 
     public function notifications(): HasMany
@@ -103,7 +227,7 @@ class User extends Authenticatable implements Auditable
 
     public function files(): Collection
     {
-        return $this->groups()->with('media')->get()->pluck('media')->unique('file_name')->sortBy('file_name')->flatten();
+        return $this->groups()->with('media')->get()->pluck('media')->flatten()->unique('file_name')->sortBy('file_name')->values();
     }
 
     /**
@@ -216,6 +340,39 @@ class User extends Authenticatable implements Auditable
     {
         return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post'])
             ->where('archiv_ab', '>', now());
+    }
+
+    /**
+     * Beiträge, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält
+     * (ohne Prüfung von Freigabe/Archiv, ohne Duplikate).
+     */
+    public function visiblePosts(): Builder
+    {
+        return Post::query()->forRecipient($this);
+    }
+
+    /**
+     * Termine, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält.
+     */
+    public function visibleTermine(): Builder
+    {
+        return Termin::query()->forRecipient($this);
+    }
+
+    /**
+     * Termine, die der Nutzer für sich ausgeblendet hat (B-102).
+     */
+    public function hiddenTermine(): BelongsToMany
+    {
+        return $this->belongsToMany(Termin::class, 'termin_hidden')->withTimestamps();
+    }
+
+    /**
+     * Listen, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält.
+     */
+    public function visibleListen(): Builder
+    {
+        return Liste::query()->forRecipient($this);
     }
 
     /**
@@ -405,5 +562,18 @@ class User extends Authenticatable implements Auditable
     public function reminderLogs(): HasMany
     {
         return $this->hasMany(ReminderLog::class, 'user_id');
+    }
+
+    /**
+     * Im Kontaktformular auswählbare Personen: alle mit der Permission
+     * „show in contact form“ – direkt vergeben oder über eine ihrer Rollen.
+     */
+    public function scopeContactRecipients(Builder $query): Builder
+    {
+        $permission = fn ($p) => $p->where('name', 'show in contact form');
+
+        return $query->where(fn ($q) => $q
+            ->whereHas('permissions', $permission)
+            ->orWhereHas('roles.permissions', $permission));
     }
 }

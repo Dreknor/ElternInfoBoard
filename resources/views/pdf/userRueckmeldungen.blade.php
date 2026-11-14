@@ -28,7 +28,7 @@
         Zeitpunkt: <b>{{$rueckmeldung->created_at->format('d.m.Y H:i')}}</b>
     </p>
     <p>
-        {!! $rueckmeldung->text !!}
+        @safeHtml($rueckmeldung->text)
     </p>
 
 @endforeach

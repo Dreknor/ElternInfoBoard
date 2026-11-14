@@ -39,6 +39,20 @@
             </form>
         </div>
 
+        {{-- Vereinsmitglieder: eigener Import mit Vorschau → Bestätigung --}}
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-2">
+                <i class="fas fa-users text-warning"></i> Vereinsmitglieder-Import
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                Verknüpft bestehende Konten über die E-Mail-Adresse mit Gruppe und Rolle „Vereinsmitglied“ und legt nur fehlende Konten neu an.
+                Andere Gruppen und Rollen bleiben unverändert. Vor dem Speichern wird eine <strong>Vorschau</strong> angezeigt.
+            </p>
+            <a href="{{ url('users/importVerein') }}" class="btn btn-outline-warning btn-sm">
+                <i class="fas fa-users mr-1"></i> Zum Vereinsmitglieder-Import
+            </a>
+        </div>
+
         <div class="p-6" x-data="importWizard()" x-cloak>
 
             {{-- Flash-Meldungen --}}

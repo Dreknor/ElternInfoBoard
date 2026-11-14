@@ -24,9 +24,10 @@
 - [Konfiguration (`.env`)](#konfiguration-env)
 - [Einstellungen in der Oberfläche](#einstellungen-in-der-oberfläche)
 - [Betrieb](#betrieb)
+- [Sicherheitsprotokoll und Datenschutz](#sicherheitsprotokoll-und-datenschutz)
 - [Updates](#updates)
 - [UCS@school-Integration](#ucsschool-integration)
-- [Eltern-App](#eltern-app)
+- [Eltern-App & MCP-Server](#eltern-app--mcp-server)
 - [Hilfreiche Artisan-Befehle](#hilfreiche-artisan-befehle)
 - [Entwicklung & Tests](#entwicklung--tests)
 - [Theme-System](#theme-system)
@@ -44,7 +45,7 @@ Zu den Kernfunktionen gehören:
 - 📢 **Informations-Feed** – Beiträge, Kommentare und Reaktionen nach Gruppen/Klassen
 - 💬 **Messenger** – Direktnachrichten mit Lesebestätigungen und Meldungen
 - 📋 **Listen & Anmeldungen** – digitale Eintragungslisten mit Terminen
-- 📊 **Umfragen & Abfragen** – interaktive Umfragen und strukturierte Abfragen
+- 📊 **Umfragen & Elternabfragen** – Umfragen und strukturierte Abfragen mit Fristen
 - 🔔 **Push-Benachrichtigungen** – Web-Push (VAPID) und native App-Mitteilungen
 - 📧 **E-Mail-Benachrichtigungen** – tägliche/wöchentliche Zusammenfassungen
 - 🤒 **Krankmeldungen** – digitale Krankmeldung mit Tagesbericht
@@ -150,6 +151,8 @@ php artisan db:seed --force        # Rollen, Rechte, Module, Grundeinstellungen
 php artisan storage:link
 ```
 
+> Über den Symlink sind nur Logo und Favicon öffentlich. Hochgeladene Dateien (Beiträge, Messenger, Krankmeldungen …) liegen auf der privaten Disk `media` (`storage/app/media`) und werden ausschließlich mit Rechteprüfung über `/image/{id}` ausgeliefert. `MEDIA_DISK` **nicht** auf `public` setzen.
+
 ### 5. Ersten Administrator anlegen
 
 ```bash
@@ -227,6 +230,7 @@ Grundsätzlich gilt: **Zugangsdaten und Server-Pfade** stehen in der `.env`, **f
 | `CACHE_STORE` / `SESSION_DRIVER` | `file` (Standard) oder `redis` |
 | `QUEUE_CONNECTION` | `database` (Standard) |
 | `USE_CRONJOB` / `QUEUE_WORKER_MEMORY` | Queue über den Scheduler abarbeiten (siehe oben) |
+| `MEDIA_DISK` | Standard `media` (privat) – nicht ändern |
 
 ### Darstellung
 
@@ -248,14 +252,17 @@ Grundsätzlich gilt: **Zugangsdaten und Server-Pfade** stehen in der `.env`, **f
 
 | Variable | Bedeutung |
 |---|---|
+| `MODULES_UNLOCKED` | Schaltet eingeschränkte Module frei (z. B. `"Schülerkonten"`), siehe `config/modules.php`. Nicht freigeschaltete Module erscheinen nicht in der Modulverwaltung. |
 | `FAMILY_RESOLVER` / `FAMILY_DUAL_WRITE_SORG2` | Familienmodell: `legacy` (bisherige Kontoverknüpfung) oder das kind-zentrierte Modell, siehe `docs/kind-zentriertes-familienmodell-konzept.md`. Stand prüfen mit `php artisan family:status`. |
+| `CUSTOM_SCRIPTS_ENABLED` | Erlaubt eigene Snippets (z. B. Chatbot) unter *Einstellungen → Eigene Skripte* |
 | `WP_URL`, `WP_USER_NAME`, `WP_PASSWORD`, `WP_CATEGORIES`, `WP_PUSH_FILES` | Beiträge auf eine WordPress-Seite veröffentlichen (Anwendungspasswort in WordPress anlegen) |
 | `API_KEY`, `LINK_MITARBEITERBOARD`, `API_KEY_MITARBEITERBOARD` | Anbindung an das MitarbeiterBoard (Vertretungsplan) |
 | `PW_IMPORT_ELTERN`, `PW_IMPORT_AUFNAHME`, `PW_IMPORT_MITARBEITER`, `PW_IMPORT_VEREIN` | Startpasswörter beim Benutzerimport (Standard: Importdatum `TTMMJJJJ`) |
 | `FREESCOUT_URL`, `FREESCOUT_API_KEY`, `FREESCOUT_MAILBOX_ID`, `FREESCOUT_QUEUE_SYNC`, `FREESCOUT_QUEUE_NAME` | Support-Anfragen an ein FreeScout-Ticketsystem weiterleiten |
 | `KEYCLOAK_*` | Vorbelegung für SSO. Werte aus *Einstellungen → OIDC / Keycloak* haben Vorrang. |
 | `UCS_*` | Startwerte für UCS@school, nur beim ersten `migrate` übernommen, siehe [unten](#ucsschool-integration) |
-| `APNS_*`, `FCM_CREDENTIALS`, `APP_*` | Eltern-App, siehe [unten](#eltern-app) |
+| `APNS_*`, `FCM_CREDENTIALS`, `APP_*` | Eltern-App, siehe [unten](#eltern-app--mcp-server) |
+| `MCP_ENABLED`, `MCP_TOKEN_LIFETIME`, `MCP_DISABLED_TOOLS` | MCP-Server für Chatbots, siehe `docs/mcp-server.md` |
 | `UPDATER_*` | Online-Update, siehe [Updates](#updates) |
 
 ---
@@ -277,6 +284,7 @@ Nach dem ersten Login als Administrator unter **Einstellungen** (Recht `edit set
 | **Design** | Farben und Theme |
 | **OIDC / Keycloak** | SSO für Eltern (siehe unten) |
 | **UCS@school** | Anbindung an Kelvin (siehe unten) |
+| **Eigene Skripte** | Eingebundene Snippets (nur mit `CUSTOM_SCRIPTS_ENABLED=true`) |
 | **Online-Update** | Updates prüfen und einspielen |
 
 Weitere Punkte nach der Einrichtung:
@@ -304,6 +312,7 @@ Dazu gehören unter anderem:
 - Informationsmails (täglich bzw. wöchentlich zu der eingestellten Zeit)
 - Erinnerungen für Rückmeldungen, Lesebestätigungen, Abfragen, Reinigung und Elternrat-Termine
 - Krankmeldungs-Tagesbericht, Schickzeiten-Erinnerung, automatischer Check-in
+- Elternabfragen (alle 15 Minuten: Starts, Erinnerungen, Export- und Löschfristen; wöchentlich Prüfung der Erklärungsquittungen, nach dem Update stündlich Nacherfassung fehlender Quittungen, bis keine mehr fehlen)
 - UCS@school-Abgleich (nachts) und Bereinigung verwaister Klassen (sonntags)
 - Online-Update, wenn in der Oberfläche angefordert
 - **Datenschutz-Bereinigung**: Logs (90 Tage), Audit-Trail, Lesebestätigungen und Reminder-Logs (12 Monate), Check-ins und Kinder-Notizen (3 Monate), Krankmeldungen, Messenger-Nachrichten zum Schuljahresende (1. 8.), endgültige Löschung deaktivierter Benutzer nach 400 Tagen
@@ -314,7 +323,7 @@ Dazu gehören unter anderem:
 Regelmäßig sichern:
 
 - die **Datenbank** (z. B. `mysqldump`),
-- `storage/app` (hochgeladene Dateien in `storage/app/public`, Updater-Sicherungen),
+- `storage/app` (enthält u. a. die privaten Medien in `storage/app/media`, Updater-Sicherungen),
 - die `.env` (insbesondere `APP_KEY` und die VAPID-Schlüssel – ohne `APP_KEY` sind verschlüsselte Daten nicht mehr lesbar).
 
 ### Protokolle und Fehlersuche
@@ -324,6 +333,41 @@ Regelmäßig sichern:
 - Fehlgeschlagene Jobs: `php artisan queue:failed`, erneut ausführen mit `php artisan queue:retry all`
 - Mailversand testen: `php artisan mail:test adresse@schule.de`
 - App-Push testen: `php artisan push:check [email]`
+
+---
+
+## Sicherheitsprotokoll und Datenschutz
+
+Die Anwendung führt ein eigenes, datensparsames **Sicherheitsprotokoll** (Tabelle `security_events`). Es ist vom allgemeinen System-Log (*Logs*) getrennt und dient ausschließlich dazu, unbefugte Zugriffe zu erkennen und nachzuweisen.
+
+**Erfasste Ereignisse** (Punktnotation, in der Oberfläche mit deutscher Kurzbezeichnung): Anmeldung, fehlgeschlagene Anmeldung, Sperre nach zu vielen Versuchen, Abmeldung, Passwort-Reset und Anmeldelinks (`auth.*`), Ausstellen/Widerrufen/Erneuern von API-Tokens (`token.*`), Anmeldung als anderer Nutzer (`impersonation.*`), Rollen- und Rechteänderungen (`rbac.*`), Passwortänderungen (`account.*`), Löschen von System-Logs (`logs.deleted`), Exporte und Downloads (`export.download`, `media.download`, `inquiry.file_download`), MCP-Werkzeugaufrufe (`mcp.tool_call`), Abruf des Kalender-Feeds (`ical.fetch`), Download der Selbstauskunft (`privacy.export`) sowie die Einsichtnahme in das Protokoll selbst (`security_log.viewed`, höchstens einmal pro Nutzer und Stunde).
+
+**Gespeicherte Daten:** Zeitpunkt, Ereignis, Konto-ID (und ggf. ID der handelnden Person), IP-Adresse, User-Agent und wenige technische Kennzeichen. Es werden **keine Inhalte, Passwörter, Tokens oder Codes** gespeichert; Kennungen wie E-Mail-Adressen erscheinen höchstens als gekürzter Hash.
+
+**Zweck und Rechtsgrundlage (Hinweis, keine Rechtsberatung):** Gewährleistung der Sicherheit der Verarbeitung und Aufklärung von Sicherheitsvorfällen, Art. 6 Abs. 1 lit. f i. V. m. Art. 32 DSGVO. Für kirchliche Träger kommen § 6 Nr. 4 bzw. Nr. 8 i. V. m. § 27 DSG-EKD in Betracht. Eine Auswertung zur Leistungs- oder Verhaltenskontrolle ist nicht vorgesehen und darf nicht erfolgen. Die rechtliche Einordnung ist durch den Datenschutzbeauftragten des Trägers zu bestätigen.
+
+**Aufbewahrung:** Einträge werden nach 90 Tagen gelöscht, die IP-Adresse wird nach 30 Tagen gekürzt und der User-Agent entfernt (täglich per `security-log:cleanup`, siehe `schedule:list`). Das Protokoll hat bewusst keinen Fremdschlüssel auf Benutzer: Es bleibt auch nach dem Löschen eines Kontos bis zum Fristablauf erhalten (die Ansicht zeigt dann nur die ID).
+
+| Variable | Bedeutung |
+|---|---|
+| `SECURITY_LOG_ENABLED` | Protokollierung ein-/ausschalten (Standard `true`) |
+| `SECURITY_LOG_RETENTION_DAYS` | Aufbewahrung in Tagen (Standard `90`) |
+| `SECURITY_LOG_ANONYMIZE_IP_AFTER_DAYS` | IP kürzen / User-Agent entfernen nach Tagen (Standard `30`) |
+
+**Zugriff:** Nur Nutzer mit dem Recht `see security log` (standardmäßig die Rolle *admin*) sehen unter *Verwaltung → Sicherheitsprotokoll* (`/security-log`) eine **reine Leseansicht** mit Filtern. Das Protokoll lässt sich über die Oberfläche weder löschen noch exportieren; jeder Aufruf wird selbst protokolliert. Das Recht sollte nur an wenige, namentlich bekannte Personen vergeben werden.
+
+**Auskunftsrecht:** Die eigenen Einträge (Zeit, Ereignis, IP, User-Agent, Kontext; bei Auslösung durch eine andere Person nur „ja/nein“) sind Teil der Selbstauskunft unter *Datenschutz* (JSON und PDF). Der Download der Selbstauskunft wird als `privacy.export` protokolliert. Die Datenschutzseite für Nutzer weist auf das Sicherheitsprotokoll hin.
+
+**Checkliste für den Betreiber (organisatorisch):**
+
+- [ ] Verzeichnis der Verarbeitungstätigkeiten und Datenschutzerklärung um das Sicherheitsprotokoll ergänzen (Zweck, Daten, Fristen, Zugriffsberechtigte).
+- [ ] Mitarbeitervertretung beteiligen: Das Protokoll erfasst auch Beschäftigte; eine Leistungs- und Verhaltenskontrolle ist auszuschließen (z. B. per Dienstvereinbarung).
+- [ ] Webserver-Access-Logs (nginx/Apache) mit definierter, kurzer Aufbewahrungsfrist vorhalten und in der Dokumentation aufführen.
+- [ ] Hinter einem Reverse Proxy `TRUSTED_PROXIES` in der `.env` setzen, sonst wird die IP des Proxys statt der des Nutzers protokolliert.
+- [ ] `LOG_CHANNEL=stack` setzen, damit das Datenbank-Log (*Logs*) geschrieben wird.
+- [ ] `LOG_LEVEL` in Produktion nicht auf `debug` stellen (sonst landen unnötig viele Details in den Logs).
+- [ ] Kreis der Personen mit dem Recht `see security log` festlegen und dokumentieren.
+- [ ] Optional: Sentry nur nutzen, wenn ein Auftragsverarbeitungsvertrag besteht; ohne `SENTRY_LARAVEL_DSN` werden keine Fehlerdaten an Dritte übermittelt.
 
 ---
 
@@ -367,6 +411,10 @@ sh deploy.sh
 
 Das Skript führt dieselben Schritte aus und bricht beim ersten Fehler im Wartungsmodus ab. Nach Behebung erneut ausführen oder `php artisan up`.
 
+### Hinweise zu einzelnen Versionen
+
+- **Erklärungsquittungen (Elternabfragen):** Nach dem Update legt der Scheduler für bereits abgegebene Antworten und Bestätigungen automatisch Quittungen an (stündlich bis zu 500, nur solange welche fehlen; ohne E-Mails). Sofort und vollständig geht es mit `php artisan elternabfragen:quittungen-nacherfassen` (vorher ansehen mit `--dry-run`); danach `php artisan elternabfragen:verify --all`.
+
 ---
 
 ## UCS@school-Integration
@@ -391,7 +439,9 @@ Die `UCS_*`-Variablen werden nur beim ersten `migrate` als Startwerte übernomme
 
 ---
 
-## Eltern-App
+## Eltern-App & MCP-Server
+
+### Eltern-App
 
 Die Eltern-App nutzt die App-API v1 (Dokumentation unter `/docs`, erzeugt mit Scribe). Für native Push-Mitteilungen:
 
@@ -400,8 +450,13 @@ Die Eltern-App nutzt die App-API v1 (Dokumentation unter `/docs`, erzeugt mit Sc
 | `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_PATH`, `APNS_BUNDLE_ID`, `APNS_PRODUCTION` | iOS: APNs-Schlüssel (`.p8`) aus dem Apple-Entwicklerkonto, z. B. in `storage/app/private/apns.p8` |
 | `FCM_CREDENTIALS` | Android: Firebase-Service-Account-JSON (Spark-Tarif genügt) |
 | `APP_SCHEME`, `APP_MIN_VERSION` | URL-Schema der App, minimal unterstützte App-Version |
+| `APP_PRIVACY_PUBLISHER`, `APP_PRIVACY_CONTACT` | Angaben für die Datenschutzerklärung unter `/app/datenschutz` (Pflicht für die App-Stores) |
 
 Einrichtung prüfen mit `php artisan push:check [email]`.
+
+### MCP-Server
+
+Ein lesender MCP-Endpunkt für Chatbots (`POST /api/v1/mcp`) ist standardmäßig aus und wird mit `MCP_ENABLED=true` freigeschaltet. Mit `MCP_DISABLED_TOOLS` lassen sich einzelne Werkzeuge (z. B. Krankmeldungen) sperren. Details: `docs/mcp-server.md`.
 
 ---
 
@@ -415,8 +470,11 @@ Einrichtung prüfen mit `php artisan push:check [email]`.
 | `push:check {email?}` | App-Push (FCM/APNs) prüfen |
 | `schedule:list` | Geplante Aufgaben anzeigen |
 | `updater:check` / `updater:run` | Online-Update |
+| `media:make-private` | Altbestand von Mediendateien auf die private Disk umziehen (`--dry-run`) |
 | `ucs:ping` / `sync:ucs-parents` | UCS@school testen bzw. abgleichen |
 | `family:status` | Stand des Familienmodells anzeigen |
+| `elternabfragen:verify {id?} --all` | Erklärungsquittungen (Hash-Kette) einer bzw. aller Abfragen prüfen; Exit-Code ≠ 0 bei Fehlern |
+| `elternabfragen:quittungen-nacherfassen` | Fehlende Quittungen für ältere Antworten anlegen (`--dry-run`, `--limit=`); läuft nach dem Update automatisch |
 | `stundenplan:import {datei}` | Stundenplan aus JSON importieren |
 | `settings:clear-cache` | Einstellungs-Cache leeren |
 
@@ -464,11 +522,12 @@ Farben werden unter *Einstellungen → Design*, Standard-Theme und Logo unter *E
 | Build-Tool | Vite 7 |
 | Berechtigungen | Spatie Laravel Permission |
 | Einstellungen | Spatie Laravel Settings |
-| Medienverwaltung | Spatie Laravel Medialibrary |
+| Medienverwaltung | Spatie Laravel Medialibrary (private Disk) |
 | Authentifizierung | Laravel Sanctum + Socialite (Keycloak), Passwordless-Login |
 | Push-Benachrichtigungen | laravel-notification-channels/webpush, APNs, FCM |
 | Audit-Log | owen-it/laravel-auditing |
 | PDF-Export | barryvdh/laravel-dompdf |
 | Excel-Import/Export | Maatwebsite/Laravel-Excel |
 | API-Dokumentation | Scribe |
+| MCP | laravel/mcp |
 | Fehlerberichte | Sentry (optional) |

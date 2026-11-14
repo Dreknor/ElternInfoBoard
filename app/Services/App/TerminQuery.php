@@ -9,7 +9,8 @@ use App\Model\User;
 use Carbon\Carbon;
 
 /**
- * Termine der Gruppen des Nutzers im Zeitraum, ohne Duplikate, optional mit eigenen Listen-Buchungen (B-30).
+ * Termine der Gruppen des Nutzers und direkt freigegebene Termine im Zeitraum, ohne Duplikate, optional mit eigenen Listen-Buchungen (B-30).
+ * Vom Nutzer ausgeblendete Termine fehlen (B-102); Buchungen und Reinigungsdienste lassen sich nicht ausblenden.
  */
 class TerminQuery
 {
@@ -18,12 +19,8 @@ class TerminQuery
         $termine = Termin::query()
             ->where('ende', '>=', $from)
             ->where('start', '<=', $to)
-            ->whereExists(function ($q) use ($user) {
-                $q->selectRaw(1)->from('group_termine')
-                    ->join('group_user', 'group_termine.group_id', '=', 'group_user.group_id')
-                    ->whereColumn('group_termine.termin_id', 'termine.id')
-                    ->where('group_user.user_id', $user->id);
-            })
+            ->forRecipient($user)
+            ->notHiddenFor($user)
             ->orderBy('start')
             ->get()
             ->map(fn (Termin $t) => [
@@ -68,6 +65,31 @@ class TerminQuery
         }
 
         return $termine->values()->all();
+    }
+
+    /**
+     * Ausgeblendete Termine des Nutzers im Zeitraum (B-102), Format wie between().
+     */
+    public static function hiddenBetween(User $user, Carbon $from, Carbon $to): array
+    {
+        return Termin::query()
+            ->where('ende', '>=', $from)
+            ->where('start', '<=', $to)
+            ->forRecipient($user)
+            ->hiddenFor($user)
+            ->orderBy('start')
+            ->get()
+            ->map(fn (Termin $t) => [
+                'id' => 'termin-'.$t->id,
+                'source' => 'termin',
+                'title' => $t->terminname,
+                'start' => $t->start->toIso8601String(),
+                'end' => $t->ende->toIso8601String(),
+                'all_day' => (bool) $t->fullDay,
+                'liste_id' => null,
+            ])
+            ->values()
+            ->all();
     }
 
     public static function upcoming(User $user, int $limit): array

@@ -240,6 +240,8 @@ class GTAController extends Controller
     {
         $fileName = 'teilnehmer_'.Str::slug($arbeitsgemeinschaft->name).'_'.date('Y-m-d').'.xlsx';
 
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'ag_teilnehmer', 'format' => 'xlsx', 'arbeitsgemeinschaft_id' => $arbeitsgemeinschaft->id]);
+
         return Excel::download(new ParticipantsExport($arbeitsgemeinschaft), $fileName);
     }
 }

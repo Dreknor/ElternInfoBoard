@@ -5,13 +5,10 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Model\Conversation;
 use App\Model\Message;
-use App\Notifications\MessengerPushNotification;
 use App\Settings\MessengerSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 
 class MessengerController extends Controller
@@ -92,6 +89,9 @@ class MessengerController extends Controller
     public function send(Request $request, Conversation $conversation): JsonResponse
     {
         Gate::authorize('sendMessage', $conversation);
+        if ($conversation->isStudentChat() && $request->hasFile('attachment')) {
+            abort(422, 'In Schülerchats sind keine Anhänge möglich.');
+        }
 
         // Rate-Limiting
         $key = 'messenger_api_send_' . auth()->id();
@@ -165,6 +165,9 @@ class MessengerController extends Controller
             return;
         }
 
+        // Schülerchat (S-14): Schüler bekommt eine App-Mitteilung ohne Text
+        \App\Services\Students\StudentMessenger::notifyStudent($conversation, $sender);
+
         $url = route('messenger.show', $conversation);
 
         // Alle Teilnehmer außer dem Sender und stummgeschalteten Nutzern
@@ -187,33 +190,6 @@ class MessengerController extends Controller
 
         // In-App-Benachrichtigung für ALLE nicht-stummgeschalteten Teilnehmer
         $conversation->notify($allRecipients, $title, "{$sender->name}: {$snippet}", false, $url, 'messenger', 'fas fa-comments', true);
-
-        // WebPush nur für Nutzer, die den Chat NICHT gerade aktiv lesen (last_read_at > 30 Sek.)
-        $pushRecipients = $allRecipients->filter(function ($user) {
-            $pivot = $user->pivot;
-            if ($pivot->last_read_at && now()->diffInSeconds($pivot->last_read_at) < 30) {
-                return false;
-            }
-            return true;
-        });
-
-        // Cooldown: max. eine Push-Benachrichtigung pro Nutzer/Konversation alle 10 Minuten
-        $pushCooldownMinutes = 10;
-
-        foreach ($pushRecipients as $participant) {
-            try {
-                if ($participant->pushSubscriptions()->exists()) {
-                    $cacheKey = "messenger_push_{$participant->id}_{$conversation->id}";
-                    if (Cache::add($cacheKey, true, now()->addMinutes($pushCooldownMinutes))) {
-                        $participant->notify(
-                            new MessengerPushNotification($title, "{$sender->name}: {$snippet}", $url)
-                        );
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::warning("Messenger WebPush (API) fehlgeschlagen für User {$participant->id}: " . $e->getMessage());
-            }
-        }
     }
 
     protected function formatMessage(Message $message, int $currentUserId): array

@@ -85,6 +85,15 @@ try {
 
         }
 
+        // Elternabfragen: geplante Starts, Erinnerungen, Export- und Löschfristen
+        Schedule::command('elternabfragen:process')->everyFifteenMinutes()->withoutOverlapping();
+        // Erklärungsquittungen: Bestand nach dem Update einmalig nacherfassen (nur solange
+        // Erklärungen ohne Quittung existieren – günstige EXISTS-Prüfung) und Kette wöchentlich prüfen
+        Schedule::command('elternabfragen:quittungen-nacherfassen --limit=500')->hourlyAt(40)->withoutOverlapping(120)
+            ->when(fn () => app(\App\Services\Elternabfragen\ReceiptBackfill::class)->hasPending());
+        Schedule::command('elternabfragen:verify --all')->weeklyOn(0, '04:40')->withoutOverlapping()
+            ->when(fn () => Schema::hasTable('inquiry_receipts'));
+
         // Elternrat Event Erinnerungen - stündlich prüfen
         Schedule::call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();
 
@@ -109,6 +118,8 @@ try {
         Schedule::command('reminder-logs:cleanup --days=365')->dailyAt('02:45');
         // Such-Protokolle auf 90 Tage begrenzen
         Schedule::command('search-logs:cleanup --days=90')->weeklyOn(1, '02:35');
+        // Sicherheitsprotokoll: Aufbewahrung begrenzen, IP/User-Agent früh kürzen
+        Schedule::command('security-log:cleanup')->dailyAt('02:40');
         // Lesebestätigungen auf 12 Monate / verwaiste entfernen
         Schedule::command('read-receipts:cleanup --days=365')->dailyAt('02:50');
         // Abgelaufene Sanctum-Tokens entfernen
@@ -124,6 +135,8 @@ try {
         Schedule::command('users:cleanup --purge-days=400')->dailyAt('04:00');
         // Monatlicher Inaktivitätsbericht an Administratoren
         Schedule::command('users:cleanup --report')->monthlyOn(1, '09:00');
+        // Schülerkonten: ausgeschiedene Kinder sperren, Löschfrist, UCS-Anlage
+        Schedule::command('schuelerkonten:pflege')->dailyAt('04:10');
 
         // ── UCS@school-Scheduler ─────────────────────────────────────────────
         // Läuft vollständig über den Scheduler (kein Queue-Worker / Supervisor nötig).

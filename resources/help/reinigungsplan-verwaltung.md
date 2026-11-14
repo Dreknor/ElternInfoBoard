@@ -21,7 +21,10 @@ Nur im gemeinsamen Modus relevant: Über **„Bereiche vom gemeinsamen Plan auss
 - Familien mit den **wenigsten bisherigen Einsätzen** werden zuerst berücksichtigt (Fairness-Algorithmus), innerhalb gleicher Einsatzzahl wird zufällig gemischt.
 - Ist eine Familie bereits im **selben Bereich und Zeitraum** eingeteilt, wird sie beim automatischen Befüllen übersprungen.
 - **Sind nicht genügend Familien für alle Wochen/Aufgaben vorhanden**, werden Familien mit den wenigsten bisherigen Einsätzen in diesem Lauf **mehrfach eingesetzt**, statt den Vorgang abzubrechen. Nur wenn im gewählten Bereich **überhaupt keine** Familie zur Verfügung steht, erscheint eine Fehlermeldung.
-- Ist **„Ferienwochen beim automatischen Befüllen überspringen"** aktiviert, werden Wochen, die laut hinterlegtem Bundesland (Care-Einstellungen) in die Schulferien fallen, nicht verplant.
+- Ferienwochen sind im Plan immer mit einem Hinweis **„Ferien: …"** markiert.
+- Ist **„Ferienwochen im Reinigungsplan auslassen"** aktiviert (Einstellungen → Reinigung), werden Ferienwochen beim automatischen Befüllen nicht verplant; leere Ferienwochen erscheinen als kompakte Zeile **„keine Reinigung"**.
+- Als Ferienwoche gilt eine Woche, in der mindestens **3 Schultage (Mo–Fr)** in den Ferien liegen – auch über den Jahreswechsel (Weihnachtsferien). Grundlage ist das Bundesland aus den **Care-Einstellungen**.
+- Werden keine Ferien angezeigt, zeigt der Plan einen Hinweis. Unter **Einstellungen → Care** sind die geladenen Ferien aufgelistet; **„Ferien neu laden"** holt sie erneut (Quelle ferien-api.de, ersatzweise openholidaysapi.org – der Server muss diese Adressen erreichen). Auf dem Server geht das auch mit `php artisan holidays:refresh`.
 
 ## Eintrag manuell erstellen
 

@@ -135,6 +135,7 @@ class NachrichtenController extends Controller
 
         if ($user->hasPermissionTo('view all', 'web')) {
             $nachrichten = Post::query()
+                ->withoutForeignConfidential($user)
                 ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
                 ->orderByDesc('sticky')
                 ->orderByDesc('updated_at')
@@ -161,8 +162,8 @@ class NachrichtenController extends Controller
 
         } else {
 
-            $nachrichten = $user->postsNotArchived()
-                ->distinct()
+            $nachrichten = $user->visiblePosts()
+                ->where('archiv_ab', '>', now())
                 ->where('released', 1)
                 ->orderByDesc('sticky')
                 ->orderByDesc('updated_at')
@@ -248,7 +249,7 @@ class NachrichtenController extends Controller
                         'mime_type' => $media->mime_type,
                         'size' => $media->size,
                         'order' => $media->order_column,
-                        'url' => route('api.files.download', ['media_uuid' => $media->uuid]),
+                        'url' => \App\Services\App\MediaAccess::downloadUrl($media),
                         'url_by_id' => url('/api/image/' . $media->id),
                     ];
                 })->values()->all();
@@ -580,9 +581,16 @@ class NachrichtenController extends Controller
             ], 404);
         }
 
-        // Check if user has access to this post
+        // Check if user has access to this post (vertraulich: nur Autor und Empfänger)
+        if ($post->isHiddenFrom($user)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not allowed',
+                'message' => 'Sie haben keine Berechtigung für diesen Beitrag'
+            ], 403);
+        }
         if (! $user->hasPermissionTo('view all', 'web')) {
-            if (! $post->users->contains($user)) {
+            if (! $post->hasRecipient($user)) {
                 return response()->json([
                     'success' => false,
                     'error' => 'User not allowed',
@@ -639,7 +647,7 @@ class NachrichtenController extends Controller
                     'mime_type' => $media->mime_type,
                     'size' => $media->size,
                     'order' => $media->order_column,
-                    'url' => route('api.files.download', ['media_uuid' => $media->uuid]),
+                    'url' => \App\Services\App\MediaAccess::downloadUrl($media),
                     'url_by_id' => url('/api/image/' . $media->id),
                 ];
             })->values()->all();

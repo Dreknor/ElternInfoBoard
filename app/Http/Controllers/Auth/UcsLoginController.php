@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
+use App\Services\Auth\SsoStudentDetector;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
@@ -109,6 +110,7 @@ class UcsLoginController extends Controller implements HasMiddleware
             Log::channel('ucs')->warning('[UcsLoginController] Socialite-Fehler im Callback', [
                 'error' => $e->getMessage(),
             ]);
+            \App\Services\Security\SecurityLog::record('auth.failed', null, ['method' => 'ucs', 'reason' => 'idp_error']);
 
             return redirect()->route('login')->with([
                 'type'    => 'danger',
@@ -131,6 +133,27 @@ class UcsLoginController extends Controller implements HasMiddleware
                 'type'    => 'danger',
                 'Meldung' => 'Der Schul-Login hat keine Benutzerkennung geliefert.',
             ]);
+        }
+
+        // Schüler: nie als Elternkonto anmelden oder verknüpfen (docs/konzept-schuelerkonten.md §6.1).
+        // Bei aktivem Modul und „Login über SSO“ ins Schülerkonto, sonst abgelehnt.
+        $studentLogin = app(\App\Services\Students\StudentSsoLogin::class);
+        if ($studentLogin->isStudent($oidc, $sub, $username)) {
+            [$student, $message] = Auth::check() ? [null, SsoStudentDetector::MESSAGE] : $studentLogin->resolve($sub, $username);
+
+            if ($student === null) {
+                Log::channel('ucs')->info('[UcsLoginController] Login abgelehnt: Schülerrolle', ['sub' => $sub]);
+
+                return redirect()->route('login')->with([
+                    'type'    => 'danger',
+                    'Meldung' => $message,
+                ]);
+            }
+
+            $this->rememberSsoSession($request, $idToken);
+            $studentLogin->login($request, $student);
+
+            return redirect()->route('student.home');
         }
 
         // ── Modus B: Eingeloggter Nutzer → Account-Linking ───────────────────
@@ -185,6 +208,7 @@ class UcsLoginController extends Controller implements HasMiddleware
         // Marker VOR Auth::login setzen: TriggerUcsProvisioningOnLogin erkennt daran
         // den SSO-Login. Auth::login() migriert die Session-ID und behält die Daten.
         $this->rememberSsoSession($request, $idToken);
+        \App\Services\Security\AuthEventSubscriber::expect('ucs');
         Auth::login($user, remember: true);
 
         Log::channel('ucs')->info('[UcsLoginController] Login erfolgreich', [

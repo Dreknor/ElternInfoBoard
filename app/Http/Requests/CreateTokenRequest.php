@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Services\IntegrationTokens;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateTokenRequest extends FormRequest
 {
@@ -23,6 +25,9 @@ class CreateTokenRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:191'],
+            'lifetime' => ['required', Rule::in(array_keys(IntegrationTokens::LIFETIMES))],
+            'scopes' => ['array'],
+            'scopes.*' => [Rule::in(array_keys(IntegrationTokens::SCOPES))],
         ];
     }
 }

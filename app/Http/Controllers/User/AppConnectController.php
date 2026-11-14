@@ -34,6 +34,8 @@ class AppConnectController extends Controller
         $expires = now()->addMinutes(self::TTL_MINUTES);
         Cache::put("app_login_code:{$code}", ['user_id' => $user->id, 'challenge' => null], $expires);
         Cache::put("app_qr_code_of:{$user->id}", $code, $expires);
+        // Einmaliger Anmeldecode (gegen Token tauschbar) – Code selbst wird nicht protokolliert.
+        \App\Services\Security\SecurityLog::record('auth.app_code.issued', $user->id, ['channel' => 'qr', 'replaced_previous' => (bool) $previous]);
 
         $content = config('services.app.scheme').'://connect?'.http_build_query([
             'server' => rtrim(config('app.url'), '/'),

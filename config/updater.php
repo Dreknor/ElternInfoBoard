@@ -42,6 +42,9 @@ return [
     // Frontend-Assets bauen (public/build ist nicht versioniert)
     'build_assets' => env('UPDATER_BUILD_ASSETS', true),
 
+    // API-Dokumentation (Scribe, public/docs) neu erzeugen, wenn sich die API geändert hat
+    'api_docs' => env('UPDATER_API_DOCS', true),
+
     // Datenbanksicherung vor dem Update
     'backup' => [
         'enabled' => env('UPDATER_BACKUP', true),

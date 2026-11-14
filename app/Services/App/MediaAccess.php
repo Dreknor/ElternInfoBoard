@@ -5,13 +5,17 @@ namespace App\Services\App;
 use App\Model\Child;
 use App\Model\Discussion;
 use App\Model\Group;
+use App\Model\Groups;
 use App\Model\Krankmeldungen;
 use App\Model\Mail;
 use App\Model\Message;
 use App\Model\Post;
 use App\Model\Site;
 use App\Model\SiteBlock;
+use App\Model\SiteBlockFiles;
+use App\Model\SiteBlockImages;
 use App\Model\User;
+use App\Services\Security\SecurityLog;
 use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -21,13 +25,39 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class MediaAccess
 {
+    /**
+     * Download-Adresse einer Mediendatei. Ältere Einträge (vor der Spalte `uuid`) haben keine UUID –
+     * dann über die ID (gleiche Zugriffsprüfung), statt dass `route()` die ganze Antwort abbricht.
+     */
+    public static function downloadUrl(Media $media): string
+    {
+        return filled($media->uuid)
+            ? route('api.files.download', ['media_uuid' => $media->uuid])
+            : url('api/image/'.$media->id);
+    }
+
     public static function canView(User $user, Media $media): bool
     {
-        if ($user->can('upload files')) {
-            return true;
+        // Beiträge nur für Schüler blendet ParentAudienceScope aus – die Policy entscheidet selbst
+        // Mail-Archiv: der globale Scope „own“ blendet fremde Mails aus – ob jemand sie sehen darf (`see mails`),
+        // entscheidet die Regel unten, nicht der Scope.
+        $model = match ($media->model_type) {
+            (new Post)->getMorphClass() => Post::withStudentAudience()->find($media->model_id),
+            (new Mail)->getMorphClass() => Mail::withoutGlobalScopes()->find($media->model_id),
+            default => $media->model,
+        };
+
+        // Anhänge vertraulicher Beiträge: nur Autor und Empfänger, auch nicht mit „upload files“
+        if ($model instanceof Post && $model->isHiddenFrom($user)) {
+            return false;
         }
 
-        $model = $media->model;
+        // „upload files“ ist die Dateiverwaltung für Inhalte (Beiträge, Gruppen, Seiten). Sie gilt nur dort –
+        // Krankmeldungen, Nachrichten, Mails, Kinder, Diskussionen und unbekannte Besitzer laufen immer
+        // durch die modellbezogene Regel.
+        if (self::isContentModel($model) && $user->can('upload files')) {
+            return true;
+        }
 
         return match (true) {
             $model instanceof Post => $user->can('view', $model),
@@ -43,6 +73,42 @@ class MediaAccess
             $model !== null && method_exists($model, 'site') => self::siteBlockVisible($user, $model),
             default => false,
         };
+    }
+
+    /** Redaktionelle Inhalte (Beitrags-, Gruppen- und Seitendateien), die die Dateiverwaltung betreffen. */
+    private static function isContentModel(mixed $model): bool
+    {
+        return $model instanceof Post
+            || $model instanceof Group
+            || $model instanceof Groups
+            || $model instanceof Site
+            || $model instanceof SiteBlock
+            || $model instanceof SiteBlockFiles
+            || $model instanceof SiteBlockImages;
+    }
+
+    /**
+     * Sicherheitsprotokoll für Dateiabrufe. Nur schutzwürdige Besitzer (Krankmeldungen, Nachrichten, Mails,
+     * Kinder, Diskussionen …) werden erfasst; Beitrags-, Gruppen- und Seitendateien nicht (würde das Protokoll
+     * mit Inline-Bildern fluten und ein Nutzungsprofil erzeugen). Kontext: nur IDs und Klassen-Kurzname.
+     */
+    public static function logDownload(Media $media): void
+    {
+        try {
+            $model = $media->model;
+        } catch (\Throwable) {
+            $model = null;
+        }
+
+        if ($model !== null && self::isContentModel($model)) {
+            return;
+        }
+
+        SecurityLog::record('media.download', null, [
+            'media_id' => $media->id,
+            'owner_type' => class_basename($model ?? (string) $media->model_type),
+            'owner_id' => $media->model_id,
+        ]);
     }
 
     private static function inGroups(User $user, array $groupIds): bool

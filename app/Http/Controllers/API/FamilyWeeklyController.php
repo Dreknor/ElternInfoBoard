@@ -97,13 +97,14 @@ class FamilyWeeklyController extends Controller
                 'is_holiday'   => $d['is_holiday'],
                 'holiday_name' => $d['holiday_name'],
                 'stundenplan'  => $d['stundenplan'],
-                'vertretungen' => $d['vertretungen']->toArray(),
-                'gtas'         => $d['gtas']->map(fn ($g) => [
+                'vertretungen' => $d['vertretungen']->values()->toArray(),
+                // values(): gefilterte Collections sonst als JSON-Objekt (App erwartet Listen)
+                'gtas'         => $d['gtas']->values()->map(fn ($g) => [
                     'name'  => $g->name,
                     'start' => $g->start_time?->format('H:i'),
                     'end'   => $g->end_time?->format('H:i'),
                 ]),
-                'schickzeiten'  => $d['schickzeiten']->map(fn ($s) => [
+                'schickzeiten'  => $d['schickzeiten']->values()->map(fn ($s) => [
                     'time'      => $s->time?->format('H:i'),
                     'type'      => $s->type,
                     'time_ab'   => $s->time_ab?->format('H:i'),
@@ -117,7 +118,7 @@ class FamilyWeeklyController extends Controller
                     'comment'    => $d['checkIn']->comment,
                 ] : null,
             ]),
-            'termine' => $c['termine']->map(fn ($t) => [
+            'termine' => $c['termine']->values()->map(fn ($t) => [
                 'name'    => $t->terminname,
                 'start'   => $t->start->format('Y-m-d H:i'),
                 'end'     => $t->ende?->format('Y-m-d H:i'),

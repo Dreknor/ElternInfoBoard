@@ -21,6 +21,11 @@ class PushTarget
         $fragment = parse_url($url, PHP_URL_FRAGMENT);
 
         $patterns = [
+            // Schülerkonten (S-13): eigene Ziele, damit die App die Schüleransicht öffnet
+            '#^/schueler/nachrichten/(\d+)#' => 'student_post',
+            '#^/schueler/chat/(\d+)#' => 'student_chat',
+            '#^/schueler/termine#' => 'student_termin',
+            '#^/elternabfragen/(\d+)#' => 'inquiry',
             '#/(?:post|home|posts)/(\d+)#' => 'post',
             '#/messenger/conversation/(\d+)#' => 'conversation',
             '#/listen/(\d+)#' => 'liste',

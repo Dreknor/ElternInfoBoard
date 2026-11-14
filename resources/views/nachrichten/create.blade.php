@@ -92,12 +92,18 @@
                     </div>
                 </div>
             </div>
+            {{-- Empfänger in voller Breite, damit Gruppen und Personensuche Platz haben --}}
             <div class="row">
-                <div class="col-md-2">
-                    @include('include.formGroups')
+                <div class="col-12 mb-3">
+                    <div class="p-3 rounded-lg border" style="border-color: var(--color-card-border); background: var(--color-card-bg, transparent);">
+                        @include('include.formGroups', ['withPersons' => true])
+                        @include('student.partials.audience-field', ['value' => null])
+                    </div>
                 </div>
+            </div>
 
-                <div class="col-md-2">
+            <div class="row">
+                <div class="col-md-4">
                     <div class="row">
                         <div class="col-12">
                             <div class="form-group">
@@ -153,6 +159,18 @@
                                 </select>
                             </div>
                         </div>
+                        @can('release posts')
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label>Vertraulich</label>
+                                <select class="custom-select" name="confidential">
+                                    <option value="0" @if(!old('confidential')) selected @endif>nein</option>
+                                    <option value="1" @if(old('confidential')) selected @endif>Ja – nur für die gewählten Empfänger</option>
+                                </select>
+                                <small class="form-text text-muted">Nur Sie und die gewählten Empfänger (Gruppen und Personen) sehen den Beitrag. Mitarbeiter mit „alle Beiträge sehen“ sehen ihn nicht. Wird nicht an WordPress übertragen und ist kein externes Angebot.</small>
+                            </div>
+                        </div>
+                        @endcan
                         <div class="col-12">
                             <div class="form-group">
                                 <label>Reaktionen erlauben</label>

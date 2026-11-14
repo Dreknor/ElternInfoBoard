@@ -1,0 +1,505 @@
+<?php
+
+namespace App\Http\Controllers\API\V1;
+
+use App\Enums\InquiryFieldType;
+use App\Enums\InquiryChangeRequestStatus;
+use App\Model\InquiryAssignment;
+use App\Model\InquiryChangeRequest;
+use App\Model\InquiryDraft;
+use App\Model\InquiryReceipt;
+use App\Model\InquiryResponse;
+use App\Services\Elternabfragen\ChangeRequestService;
+use App\Services\Elternabfragen\DeliveryService;
+use App\Services\Elternabfragen\FieldSchema;
+use App\Services\Elternabfragen\GuardianConfirmation;
+use App\Services\Elternabfragen\InquiryAccess;
+use App\Services\Elternabfragen\ReceiptService;
+use App\Services\Elternabfragen\ResponseService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * Elternabfragen in der Eltern-App: je Kind ein Auftrag. Abgeben dürfen nur
+ * Sorgeberechtigte; nicht zugängliche Aufträge liefern 404.
+ *
+ * @group Elternabfragen
+ */
+class InquiryController extends ApiController
+{
+    public function __construct(
+        private readonly InquiryAccess $access,
+        private readonly ResponseService $responses,
+        private readonly FieldSchema $schema,
+        private readonly GuardianConfirmation $confirmation,
+        private readonly ChangeRequestService $changes,
+        private readonly ReceiptService $receipts,
+    ) {}
+
+    /**
+     * Alle Abfragen zu den eigenen Kindern.
+     *
+     * `status`: open | in_progress | submitted | corrected | awaiting_confirmation | problem.
+     * `can_confirm`: die Antwort liegt vor und muss vom Nutzer noch bestätigt werden (Vorlagen mit
+     * `requires_all_guardians`).
+     * `can_submit`/`can_correct` steuern die Buttons; `reason` erklärt, warum nicht.
+     * `can_request_change`: nach Ablauf der Selbstkorrektur bzw. nach Abschluss eine Änderung melden
+     * (`change_pending` = offene Meldung liegt vor, `change_reason` = warum nicht).
+     *
+     * @queryParam filter string `open` = nur offene, die der Nutzer abgeben darf. Example: open
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $items = $this->access->assignmentsQuery($user)
+            ->with(['inquiry', 'child', 'currentResponse'])
+            ->get()
+            ->map(fn (InquiryAssignment $a) => $this->summary($request, $a))
+            ->when($request->query('filter') === 'open', fn ($c) => $c->filter(fn ($i) => $i['can_submit'] || $i['can_confirm']))
+            ->sortBy('deadline')
+            ->values();
+
+        return response()->json(['data' => $items]);
+    }
+
+    /**
+     * Abfrage mit Feldern, Entwurf bzw. gültiger Antwort und Versionsverlauf.
+     * Ohne Entwurf und Antwort enthält `prefill` die übernommenen Angaben der Vorabfrage
+     * (z. B. Vorjahr) – Einwilligungen und Dateien sind nicht enthalten.
+     *
+     * Feldtypen: consent (Werte granted|denied, `consent_text` vollständig anzeigen), yes_no (yes|no),
+     * checkbox (Array der Optionen), radio, select, text (`format`: email|phone|postal_code|number),
+     * textarea, date (YYYY-MM-DD), file (Upload beim Absenden), info (nur Überschrift/Hinweis),
+     * child (Auswahl eines eigenen Kindes: `options` mit Kind-ID als `value`; gespeichert als {id, name}).
+     *
+     * `receipts`: Erklärungsquittungen des Auftrags (neueste zuerst; nur für Sorgeberechtigte, sonst leer).
+     * `withdrawal`: `possible` + widerrufbare Einwilligungen (`fields` mit key/label) – unabhängig von
+     * Frist und Korrekturfenster (Art. 7 Abs. 3 DSGVO).
+     */
+    public function show(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+
+        return response()->json(['data' => $this->showPayload($request, $assignment)]);
+    }
+
+    private function showPayload(Request $request, InquiryAssignment $assignment): array
+    {
+        $user = $request->user();
+        $assignment->load(['inquiry.templateVersion', 'child', 'currentResponse.user', 'responses.user']);
+        $state = $this->access->state($user, $assignment);
+        $version = $assignment->inquiry->templateVersion;
+        $draft = $state['can_view_answers']
+            ? InquiryDraft::where('assignment_id', $assignment->id)->where('user_id', $user->id)->first()
+            : null;
+        $current = $assignment->currentResponse;
+        $children = $this->responses->childOptions($version->fields, $user);
+        $prefill = ! $draft && ! $current && $state['can_view_answers'] ? $this->responses->prefillFromPrevious($assignment, $user) : [];
+
+        return $this->summary($request, $assignment) + [
+            'intro' => $assignment->inquiry->intro,
+            'purpose' => $version->purpose,
+            'parent_info' => $version->parent_info,
+            'responsible_office' => $version->responsible_office,
+            'retention_note' => $version->retention_note,
+            'retention_days' => $assignment->inquiry->retention_days,
+            'requires_all_guardians' => (bool) $version->requires_all_guardians,
+            'confirmations' => $state['can_view_answers'] ? array_map(fn (array $row) => [
+                'name' => $row['name'],
+                'state' => $row['state'],
+                'at' => $row['at']?->toIso8601String(),
+            ], $this->confirmation->overview($assignment)) : [],
+            'fields' => array_map(fn (array $f) => $this->presentField($f, $children), $version->fields),
+            'draft' => $draft ? ['answers' => $draft->answers, 'updated_at' => $draft->updated_at->toIso8601String()] : null,
+            'prefill' => $prefill !== [] ? [
+                'from_inquiry' => ['id' => $assignment->inquiry->previous_inquiry_id, 'title' => $assignment->inquiry->previousInquiry?->title],
+                'answers' => $prefill,
+            ] : null,
+            'response' => $current && $state['can_view_answers'] ? $this->presentResponse($assignment, $current) : null,
+            'change_request' => $state['can_view_answers'] ? $this->presentChange($request, $assignment) : null,
+            'versions' => $state['can_view_answers'] ? $assignment->responses->map(fn (InquiryResponse $r) => [
+                'version' => $r->version,
+                'submitted_at' => $r->submitted_at->toIso8601String(),
+                'submitted_by' => $r->user?->name,
+                'is_current' => $r->is_current,
+                'correction_reason' => $r->correction_reason,
+            ])->values() : [],
+            'receipts' => $state['can_view_answers']
+                ? InquiryReceipt::where('assignment_id', $assignment->id)->orderByDesc('declared_at')->orderByDesc('sequence')->get()
+                    ->map(fn (InquiryReceipt $r) => $this->presentReceipt($assignment, $r))->values()
+                : [],
+            'withdrawal' => $this->responses->withdrawalState($user, $assignment),
+        ];
+    }
+
+    /**
+     * Entwurf speichern (gilt nicht als Rückmeldung; Dateien werden erst beim Absenden übernommen).
+     *
+     * @bodyParam answers object required Antworten je Feldschlüssel.
+     */
+    public function saveDraft(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $request->validate(['answers' => 'present|array']);
+        $draft = $this->responses->saveDraft($assignment, $request->user(), (array) $request->input('answers', []));
+
+        return response()->json(['data' => ['answers' => $draft->answers, 'updated_at' => $draft->updated_at->toIso8601String()]]);
+    }
+
+    /**
+     * Entwurf verwerfen.
+     */
+    public function discardDraft(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $this->responses->discardDraft($assignment, $request->user());
+
+        return response()->json(['message' => 'Entwurf verworfen.']);
+    }
+
+    /**
+     * Verbindlich absenden bzw. korrigieren.
+     *
+     * Als JSON oder – bei Datei-Feldern – als multipart/form-data (`answers[<key>]`).
+     * 403 ohne Sorgerecht oder nach Fristende, 409 wenn bereits eine Antwort vorliegt und
+     * keine Korrektur mehr möglich ist, 422 bei ungültigen Angaben (Meldungen je `answers.<key>`).
+     *
+     * @bodyParam answers object required Antworten je Feldschlüssel.
+     * @bodyParam confirm boolean required Bestätigung der Richtigkeit. Example: true
+     * @bodyParam correction_reason string Grund einer Korrektur.
+     */
+    public function submit(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $request->validate([
+            'answers' => 'present|array',
+            'confirm' => 'accepted',
+            'correction_reason' => 'nullable|string|max:1000',
+        ], ['confirm.accepted' => 'Bitte bestätigen Sie die Richtigkeit Ihrer Angaben.']);
+
+        $files = collect($assignment->inquiry->templateVersion->fields)
+            ->filter(fn ($f) => $f['type'] === InquiryFieldType::File->value && $request->hasFile('answers.'.$f['key']))
+            ->mapWithKeys(fn ($f) => [$f['key'] => $request->file('answers.'.$f['key'])])
+            ->all();
+
+        $response = $this->responses->submit(
+            $assignment,
+            $request->user(),
+            (array) $request->input('answers', []),
+            $files,
+            ['channel' => 'app', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()],
+            $request->input('correction_reason'),
+        );
+
+        $assignment->refresh()->load(['inquiry', 'child']);
+
+        return response()->json([
+            'message' => 'Vielen Dank! Ihre Angaben wurden verbindlich übermittelt.',
+            'data' => $this->summary($request, $assignment) + ['response' => $this->presentResponse($assignment, $response)],
+        ] + $this->receiptResult($assignment, $response->getRelation('receipt')), 201);
+    }
+
+    /**
+     * Gültige Antwort als weitere sorgeberechtigte Person bestätigen (nur bei `can_confirm`).
+     * 409, wenn die Antwort inzwischen korrigiert wurde oder keine Bestätigung aussteht.
+     *
+     * @bodyParam confirm boolean required Angaben geprüft und einverstanden. Example: true
+     */
+    public function confirm(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $request->validate(['confirm' => 'accepted'], [
+            'confirm.accepted' => 'Bitte bestätigen Sie, dass Sie die Angaben geprüft haben und mit ihnen einverstanden sind.',
+        ]);
+
+        $confirmation = $this->confirmation->confirm($assignment, $request->user(), ['channel' => 'app', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()]);
+        $assignment->refresh()->load(['inquiry', 'child']);
+
+        return response()->json([
+            'message' => 'Vielen Dank! Ihre Bestätigung wurde gespeichert.',
+            'data' => $this->summary($request, $assignment),
+        ] + $this->receiptResult($assignment, $confirmation->getRelation('receipt')));
+    }
+
+    /**
+     * Einwilligung(en) widerrufen (Art. 7 Abs. 3 DSGVO) – jederzeit, auch nach Fristende, solange
+     * die Antworten nicht gelöscht sind. Erzeugt eine neue Antwortversion mit den Einwilligungen
+     * als `denied` und eine Quittung der Art `withdrawal`. Bei gemeinsamer Erklärung wirkt der
+     * Widerruf sofort. 403 ohne Sorgerecht, 422 bei nicht widerrufbaren Feldern.
+     *
+     * @bodyParam fields string[] Schlüssel der Einwilligungen; ohne Angabe alle widerrufbaren. Example: ["foto"]
+     * @bodyParam confirm string required Bestätigung des Widerrufs. Example: accepted
+     * @bodyParam reason string Optionaler Grund (max. 500 Zeichen).
+     */
+    public function withdraw(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        abort_unless($this->access->canAnswer($request->user(), $assignment), 403, 'Einwilligungen können nur sorgeberechtigte Personen widerrufen.');
+        $request->validate([
+            'fields' => 'nullable|array',
+            'fields.*' => 'string|max:100',
+            // Vertrag: "confirm": "accepted" (zusätzlich die üblichen Werte von „accepted“)
+            'confirm' => ['required', Rule::in(['accepted', '1', 'true', 'yes', 'on'])],
+            'reason' => 'nullable|string|max:500',
+        ], ['confirm.required' => 'Bitte bestätigen Sie den Widerruf.', 'confirm.in' => 'Bitte bestätigen Sie den Widerruf.']);
+
+        $response = $this->responses->withdraw(
+            $assignment,
+            $request->user(),
+            array_values((array) $request->input('fields', [])),
+            $request->input('reason'),
+            'app',
+            ['ip' => $request->ip(), 'user_agent' => $request->userAgent()],
+        );
+        $assignment->refresh();
+
+        return response()->json([
+            'message' => 'Ihr Widerruf wurde gespeichert.',
+            'data' => $this->showPayload($request, $assignment),
+        ] + $this->receiptResult($assignment, $response->getRelation('receipt')));
+    }
+
+    /**
+     * Erklärungsquittung als PDF (byteidentisch zum Original). 404, wenn die Quittung nicht zu
+     * diesem Auftrag gehört; 403 ohne Sorgerecht.
+     */
+    public function receipt(Request $request, InquiryAssignment $assignment, string $uuid): Response
+    {
+        $this->authorizeView($request, $assignment);
+        $receipt = InquiryReceipt::where('assignment_id', $assignment->id)->where('uuid', $uuid)->first();
+        abort_if($receipt === null, 404, 'Quittung nicht gefunden.');
+        abort_unless($this->access->canAnswer($request->user(), $assignment), 403, 'Quittungen können nur sorgeberechtigte Personen abrufen.');
+
+        return response($this->receipts->pdf($receipt), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$receipt->fileName().'"',
+        ]);
+    }
+
+    /**
+     * Änderung zu einer abgegebenen Antwort melden (nur bei `can_request_change`), z. B. nach
+     * einem Umzug. `answers` enthält den vollständigen neuen Datensatz (vorbefüllt aus
+     * `response.answers`). Die Schule prüft die Meldung und übernimmt sie als neue Version;
+     * eine eigene offene Meldung wird ersetzt. 409, wenn keine Meldung möglich ist
+     * (`change_reason`), 422 bei ungültigen oder unveränderten Angaben.
+     *
+     * @bodyParam answers object required Antworten je Feldschlüssel.
+     * @bodyParam message string required Was hat sich geändert? Example: Umzug zum 01.03.
+     * @bodyParam confirm boolean required Bestätigung der Richtigkeit. Example: true
+     */
+    public function requestChange(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $request->validate([
+            'answers' => 'present|array',
+            'message' => 'required|string|max:2000',
+            'confirm' => 'accepted',
+        ], [
+            'message.required' => 'Bitte beschreiben Sie kurz, was sich geändert hat.',
+            'confirm.accepted' => 'Bitte bestätigen Sie die Richtigkeit Ihrer Angaben.',
+        ]);
+
+        $files = collect($assignment->inquiry->templateVersion->fields)
+            ->filter(fn ($f) => $f['type'] === InquiryFieldType::File->value && $request->hasFile('answers.'.$f['key']))
+            ->mapWithKeys(fn ($f) => [$f['key'] => $request->file('answers.'.$f['key'])])
+            ->all();
+
+        $this->changes->submit($assignment, $request->user(), (array) $request->input('answers', []), $files, (string) $request->input('message'),
+            ['channel' => 'app', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()]);
+        $assignment->refresh()->load(['inquiry', 'child']);
+
+        return response()->json([
+            'message' => 'Vielen Dank! Ihre Änderung wurde an die Schule übermittelt.',
+            'data' => $this->summary($request, $assignment) + ['change_request' => $this->presentChange($request, $assignment)],
+        ], 201);
+    }
+
+    /**
+     * Eigene offene Änderungsmeldung zurückziehen.
+     */
+    public function withdrawChange(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $this->changes->withdraw($assignment, $request->user());
+
+        return response()->json(['message' => 'Änderungsmeldung zurückgezogen.']);
+    }
+
+    /**
+     * PDF-Bestätigung der gültigen Antwort.
+     */
+    public function pdf(Request $request, InquiryAssignment $assignment): Response
+    {
+        $this->authorizeView($request, $assignment);
+        abort_unless($this->access->canAnswer($request->user(), $assignment) && $assignment->currentResponse, 404);
+        // Erklärungsquittung (byteidentisch zum Original); ohne Quittung (Altbestand) wie bisher
+        $receipt = $this->receipts->currentReceiptFor($assignment, $request->user());
+        if ($receipt !== null) {
+            return response($this->receipts->pdf($receipt), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="'.$receipt->fileName().'"',
+            ]);
+        }
+
+        $response = $assignment->currentResponse()->with(['user', 'templateVersion'])->first();
+
+        return Pdf::loadView('elternabfragen.pdf.confirmation', [
+            'assignment' => $assignment,
+            'inquiry' => $assignment->inquiry,
+            'response' => $response,
+            'fields' => $response->templateVersion->fields,
+            'schema' => $this->schema,
+        ])->download('Bestaetigung_'.$assignment->inquiry_id.'_v'.$response->version.'.pdf');
+    }
+
+    /**
+     * Hochgeladene Datei der gültigen Antwort.
+     */
+    public function file(Request $request, InquiryAssignment $assignment, string $field): Response
+    {
+        $this->authorizeView($request, $assignment);
+        abort_unless($this->access->canAnswer($request->user(), $assignment), 404);
+        $file = $assignment->currentResponse ? $this->responses->filePath($assignment->currentResponse, $field) : null;
+        abort_unless($file, 404);
+        \App\Services\Security\SecurityLog::record('inquiry.file_download', null, ['inquiry_id' => $assignment->inquiry_id, 'assignment_id' => $assignment->id]);
+
+        return Storage::disk(ResponseService::DISK)->download($file['path'], $file['name']);
+    }
+
+    private function summary(Request $request, InquiryAssignment $assignment): array
+    {
+        $state = $this->access->state($request->user(), $assignment);
+        $change = $this->changes->state($request->user(), $assignment);
+        $inquiry = $assignment->inquiry;
+
+        return [
+            'id' => $assignment->id,
+            'inquiry_id' => $inquiry->id,
+            'title' => $inquiry->title,
+            'child' => [
+                'id' => $assignment->child_id,
+                'first_name' => $assignment->child?->first_name,
+                'full_name' => $assignment->childName(),
+            ],
+            'status' => $assignment->status->value,
+            'status_label' => $assignment->displayLabel(),
+            'inquiry_status' => $inquiry->status->value,
+            'deadline' => $state['deadline']->toIso8601String(),
+            'extended' => $assignment->extended_until !== null,
+            'reopened' => $assignment->isReopened(),
+            'submitted_at' => $assignment->last_submitted_at?->toIso8601String(),
+            'can_view_answers' => $state['can_view_answers'],
+            'can_submit' => $state['can_submit'],
+            'can_correct' => $state['can_correct'],
+            'can_confirm' => $state['can_confirm'],
+            'awaiting_confirmation' => $state['awaiting_confirmation'],
+            'correction_until' => $state['correction_until']?->toIso8601String(),
+            'reason' => $state['reason'],
+            'can_request_change' => $change['allowed'],
+            'change_reason' => $change['visible'] && ! $change['allowed'] ? $change['reason'] : null,
+            'change_pending' => $change['pending'] !== null,
+        ];
+    }
+
+    /** @param  array<int, string>  $children  wählbare eigene Kinder (id => Name) */
+    private function presentField(array $field, array $children = []): array
+    {
+        return array_filter([
+            'key' => $field['key'],
+            'type' => $field['type'],
+            'label' => $field['label'],
+            'help' => $field['help'] ?? null,
+            'required' => (bool) ($field['required'] ?? false),
+            'options' => match ($field['type']) {
+                'yes_no' => [['value' => FieldSchema::YES, 'label' => 'Ja'], ['value' => FieldSchema::NO, 'label' => 'Nein']],
+                'consent' => [['value' => FieldSchema::GRANTED, 'label' => 'Ich willige ein'], ['value' => FieldSchema::DENIED, 'label' => 'Ich willige nicht ein']],
+                'child' => array_map(fn ($id, $name) => ['value' => (string) $id, 'label' => $name], array_keys($children), $children),
+                default => isset($field['options']) ? array_map(fn ($o) => ['value' => $o, 'label' => $o], $field['options']) : null,
+            },
+            'min_length' => $field['min_length'] ?? null,
+            'max_length' => $field['max_length'] ?? null,
+            'format' => $field['format'] ?? null,
+            'error_message' => $field['error_message'] ?? null,
+            'consent_text' => $field['consent_text'] ?? null,
+            'accept' => $field['type'] === 'file' ? FieldSchema::UPLOAD_MIMES : null,
+        ], fn ($v) => $v !== null);
+    }
+
+    private function presentResponse(InquiryAssignment $assignment, InquiryResponse $response): array
+    {
+        $fields = collect($response->templateVersion?->fields ?? $assignment->inquiry->templateVersion->fields)->keyBy('key');
+
+        return [
+            'version' => $response->version,
+            'submitted_at' => $response->submitted_at->toIso8601String(),
+            'submitted_by' => $response->user?->name,
+            'answers' => collect($response->answers)->map(fn ($value, $key) => is_array($value) && isset($value['path'])
+                ? ['name' => $value['name'], 'size' => $value['size'] ?? null, 'url' => route('api.v1.elternabfragen.file', [$assignment, $key])]
+                : $value)->all(),
+            'display' => $fields->filter(fn ($f) => $f['type'] !== 'info')
+                ->map(fn ($f) => ['key' => $f['key'], 'label' => $f['label'], 'value' => $this->schema->display($f, $response->answers[$f['key']] ?? null)])
+                ->values(),
+            'answer_hash' => $response->answer_hash,
+            'pdf_url' => route('api.v1.elternabfragen.pdf', $assignment),
+        ];
+    }
+
+    private function presentReceipt(InquiryAssignment $assignment, InquiryReceipt $receipt): array
+    {
+        return [
+            'uuid' => $receipt->uuid,
+            'kind' => $receipt->kind->value,
+            'kind_label' => $receipt->kind->label(),
+            'declared_at' => $receipt->declared_at->toIso8601String(),
+            'declarant_name' => $receipt->declarant_name,
+            'child_name' => $receipt->child_name,
+            'backfilled' => (bool) $receipt->backfilled,
+            'content_hash' => $receipt->content_hash,
+            'pdf_url' => route('api.v1.elternabfragen.receipts.pdf', [$assignment, $receipt->uuid]),
+        ];
+    }
+
+    /** @return array{receipt?: array, receipt_delivery?: string} */
+    private function receiptResult(InquiryAssignment $assignment, ?InquiryReceipt $receipt): array
+    {
+        return $receipt === null ? [] : [
+            'receipt' => $this->presentReceipt($assignment, $receipt),
+            'receipt_delivery' => app(DeliveryService::class)->receiptDelivery($receipt),
+        ];
+    }
+
+    /**
+     * Letzte eigene bzw. offene Änderungsmeldung: status pending|accepted|rejected,
+     * `note` = Begründung bzw. Vermerk der Schule.
+     */
+    private function presentChange(Request $request, InquiryAssignment $assignment): ?array
+    {
+        /** @var InquiryChangeRequest|null $change */
+        $change = $assignment->changeRequests()->with(['user:id,name', 'response:id,version'])
+            ->where(fn ($q) => $q->where('user_id', $request->user()->id)->orWhere('status', InquiryChangeRequestStatus::Pending->value))
+            ->where('status', '!=', InquiryChangeRequestStatus::Withdrawn->value)
+            ->first();
+
+        return $change ? [
+            'id' => $change->id,
+            'status' => $change->status->value,
+            'status_label' => $change->status->label(),
+            'message' => $change->message,
+            'requested_at' => $change->created_at->toIso8601String(),
+            'requested_by' => $change->user?->name,
+            'own' => $change->user_id === $request->user()->id,
+            'handled_at' => $change->isPending() ? null : $change->handled_at?->toIso8601String(),
+            'note' => $change->status === InquiryChangeRequestStatus::Rejected ? $change->handled_note : null,
+            'version' => $change->response?->version,
+        ] : null;
+    }
+
+    private function authorizeView(Request $request, InquiryAssignment $assignment): void
+    {
+        abort_unless($this->access->canView($request->user(), $assignment), 404, 'Abfrage nicht gefunden.');
+    }
+}

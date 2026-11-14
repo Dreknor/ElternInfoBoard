@@ -1,5 +1,6 @@
 <div class="container-fluid">
-    <div class="row">
+    {{-- id wird von refreshAttendanceList() in index.blade.php zum Austauschen genutzt --}}
+    <div class="row" id="groups-container">
         @foreach($groups as $group)
             @if($careSettings->hide_groups_when_empty and $children->where('group_id', $group->id)->count() == 0)
                 @continue
@@ -127,8 +128,8 @@
                                                             @endif
                                                         @endforeach
                                                     @endif
-                                                        @if(!($isFerientag ?? false) && $child->arbeitsgemeinschaften_today()->isNotEmpty())
-                                                                @foreach($child->arbeitsgemeinschaften_today() as $ag)
+                                                        @if(!($isFerientag ?? false) && $child->arbeitsgemeinschaften_aktuell()->isNotEmpty())
+                                                                @foreach($child->arbeitsgemeinschaften_aktuell() as $ag)
                                                                     <span class="badge badge-primary ml-1">
                                                                 <i class="fas fa-users"></i> AG
                                                                 {{ $ag->name }}, <br> {{ $ag->start_time->format('H:i') }} - {{ $ag->end_time->format('H:i') }}

@@ -7,6 +7,8 @@ use App\Model\Message;
 use App\Model\MessageReport;
 use App\Model\PostReport;
 use App\Model\ReminderLog;
+use App\Model\SecurityEvent;
+use App\Services\Security\SecurityLog;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -47,6 +49,8 @@ class DatenschutzController extends Controller
 
         $data = $this->collectUserData($user);
 
+        SecurityLog::record('privacy.export', $user->id, ['format' => 'json']);
+
         $filename = Carbon::now()->format('Y-m-d') . '_datenschutz_' . str($user->name)->slug() . '.json';
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
@@ -72,13 +76,37 @@ class DatenschutzController extends Controller
             'user'           => $user,
             'pflichtstunden' => $pflichtstunden,
             'exportAt'       => Carbon::now(),
+            'securityEvents' => $this->securityEvents($user),
         ]);
+
+        SecurityLog::record('privacy.export', $user->id, ['format' => 'pdf']);
 
         $pdf->setPaper('A4', 'portrait');
 
         $filename = Carbon::now()->format('Y-m-d') . '_datenschutz_' . str($user->name)->slug() . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Eigene Einträge des Sicherheitsprotokolls (Art. 15 DSGVO / § 19 DSG-EKD).
+     * Die handelnde Person wird nicht namentlich genannt, nur ob eine andere Person beteiligt war.
+     */
+    private function securityEvents($user): array
+    {
+        return SecurityEvent::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($e) => [
+                'zeitpunkt'  => $e->created_at?->toIso8601String(),
+                'ereignis'   => $e->event,
+                'ip_adresse' => $e->ip_address,
+                'user_agent' => $e->user_agent,
+                'kontext'    => $e->context ?: null,
+                'durch_andere_person_ausgeloest' => $e->actor_id !== null && (int) $e->actor_id !== (int) $user->id,
+            ])
+            ->values()->toArray();
     }
 
     /**
@@ -155,7 +183,15 @@ class DatenschutzController extends Controller
                     'gueltig_bis'   => $c->pivot->valid_until?->toDateString(),
                     'herkunft'      => $c->pivot->sourceLabel(),
                     'ungeprueft'    => $c->pivot->isPendingReview(),
-                ])
+                ] + (\App\Support\StudentAccounts::enabled() && $c->studentAccount ? [
+                    // Schülerkonto des Kindes (docs/konzept-schuelerkonten.md §9, S-11)
+                    'schuelerkonto' => [
+                        'benutzername' => $c->studentAccount->username,
+                        'aktiv'        => (bool) $c->studentAccount->is_active,
+                        'angelegt_am'  => $c->studentAccount->created_at?->toIso8601String(),
+                        'zustimmung'   => $c->studentAccount->student_consent,
+                    ],
+                ] : []))
                 ->values()->toArray(),
 
             'api_tokens' => $user->tokens
@@ -334,6 +370,14 @@ class DatenschutzController extends Controller
                     'gesendet_am'   => $l->sent_at->toIso8601String(),
                 ])
                 ->values()->toArray(),
+
+            'sicherheitsprotokoll' => [
+                'hinweis' => 'Einträge zu Anmeldungen, Downloads und sicherheitsrelevanten Vorgängen Ihres Kontos. '
+                    . 'Zweck: Aufklärung von Sicherheitsvorfällen (Art. 32 DSGVO). Aufbewahrung '
+                    . config('security_log.retention_days') . ' Tage, die IP-Adresse wird nach '
+                    . config('security_log.anonymize_ip_after_days') . ' Tagen gekürzt und der User-Agent entfernt.',
+                'eintraege' => $this->securityEvents($user),
+            ],
         ];
     }
 }

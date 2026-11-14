@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Support\KontaktEmpfaenger;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\KontaktRequest;
-use App\Mail\SendFeedback;
+use App\Jobs\SendKontaktMail;
 use App\Model\User;
 use App\Settings\EmailSetting;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Class ContactController
@@ -28,7 +30,7 @@ class ContactController extends Controller implements HasMiddleware
     /**
      * Display a listing of employees.
      *
-     * Retrieves a list of employees who have the role 'Mitarbeiter' or the permission 'show in contact form'.
+     * Retrieves a list of users who have the permission 'show in contact form' (directly or via one of their roles).
      * Prepends the list with a default 'Sekretariat' entry.
      *
      * @responseField data array The list of employees.
@@ -44,27 +46,28 @@ class ContactController extends Controller implements HasMiddleware
         $emailSettings = new EmailSetting;
         $defaultName = $emailSettings->contact_default_name ?? 'Sekretariat';
 
-        $mitarbeiter = User::whereHas('roles', function ($q) {
-            $q->where('name', 'Mitarbeiter');
-        })->orWhereHas('permissions', function ($q) {
-            $q->where('name', 'show in contact form');
-        })->orderBy('name')->get(['id', 'name']);
+        $mitarbeiter = User::contactRecipients()->orderBy('name')->get(['id', 'name']);
 
         $mitarbeiter->prepend(['id' => 0, 'name' => $defaultName]);
 
-        return response()->json(
-            ['data' => $mitarbeiter]
-        );
+        // meta.multiple: Server nimmt mehrere Empfänger an (mitarbeiter[] beim Senden).
+        // Ältere Server liefern kein meta – die App bleibt dann bei einem Empfänger.
+        return response()->json([
+            'data' => $mitarbeiter,
+            'meta' => ['multiple' => true, 'max' => KontaktEmpfaenger::MAX],
+        ]);
     }
 
     /**
      * Send email.
      *
-     * Sends a email to the specified employee or to the default email address if no employee is specified.
+     * Queues an email to the specified employee or to the default email address if no employee is specified.
+     * Attachments are stored privately until the mail has been sent.
      *
      * @bodyParam mitarbeiter int required The ID of the employee to send the email to. If 0, the email is sent to the default address.
      * @bodyParam betreff string required The subject of the email.
      * @bodyParam text string required The content of the email.
+     * @bodyParam files file[] Up to 3 attachments, max. 8 MB each.
      *
      * @responseField success string The success message.
      * @responseField error string The error message.
@@ -76,24 +79,31 @@ class ContactController extends Controller implements HasMiddleware
     public function send(KontaktRequest $request)
     {
         $user = $request->user();
-        $recipientId = (int) $request->input('mitarbeiter');
-
-        if ($recipientId !== 0) {
-            // Nur Empfänger aus der Kontaktliste – nicht beliebige Nutzer-IDs.
-            $email = $this->contactQuery()->where('id', $recipientId)->value('email');
-            if (! $email) {
-                return response()->json(['error' => 'Empfänger nicht gefunden', 'message' => 'Empfänger nicht gefunden'], 404);
-            }
-        } else {
-            $emailSettings = new EmailSetting;
-            $email = $emailSettings->contact_default_email ?: config('mail.from.address');
+        // Einzelne ID (ältere Apps) oder Liste; nur Empfänger aus der Kontaktliste – nicht beliebige Nutzer-IDs.
+        $recipientIds = KontaktEmpfaenger::ids($request->input('mitarbeiter'));
+        $email = KontaktEmpfaenger::emails($recipientIds);
+        if ($email === null) {
+            return response()->json(['error' => 'Empfänger nicht gefunden', 'message' => 'Empfänger nicht gefunden'], 404);
         }
 
-        $attachmentsData = [];
+        // Anhänge bis zum Versand privat ablegen; der Job verschickt die Mail im Hintergrund,
+        // damit die App nicht auf Upload-Verarbeitung und SMTP-Versand warten muss.
+        $attachments = [];
+        $directory = null;
         foreach ((array) $request->file('files', []) as $file) {
             if ($file && $file->isValid()) {
-                $attachmentsData[] = [
-                    'path' => $file->getRealPath(),
+                $directory ??= SendKontaktMail::DIRECTORY.'/'.Str::uuid();
+                $path = $file->storeAs($directory, count($attachments).'_'.Str::random(8), 'local');
+                if ($path === false) {
+                    Storage::disk('local')->deleteDirectory($directory);
+
+                    return response()->json([
+                        'error' => 'Attachment not stored',
+                        'message' => 'Der Anhang konnte nicht gespeichert werden. Bitte versuchen Sie es später erneut.',
+                    ], 500);
+                }
+                $attachments[] = [
+                    'path' => $path,
                     'name' => $file->getClientOriginalName(),
                     'mime' => $file->getMimeType(),
                 ];
@@ -103,38 +113,21 @@ class ContactController extends Controller implements HasMiddleware
         // Keine Inhalte protokollieren (B-61) – nur Metadaten.
         Log::info('Kontaktformular (API)', [
             'user_id' => $user?->id,
-            'recipient_id' => $recipientId,
-            'attachments' => count($attachmentsData),
+            'recipient_ids' => $recipientIds,
+            'attachments' => count($attachments),
         ]);
 
-        try {
-            // Synchron, weil hochgeladene Anhänge nur während der Anfrage existieren.
-            Mail::to($email)->send(new SendFeedback(
-                $request->input('text'),
-                $request->input('betreff'),
-                ['attachments' => $attachmentsData],
-                $user?->name,
-                $user?->email,
-                $user?->name
-            ));
+        SendKontaktMail::dispatch(
+            $email,
+            $request->input('text'),
+            $request->input('betreff'),
+            $attachments,
+            $directory,
+            $user?->name,
+            $user?->email,
+            (bool) $user?->sendCopy,
+        );
 
-            return response()->json(['success' => 'Mail sent'], 200);
-        } catch (\Exception $e) {
-            Log::error('Kontaktformular (API): Versand fehlgeschlagen', ['error' => $e->getMessage()]);
-
-            return response()->json([
-                'error' => 'Mail not sent',
-                'message' => 'Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.',
-            ], 500);
-        }
-    }
-
-    /** Nutzer, die im Kontaktformular auswählbar sind. */
-    private function contactQuery()
-    {
-        return User::query()->where(function ($q) {
-            $q->whereHas('roles', fn ($r) => $r->where('name', 'Mitarbeiter'))
-                ->orWhereHas('permissions', fn ($p) => $p->where('name', 'show in contact form'));
-        });
+        return response()->json(['success' => 'Mail sent'], 200);
     }
 }

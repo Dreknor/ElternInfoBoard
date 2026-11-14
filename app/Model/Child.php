@@ -38,6 +38,7 @@ class Child extends Model implements HasMedia
         'last_name',
         'group_id',
         'class_id',
+        'stundenplan_klasse',
         'notification',
         'auto_checkIn',
         'ucs_username',
@@ -45,7 +46,23 @@ class Child extends Model implements HasMedia
         'ucs_school',
         'ucs_synced_at',
         'ucs_source',
+        // `user_id` (Schülerkonto) bewusst nicht: nur StudentAccountService setzt es (forceFill)
     ];
+
+    protected static function booted(): void
+    {
+        // Kind ausgeschieden oder gelöscht → Schülerkonto sofort sperren (§7)
+        $lock = function (Child $child): void {
+            if ($child->user_id && ($child->trashed() || $child->status === self::STATUS_LEFT)) {
+                $student = User::students()->find($child->user_id);
+                if ($student) {
+                    app(\App\Services\Students\StudentAccountService::class)->deactivate($student, 'kind_ausgeschieden');
+                }
+            }
+        };
+        static::saved($lock);
+        static::deleted($lock);
+    }
 
     protected function casts(): array
     {
@@ -56,6 +73,13 @@ class Child extends Model implements HasMedia
             'entry_date' => 'date',
             'exit_date' => 'date',
         ];
+    }
+
+    /** Schülerkonto des Kindes (docs/konzept-schuelerkonten.md §3), höchstens eines. */
+    public function studentAccount(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id')
+            ->withoutGlobalScope(\App\Model\Scopes\ExcludeStudentAccounts::class);
     }
 
     public function group(): BelongsTo
@@ -149,6 +173,17 @@ class Child extends Model implements HasMedia
     {
         return $this->belongsToMany(Arbeitsgemeinschaft::class, 'arbeitsgemeinschaften_participants', 'participant_id', 'ag_id')
             ->where('end_date', '>', now());
+    }
+
+    /**
+     * AGs von heute für die Anwesenheitsliste: ausgeblendet, sobald das Ende mehr als
+     * 15 Minuten zurückliegt. Gefiltert wird bei jedem Aufruf, nicht im Tages-Cache.
+     */
+    public function arbeitsgemeinschaften_aktuell(): \Illuminate\Support\Collection
+    {
+        return $this->arbeitsgemeinschaften_today()
+            ->filter(fn ($ag) => ! $ag->end_time || today()->setTimeFrom($ag->end_time)->addMinutes(15)->isFuture())
+            ->values();
     }
 
     public function arbeitsgemeinschaften_today()

@@ -17,11 +17,24 @@ return Application::configure(basePath: dirname(__DIR__))
         // channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
+    // Echte Client-IP hinter Reverse-Proxy/Load-Balancer: TRUSTED_PROXIES (config/trustedproxy.php).
+    // Erst nach dem Laden der Konfiguration, denn beim Aufbau der Middleware ist .env noch nicht geladen.
+    // Ohne Angabe wird keinem Proxy vertraut (bisheriges Verhalten).
+    ->booted(function () {
+        $proxies = config('trustedproxy.proxies');
+        if (! empty($proxies)) {
+            \Illuminate\Http\Middleware\TrustProxies::at($proxies);
+        }
+    })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo('/home');
 
         $middleware->web([
+            // Nach Passwortänderung andere Web-Sitzungen beenden (vergleicht den Passwort-Hash in der Sitzung).
+            \App\Http\Middleware\AuthenticateSession::class,
+            // Schülerkonten: Freigabeliste vor allen übrigen Prüfungen (docs/konzept-schuelerkonten.md §5)
+            \App\Http\Middleware\RestrictStudentAccounts::class,
             \App\Http\Middleware\CheckNewsForUser::class,
             \App\Http\Middleware\LastOnlineAt::class,
             \App\Http\Middleware\CheckUserActive::class,
@@ -30,6 +43,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->throttleApi();
+
+        // Integrations-Tokens: nur lesen bzw. freigegebene Bereiche schreiben
+        $middleware->api(append: [
+            \App\Http\Middleware\RestrictStudentAccounts::class,
+            \App\Http\Middleware\EnforceIntegrationTokenScope::class,
+        ]);
+
+        // MCP-Tokens (Chatbot) gelten nur für den MCP-Endpunkt – vorn in der Gruppe, damit vor
+        // Route-Model-Binding und Controller nichts mit einem solchen Token läuft.
+        $middleware->api(prepend: [\App\Http\Middleware\RestrictMcpTokens::class]);
 
         // Wartungsmodus-Bypass wird vom Online-Updater gesetzt und vor dem
         // Entschlüsseln der Cookies geprüft – daher unverschlüsselt lassen.
@@ -43,6 +66,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'etag' => \App\Http\Middleware\ETagResponses::class,
             'api.password' => \App\Http\Middleware\ApiPasswordChangeRequired::class,
             'module' => \App\Http\Middleware\EnsureModuleActive::class,
+            'student' => \App\Http\Middleware\EnsureStudentAccount::class,
+            'student.enabled' => \App\Http\Middleware\EnsureStudentAccountsEnabled::class,
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'student.messenger' => \App\Http\Middleware\EnsureStudentMessengerEnabled::class,
         ]);
 
         $middleware->priority([

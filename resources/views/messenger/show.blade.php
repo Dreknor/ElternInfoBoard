@@ -32,12 +32,25 @@
             <div class="min-w-0">
                 <h1 class="text-lg font-bold text-gray-800 truncate">{{ $display_name }}</h1>
                 <p class="text-xs text-gray-500">
-                    {{ $conversation->users->count() }} Teilnehmer
+                    @if($conversation->isStudentChat())
+                        Chat mit einer Schülerin oder einem Schüler
+                    @else
+                        {{ $conversation->users->count() }} Teilnehmer
+                    @endif
                 </p>
             </div>
         </div>
+        @if($conversation->isStudentChat() && $conversation->is_active)
+            <form action="{{ route('schuelerchat.close', $conversation->id) }}" method="POST" class="ml-auto"
+                  onsubmit="return confirm('Chat beenden? Danach kann die Schülerin oder der Schüler nicht mehr schreiben.');">
+                @csrf
+                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100">
+                    <i class="fas fa-ban"></i> Chat beenden
+                </button>
+            </form>
+        @endif
         <!-- Stummschalten -->
-        <form action="{{ route('messenger.mute', $conversation) }}" method="POST" class="ml-auto">
+        <form action="{{ route('messenger.mute', $conversation) }}" method="POST" class="{{ $conversation->isStudentChat() ? '' : 'ml-auto' }}">
             @csrf
             @php
                 $myPivot = $conversation->users->where('id', auth()->id())->first()?->pivot;
@@ -98,7 +111,8 @@
                                      loading="lazy"
                                      class="rounded-lg max-w-full cursor-zoom-in"
                                      style="max-height: 300px; object-fit: contain;"
-                                     onerror="this.parentElement.innerHTML='<span class=\'text-xs opacity-75 flex items-center gap-1\'><i class=\'fas fa-image\'></i> {{ e($media->file_name) }}</span>'">
+                                     data-file-name="{{ $media->file_name }}"
+                                     onerror="const s = document.createElement('span'); s.className = 'text-xs opacity-75 flex items-center gap-1'; s.innerHTML = '<i class=\'fas fa-image\'></i> '; s.append(this.dataset.fileName); this.parentElement.replaceChildren(s);">
                             </a>
                             @else
                             <a href="{{ route('messenger.attachment', $message) }}"

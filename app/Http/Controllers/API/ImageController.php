@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Services\App\MediaAccess;
+use App\Support\UploadGuard;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -24,7 +25,7 @@ class ImageController extends Controller implements HasMiddleware
      *
      * Get file by uuid
      *
-     * @group Files
+     * @group Dateien
      *
      * @urlParam uuid required The uuid of the file
      *
@@ -44,7 +45,7 @@ class ImageController extends Controller implements HasMiddleware
      *
      * Get file by id
      *
-     * @group Files
+     * @group Dateien
      *
      * @urlParam media_id required The id of the file
      *
@@ -60,20 +61,21 @@ class ImageController extends Controller implements HasMiddleware
     }
 
     /**
-     * Zugriff prüfen (B-07) und – falls angefragt und vorhanden – eine verkleinerte Fassung liefern (B-12).
+     * Zugriff prüfen und – falls angefragt und vorhanden – eine verkleinerte Fassung liefern.
      */
     private function serve(Request $request, Media $media): BinaryFileResponse
     {
         abort_unless(MediaAccess::canView($request->user(), $media), 403, 'Zugriff verweigert.');
+        MediaAccess::logDownload($media);
 
         $size = $request->query('size');
         $path = in_array($size, ['thumb', 'preview'], true) && $media->hasGeneratedConversion($size)
             ? $media->getPath($size)
             : $media->getPath();
 
-        return response()->file($path, [
+        return UploadGuard::harden(response()->file($path, [
             'Content-Type' => $path === $media->getPath() ? $media->mime_type : (mime_content_type($path) ?: $media->mime_type),
             'Cache-Control' => 'private, max-age=86400',
-        ]);
+        ]), $media);
     }
 }

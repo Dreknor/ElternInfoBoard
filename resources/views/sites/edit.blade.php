@@ -100,7 +100,7 @@
                                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                         @foreach($block->block->getMedia() as $media)
                                             <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                                                <img src="{{ $media->getUrl() }}" alt="{{ $media->name }}" class="w-full h-32 object-cover">
+                                                <img src="{{ url('/image/'.$media->id) }}" alt="{{ $media->name }}" class="w-full h-32 object-cover">
                                                 @can('create sites')
                                                     <div class="p-2">
                                                         <form action="{{ route('blocks.media.delete', ['block' => $block->id, 'media' => $media->id]) }}" method="post">
@@ -154,7 +154,7 @@
                                     <div class="space-y-2">
                                         @foreach($block->block->getMedia() as $media)
                                             <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                                <a href="{{ $media->getUrl() }}" target="_blank" class="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900">
+                                                <a href="{{ url('/image/'.$media->id) }}" target="_blank" class="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900">
                                                     <i class="fas fa-file text-gray-400"></i>
                                                     {{ $media->file_name }}
                                                 </a>

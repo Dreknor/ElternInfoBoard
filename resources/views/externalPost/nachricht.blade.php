@@ -57,7 +57,7 @@
 
     <div class="nachricht {{$nachricht->type}} rounded-xl shadow-lg overflow-hidden mb-6 transition-shadow duration-300 hover:shadow-xl"
          id="{{$nachricht->id}}" style="{{ $cardBorderStyle }}"
-         @if($nachricht->is_archived) x-data="{ showArchived: false }" @endif>
+         @if($nachricht->is_archived) x-data="{ showArchived: false, showRueckmeldungen: false }" @else x-data="{ showRueckmeldungen: false }" @endif>
         @if(count($nachricht->getMedia('header'))>0)
             <div class="relative h-56 overflow-hidden">
                 <img class="w-full h-full object-cover object-center" loading="lazy" decoding="async" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}"
@@ -140,7 +140,7 @@
             @if(count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0)
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="md:col-span-2 prose max-w-none leading-relaxed" style="color: var(--color-text-primary);">
-                        {!! $nachricht->news !!}
+                        @safeHtml($nachricht->news)
                     </div>
                     <div class="md:col-span-1 space-y-4">
                         @if(count($nachricht->getMedia('images'))>0)
@@ -154,43 +154,94 @@
                 </div>
             @else
                 <div class="prose max-w-none leading-relaxed" style="color: var(--color-text-primary);">
-                    {!! $nachricht->news !!}
+                    @safeHtml($nachricht->news)
                 </div>
             @endif
         </div>
 
-        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'email')
-            @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
-                <div class="px-6 pb-4">
-                    <div class="flex items-center gap-2">
-                        @for($x=1; $x <= $nachricht->userRueckmeldung->count(); $x++)
-                            <i class="fas fa-user-alt text-green-600" title="{{$x}}"></i>
-                        @endfor
-                        @for($x=1; $x <= app(\App\Services\Rueckmeldungen\RueckmeldungStatusService::class)->summary($nachricht)['open']; $x++)
-                            <i class="fas fa-user-alt text-red-600" title="{{$x}}"></i>
-                        @endfor
-                    </div>
-                </div>
-            @endif
-            @include('nachrichten.footer.rueckmeldung')
-            @can('view rueckmeldungen')
-                <div class="border-t px-6 py-3" style="border-color: var(--color-card-border);">
-                    <button class="w-full inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors duration-200 btnShowRueckmeldungen"
-                            style="background-color: var(--color-primary); color: var(--color-widget-header-text);"
-                            onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
-                            onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
-                            data-toggle="collapse" data-target="#{{$nachricht->id}}_rueckmeldungen">
-                        <i class="fa fa-eye mr-2"></i>
-                        {{$nachricht->userRueckmeldung->count()}} Rückmeldungen anzeigen
-                    </button>
-                    <div id="{{$nachricht->id}}_rueckmeldungen" class="collapse mt-3">
-                        @include('nachrichten.footer.eingegangeneRueckmeldung')
-                    </div>
-                </div>
-            @endcan
+        <!-- Anonymous Poll -->
+        @include('nachrichten.footer.poll_anonym')
+
+        <!-- Rueckmeldungen Section -->
+        @if(!is_null($nachricht->rueckmeldung))
+            <div id="rueckmeldung_{{$nachricht->id}}"></div>
         @endif
-        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
-            @include('nachrichten.footer.imageRueckmeldung')
+        @if(!is_null($nachricht->rueckmeldung))
+            <div class="border-t border-gray-200 bg-gray-50 p-6" >
+                <div class="space-y-3">
+                    @if($nachricht->rueckmeldung->multiple)
+                        <div class="flex items-start gap-3 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                            <i class="fas fa-check-double text-blue-600 mt-1"></i>
+                            <p class="text-blue-800 font-medium text-sm">
+                                Es können mehrere Rückmeldungen abgegeben werden.
+                            </p>
+                        </div>
+                    @endif
+                    @if($nachricht->rueckmeldung->pflicht)
+                        <div class="flex items-start gap-3 p-3 bg-red-50 border-l-4 border-red-500 rounded">
+                            <i class="fas fa-exclamation-triangle text-red-600 mt-1"></i>
+                            <p class="text-red-800 font-medium text-sm">
+                                Rückmeldung bis {{$nachricht->rueckmeldung->ende->format('d.m.Y')}} ist Pflicht.
+                            </p>
+                        </div>
+                    @endif
+                </div>
+
+                @if($nachricht->rueckmeldung != null)
+                    @include('nachrichten.elements.progressbar')
+                @endif
+
+                @if($nachricht->rueckmeldung->type == 'email')
+                    @include('nachrichten.footer.rueckmeldung')
+
+                    @can('manage rueckmeldungen')
+                        <div class="mt-4">
+                            <a href="{{url('rueckmeldungen')}}"
+                               class="block w-full text-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                <i class="fas fa-list mr-2"></i>
+                                Rückmeldungen ansehen
+                            </a>
+                        </div>
+                    @elsecan('view rueckmeldungen')
+                        <button @click="showRueckmeldungen = !showRueckmeldungen"
+                                class="mt-4 w-full inline-flex items-center justify-center px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200">
+                            <i class="fa mr-2" :class="showRueckmeldungen ? 'fa-eye-slash' : 'fa-eye'"></i>
+                            <span x-text="showRueckmeldungen ? '{{$nachricht->userRueckmeldung->count()}} Rückmeldungen ausblenden' : '{{$nachricht->userRueckmeldung->count()}} Rückmeldungen anzeigen'"></span>
+                        </button>
+                        <div x-show="showRueckmeldungen"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 transform scale-95"
+                             x-transition:enter-end="opacity-100 transform scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 transform scale-100"
+                             x-transition:leave-end="opacity-0 transform scale-95"
+                             style="display: none;"
+                             id='{{$nachricht->id."_rueckmeldungen"}}'
+                             class="mt-4">
+                            @include('nachrichten.footer.eingegangeneRueckmeldung')
+                        </div>
+                    @endcan
+                @endif
+            </div>
+        @endif
+
+        <!-- Abfrage Type -->
+        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
+            <div class="border-t border-gray-200">
+                @include('nachrichten.footer.abfrage')
+            </div>
+        @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'terminliste')
+            <div class="border-t border-gray-200 p-6">
+                @include('nachrichten.footer.terminliste')
+            </div>
+        @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
+            <div class="border-t border-gray-200">
+                @include('nachrichten.footer.imageRueckmeldung')
+            </div>
+        @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'commentable' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
+            <div class="border-t border-gray-200 p-6">
+                @include('nachrichten.footer.comments')
+            </div>
         @endif
 
         {{-- Beitrag melden --}}

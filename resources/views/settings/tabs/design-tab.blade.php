@@ -49,6 +49,50 @@
             </div>
         </div>
 
+        {{-- Menü-Darstellung --}}
+        <h6 class="text-base font-bold mt-6 mb-4 pb-2 border-b" style="color: var(--color-text-primary); border-color: var(--color-card-border);">
+            <i class="fas fa-bars text-blue-600 mr-2"></i>
+            Seitenmenü
+        </h6>
+
+        <div class="form-row mt-1 p-2 border rounded" style="border-color: var(--color-card-border);">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100" style="color: var(--color-text-primary);">
+                    Menü-Darstellung (System)
+                    <select name="nav_style" class="form-control"
+                            style="background-color: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);">
+                        @foreach(config('navigation.styles') as $styleKey => $styleLabel)
+                            <option value="{{ $styleKey }}"
+                                @if(($settings->nav_style ?? 'classic') === $styleKey) selected @endif>
+                                {{ $styleLabel }}
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small" style="color: var(--color-text-secondary);">
+                    Die kompakte Darstellung fasst die Menüpunkte in einklappbaren Gruppen zusammen und bietet ein Filterfeld.
+                    Die Gruppen werden in <code>config/navigation.php</code> festgelegt.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-2 p-2 border rounded" style="border-color: var(--color-card-border);">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100 d-flex align-items-center gap-2" style="color: var(--color-text-primary);">
+                    <input type="checkbox" name="allow_user_nav_style" value="1"
+                           @if($settings->allow_user_nav_style ?? true) checked @endif>
+                    Nutzer dürfen die Menü-Darstellung selbst wählen
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small" style="color: var(--color-text-secondary);">
+                    Wenn aktiv, können Nutzer in ihren persönlichen Einstellungen (Tab „Design“) zwischen klassischem und kompaktem Menü wechseln.
+                </div>
+            </div>
+        </div>
+
         {{-- Theme-Vorschauen --}}
         <div class="form-row mt-3 p-2">
             <div class="col-12">

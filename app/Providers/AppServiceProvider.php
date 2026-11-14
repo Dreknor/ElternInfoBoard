@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Model\PersonalAccessToken;
+use App\Services\IntegrationTokens;
 use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -41,7 +42,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // exists:/unique:users,… ignorieren Schülerkonten (S-04)
+        $this->app->extend('validation.presence', fn ($verifier, $app) => new \App\Validation\StudentAwarePresenceVerifier($app['db']));
     }
 
     /**
@@ -53,6 +55,34 @@ class AppServiceProvider extends ServiceProvider
         // in Umgebungen, in denen PHP keine ausführbaren Speicherbereiche allokieren darf.
         ini_set('pcre.jit', '0');
 
+        // Gemerkte Spalte „account_type“ vergessen, sobald migriert wird (migrate:fresh im selben Prozess)
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Database\Events\MigrationStarted::class,
+            fn () => \App\Model\Scopes\ExcludeStudentAccounts::forgetColumn()
+        );
+
+        // Sicherheitsprotokoll: Anmelde- und Kontoereignisse (nur Datensicherheit, keine Seitenaufrufe)
+        \Illuminate\Support\Facades\Event::subscribe(\App\Services\Security\AuthEventSubscriber::class);
+
+        // Keine ausführbaren bzw. im Browser aktiven Dateien in der (öffentlich gespeicherten) Medienbibliothek
+        \Spatie\MediaLibrary\MediaCollections\Models\Media::creating(fn ($media) => \App\Support\UploadGuard::assertAllowed($media));
+
+        // Editor-HTML bereinigt ausgeben: @safeHtml($post->news) statt {!! $post->news !!}
+        \Illuminate\Support\Facades\Blade::directive('safeHtml', fn (string $expression) => "<?php echo \\App\\Support\\SafeHtml::clean({$expression}); ?>");
+
+        // Schülerkonten haben keine Rechte: jede Berechtigung und jede Policy sagt „nein“
+        // (docs/konzept-schuelerkonten.md §5.2). Was Schüler dürfen, regeln allein die `student.*`-Routen.
+        Gate::before(function ($user, string $ability) {
+            if ($user instanceof \App\Model\User && $user->isStudent()) {
+                return false;
+            }
+
+            return null;
+        });
+
+        // Anmeldung stellt auch Sitzungen von Schülerkonten wieder her (globaler Scope auf User).
+        \Illuminate\Support\Facades\Auth::provider('eloquent-students', fn ($app, array $config) => new \App\Auth\StudentAwareUserProvider($app['hash'], $config['model']));
+
         // Policy-Registrierung
         Gate::policy(Liste::class, TerminListenPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
@@ -60,6 +90,25 @@ class AppServiceProvider extends ServiceProvider
 
         // Use custom PersonalAccessToken model with explicit MySQL connection
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        // Integrations-Tokens laufen nach eigener Laufzeit ab (auch unbegrenzt), nicht nach `sanctum.expiration`.
+        // Deaktivierte Konten verlieren den Zugriff über alle Tokens (App, Integration, MCP) – wie im Web.
+        Sanctum::authenticateAccessTokensUsing(function ($token, bool $isValid) {
+            if ($token->tokenable?->is_active === false) {
+                return false;
+            }
+
+            // Schülerkonten: nur Tokens mit der Fähigkeit `student`, nur bei aktivem Modul (§8, S-12)
+            if ($token->tokenable instanceof \App\Model\User && $token->tokenable->isStudent()) {
+                return $isValid && \App\Support\StudentAccounts::enabled() && $token->can(\App\Support\StudentAccounts::TOKEN_ABILITY);
+            }
+
+            if (! IntegrationTokens::isIntegration($token)) {
+                return $isValid;
+            }
+
+            return $token->tokenable !== null && (! $token->expires_at || $token->expires_at->isFuture());
+        });
 
         Paginator::useTailwind();
 
@@ -194,12 +243,23 @@ class AppServiceProvider extends ServiceProvider
 
     public function bootRoute()
     {
+        // Scribe setzt das Kennzeichen nur für seine Beispielaufrufe (config/scribe*.php),
+        // sonst bestünde die API-Doku aus „429 Too Many Attempts“.
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return config('app.generating_api_docs')
+                ? Limit::none()
+                : Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
         RateLimiter::for('global', function (Request $request) {
-            return Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
+            return config('app.generating_api_docs')
+                ? Limit::none()
+                : Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // MCP-Server (Chatbot): eigenes Kontingent je Nutzer, damit ein Bot nicht unbegrenzt abfragt.
+        RateLimiter::for('mcp', function (Request $request) {
+            return Limit::perMinute(60)->by('mcp:'.($request->user()?->id ?: $request->ip()));
         });
 
         // Dediziertes, strenges Rate-Limit für externe API-Key-Endpunkte (Vertretungsplan, Stundenplan).
@@ -212,6 +272,17 @@ class AppServiceProvider extends ServiceProvider
         // Verhindert E-Mail-Bombing und Brute-Force auf Passwörter.
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Schülerkonten (Benutzername, Code): je Benutzername streng, je IP großzügig, damit eine
+        // ganze Klasse hinter einer Schul-IP sich gleichzeitig anmelden kann (docs/konzept-schuelerkonten.md §6.2).
+        RateLimiter::for('login-student', function (Request $request) {
+            $name = mb_strtolower(trim((string) $request->input('username')));
+
+            return [
+                Limit::perMinute(5)->by('student-login:'.$name.'|'.$request->ip()),
+                Limit::perMinute(150)->by('student-login-ip:'.$request->ip()),
+            ];
         });
 
         // Rate-Limit für UCS OIDC-JIT-Callback (schützt vor Kellvin-API-Überlast).

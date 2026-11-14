@@ -252,7 +252,7 @@
                                 <td class="px-4 py-3 align-top">
                                     <div class="space-y-2">
                                         <div class="hidden md:block text-sm p-2 rounded" style="color: var(--color-text-primary); background-color: var(--color-surface-subtle)">
-                                            {!! $krankmeldung->kommentar ?? '<em style="color: var(--color-text-muted)">Kein Kommentar</em>' !!}
+                                            @safeHtml($krankmeldung->kommentar ?? '<em style="color: var(--color-text-muted)">Kein Kommentar</em>')
                                         </div>
                                         <div class="text-xs border-t pt-2" style="color: var(--color-text-muted); border-color: var(--color-card-border)">
                                             <p class="flex items-center gap-1 mb-1">

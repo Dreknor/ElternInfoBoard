@@ -139,6 +139,44 @@
                     </div>
                 </div>
             </div>
+
+            <div class="form-row mt-3">
+                <div class="col-md-6 col-sm-12">
+                    <label class="label-control w-100">
+                        Unbekannte Nutzer automatisch anlegen
+                        <input type="checkbox" class="form-control" name="auto_create_users" value="1"
+                               @if($keycloakSettings->auto_create_users ?? true) checked @endif>
+                    </label>
+                </div>
+                <div class="col-md-6 col-sm-12 m-auto">
+                    <div class="small text-muted">
+                        Wenn aktiviert, wird beim ersten SSO-Login ohne passendes Konto ein neues Konto angelegt.
+                        Wenn deaktiviert, können sich nur Nutzer anmelden, die bereits ein Konto haben.
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row mt-3">
+                <div class="col-md-6 col-sm-12">
+                    <label class="label-control w-100 font-weight-bold">
+                        Rollen für Schülerinnen und Schüler
+                    </label>
+                    <input type="text" class="form-control" name="student_roles"
+                           value="{{ $keycloakSettings->student_roles ?? '' }}"
+                           placeholder="z. B. schueler, student">
+                </div>
+                <div class="col-md-6 col-sm-12 m-auto">
+                    <div class="small text-muted">
+                        Rollen im Login-Token (Realm- oder Client-Rolle), an denen Schülerinnen und Schüler erkannt werden.
+                        Mehrere Rollen mit Komma trennen. Nutzer mit einer dieser Rollen werden beim SSO-Login abgewiesen
+                        und nie als Elternkonto angelegt.
+                        <br><strong>UCS@school:</strong> Hier muss nichts eingetragen werden. Erkannt wird der Claim
+                        <code>ucsschoolRole</code> mit dem Wert <code>student:school:…</code>. Dafür im Keycloak das
+                        LDAP-Attribut <code>ucsschoolRole</code> per Mapper in das Token übernehmen
+                        (siehe <code>docs/konzept-schuelerkonten.md</code>, Abschnitt 6.3).
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="alert alert-info mt-3 small">

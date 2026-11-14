@@ -14,6 +14,7 @@ use App\Model\listen_termine;
 use App\Model\Poll;
 use App\Model\Poll_Votes;
 use App\Model\Post;
+use App\Model\Module;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
 use App\Services\UserService;
@@ -180,7 +181,7 @@ class UserController extends Controller implements HasMiddleware
             }),
             'permissions' => Cache::remember('permissions', 60 * 5, function () {
                 return Permission::all();
-            }),
+            })->whereNotIn('name', Module::lockedPermissionNames())->values(),
             'roles' => $roles,
             // Kandidaten für die Familienverknüpfung: alle außer bisherigen Familienmitgliedern
             'users' => User::query()
@@ -365,10 +366,9 @@ class UserController extends Controller implements HasMiddleware
         if (! $request->user()->can('loginAsUser')) {
             Log::warning('loginAsUser: Zugriff verweigert (Berechtigung fehlt)', [
                 'requestor_id' => $request->user()->id,
-                'requestor_email' => $request->user()->email,
                 'target_user_id' => $id,
-                'ip' => $request->ip(),
             ]);
+            \App\Services\Security\SecurityLog::record('impersonation.denied', is_numeric($id) ? (int) $id : null);
             return redirect()->back()->with([
                 'Meldung' => 'Berechtigung fehlt',
                 'type' => 'danger',
@@ -379,15 +379,15 @@ class UserController extends Controller implements HasMiddleware
 
         Log::warning('Impersonation gestartet', [
             'admin_id' => $request->user()->id,
-            'admin_name' => $request->user()->name,
             'target_id' => $targetUser->id,
-            'target_name' => $targetUser->name,
-            'ip' => $request->ip(),
         ]);
 
         session(['ownID' => Crypt::encryptString($request->user()->id)]);
 
+        // Kein auth.login: im Sicherheitsprotokoll als impersonation.start (actor = Admin aus ownID)
+        \App\Services\Security\AuthEventSubscriber::expect('impersonation');
         Auth::loginUsingId($id);
+        \App\Services\Security\SecurityLog::record('impersonation.start', $targetUser->id);
 
         return redirect()->to(url('/'));
     }

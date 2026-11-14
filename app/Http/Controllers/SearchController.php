@@ -44,25 +44,27 @@ class SearchController extends Controller implements HasMiddleware
 
         if (! $request->user()->can('create posts')) {
             if ($months->search($searchTerm)) {
-                $Nachrichten = $request->user()->posts()
-                    ->whereMonth('posts.updated_at', $months->search($searchTerm))
-                    ->orWhereLike(['header', 'news'], $searchTerm)
+                $Nachrichten = $request->user()->visiblePosts()
+                    ->where(fn ($q) => $q->whereMonth('posts.updated_at', $months->search($searchTerm))
+                        ->orWhereLike(['header', 'news'], $searchTerm))
                     ->with('rueckmeldung', 'autor')
                     ->get();
             } else {
-                $Nachrichten = $request->user()->posts()
+                $Nachrichten = $request->user()->visiblePosts()
                     ->whereLike(['header', 'news'], $searchTerm)
                     ->with('rueckmeldung', 'autor')
                     ->get();
             }
         } else {
             if ($months->search($searchTerm)) {
-                $Nachrichten = Post::whereMonth('posts.updated_at', $months->search($searchTerm))
-                    ->orWhereLike(['header', 'news'], $searchTerm)
+                $Nachrichten = Post::withoutForeignConfidential($request->user())
+                    ->where(fn ($q) => $q->whereMonth('posts.updated_at', $months->search($searchTerm))
+                        ->orWhereLike(['header', 'news'], $searchTerm))
                     ->with('rueckmeldung', 'autor')
                     ->get();
             } else {
-                $Nachrichten = Post::whereLike(['header', 'news'], $searchTerm)
+                $Nachrichten = Post::withoutForeignConfidential($request->user())
+                    ->whereLike(['header', 'news'], $searchTerm)
                     ->with('rueckmeldung', 'autor')
                     ->get();
             }

@@ -51,6 +51,11 @@ class GroupMembershipService
      */
     public function syncDerivedGroups(User $user, array $adoptGroupIds = []): array
     {
+        // Schülerkonten sind nie Gruppenmitglied (docs/konzept-schuelerkonten.md §3)
+        if ($user->isStudent()) {
+            return ['attached' => [], 'detached' => []];
+        }
+
         $desired = $this->desiredGroups($user);
 
         if ($adoptGroupIds !== []) {

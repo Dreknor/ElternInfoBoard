@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Model\Child;
+use App\Model\Group;
 use App\Model\Stundenplan\Schuljahr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -79,6 +81,7 @@ class StundenplanDataProvider
 
                     $klassen[] = [
                         'Kurzform' => $klasse->kurzform,
+                        'Name' => $klasse->name,
                         'Plan' => $plan,
                         'schuljahr_id' => $klasse->schuljahr_id, // NEW: Track which Schuljahr
                         'schulform' => $schuljahr->schulform, // NEW: Track Schulform
@@ -103,6 +106,87 @@ class StundenplanDataProvider
     }
 
     /**
+     * Stundenplan-Klassen (Kurzformen) eines Kindes.
+     *
+     * Eine von den Eltern gewählte Klasse (`children.stundenplan_klasse`) hat
+     * Vorrang. Sonst wird über den Namen der Gruppen des Kindes zugeordnet
+     * (Klasse, Gruppe, weitere Gruppen wie UCS-Kombiklassen): Gruppenname = Kurzform bzw. Name der Stundenplan-Klasse.
+     * Passt kein Name exakt, wird ohne Groß-/Kleinschreibung, Leerzeichen und ein
+     * vorangestelltes „Klasse“ verglichen („Klasse 3a“ ↔ „3a“).
+     *
+     * @return list<string>
+     */
+    public function klassenForChild(Child $child, ?array $data = null): array
+    {
+        $data ??= $this->getStundenplanData();
+        $klassen = $data['Klassen'] ?? [];
+        if ($klassen === []) {
+            return [];
+        }
+
+        $result = [];
+        if ($child->stundenplan_klasse && in_array($child->stundenplan_klasse, array_column($klassen, 'Kurzform'), true)) {
+            $result[] = $child->stundenplan_klasse;
+        }
+
+        $groupIds = array_values(array_unique(array_filter(array_merge(
+            [$child->class_id, $child->group_id],
+            $child->additionalGroups()->pluck('groups.id')->all(),
+        ))));
+        if ($groupIds === []) {
+            return $result;
+        }
+
+        $names = Group::withoutGlobalScopes()->whereIn('id', $groupIds)->pluck('name', 'id');
+        // Reihenfolge beibehalten: Klasse vor Gruppe vor weiteren Gruppen
+        $names = array_values(array_filter(array_map(fn ($id) => $names[$id] ?? null, $groupIds)));
+
+        foreach ($names as $name) {
+            $exact = null;
+            $loose = null;
+            foreach ($klassen as $klasse) {
+                $kurzform = $klasse['Kurzform'] ?? '';
+                if ($kurzform === $name) {
+                    $exact = $kurzform;
+                    break;
+                }
+                if ($loose === null && in_array(self::normalize($name), [self::normalize($kurzform), self::normalize($klasse['Name'] ?? '')], true)) {
+                    $loose = $kurzform;
+                }
+            }
+            if ($match = $exact ?? $loose) {
+                $result[] = $match;
+            }
+        }
+
+        return array_values(array_unique($result));
+    }
+
+    /**
+     * Alle Klassen des aktiven Stundenplans (für die Auswahl in der App).
+     *
+     * @return list<array{kurzform: string, name: string|null}>
+     */
+    public function klassen(?array $data = null): array
+    {
+        $data ??= $this->getStundenplanData();
+
+        return collect($data['Klassen'] ?? [])
+            ->map(fn ($k) => ['kurzform' => (string) $k['Kurzform'], 'name' => $k['Name'] ?? null])
+            ->unique('kurzform')
+            ->sortBy('kurzform', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->all();
+    }
+
+    private static function normalize(string $value): string
+    {
+        $value = mb_strtolower(preg_replace('/\s+/u', '', $value));
+
+        return preg_replace('/^klasse/u', '', $value) ?: $value;
+    }
+
+    /**
      * Clear the cache
      */
     public function clearCache(): void
@@ -110,5 +194,57 @@ class StundenplanDataProvider
         Cache::forget('stundenplan_data_from_db');
         Cache::forget('stundenplan_data'); // Old cache key
     }
-}
 
+    /**
+     * Stundenplan einer Klasse als [Tag 1–5][Stunde] => Eintrag (oder null).
+     */
+    public function timetableForClass(array $data, string $className): array
+    {
+        $maxStunde = 6;
+        foreach ((array) ($data['Zeitslots'] ?? []) as $slot) {
+            $maxStunde = max($maxStunde, (int) ($slot['Stunde'] ?? 0));
+        }
+
+        $timetable = [];
+        for ($tag = 1; $tag <= 5; $tag++) {
+            for ($stunde = 1; $stunde <= $maxStunde; $stunde++) {
+                $timetable[$tag][$stunde] = null;
+            }
+        }
+
+        foreach ((array) ($data['Klassen'] ?? []) as $klasse) {
+            if (($klasse['Kurzform'] ?? null) !== $className) {
+                continue;
+            }
+            foreach ((array) ($klasse['Plan'] ?? []) as $entry) {
+                $tag = (int) ($entry['PlTg'] ?? 0);
+                $stunde = (int) ($entry['PlSt'] ?? 0);
+                if ($tag >= 1 && $tag <= 5 && $stunde >= 1 && $stunde <= $maxStunde) {
+                    $timetable[$tag][$stunde] = $entry;
+                }
+            }
+            break;
+        }
+
+        return $timetable;
+    }
+
+    /**
+     * Zeitraster einer Klasse (Zeitslots ihres Schuljahres), nach Stunde sortiert.
+     */
+    public function zeitslotsForClass(array $data, string $className): array
+    {
+        $schuljahrId = null;
+        foreach ((array) ($data['Klassen'] ?? []) as $klasse) {
+            if (($klasse['Kurzform'] ?? null) === $className) {
+                $schuljahrId = $klasse['schuljahr_id'] ?? null;
+                break;
+            }
+        }
+
+        $slots = array_values(array_filter((array) ($data['Zeitslots'] ?? []), fn ($slot) => ($slot['schuljahr_id'] ?? null) === $schuljahrId));
+        usort($slots, fn ($a, $b) => (int) $a['Stunde'] <=> (int) $b['Stunde']);
+
+        return $slots;
+    }
+}

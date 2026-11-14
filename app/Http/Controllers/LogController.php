@@ -3,12 +3,95 @@
 namespace App\Http\Controllers;
 
 use App\Model\SearchLog;
+use App\Services\Security\SecurityLog;
 use Carbon\Carbon;
 use danielme85\LaravelLogToDB\LogToDB;
 use Illuminate\Http\Request;
 
 class LogController extends Controller
 {
+    /**
+     * Vordefinierte Kategorien für den Schnellfilter. Die Zuordnung erfolgt
+     * über Schlüsselwörter in der Log-Nachricht (Groß-/Kleinschreibung egal).
+     */
+    public const CATEGORIES = [
+        'login' => [
+            'label' => 'Login & Anmeldung',
+            'icon' => 'fa-sign-in-alt',
+            'keywords' => ['login', 'logout', 'keycloak', 'impersonation', 'anmeldung', 'passwort', 'password'],
+        ],
+        'mail' => [
+            'label' => 'E-Mail',
+            'icon' => 'fa-envelope',
+            'keywords' => ['mail', 'zugangsdaten', 'kontaktformular'],
+        ],
+        'push' => [
+            'label' => 'Push & Benachrichtigungen',
+            'icon' => 'fa-bell',
+            'keywords' => ['push', 'benachrichtigung', 'notification', 'erinnerung', 'reminder'],
+        ],
+        'nachrichten' => [
+            'label' => 'Nachrichten & Rückmeldungen',
+            'icon' => 'fa-newspaper',
+            'keywords' => ['post ', 'nachricht', 'rückmeldung', 'rueckmeldung', 'lesebestätigung', 'wordpress'],
+        ],
+        'termine' => [
+            'label' => 'Termine & Listen',
+            'icon' => 'fa-calendar-alt',
+            'keywords' => ['termin', 'liste'],
+        ],
+        'pflichtstunden' => [
+            'label' => 'Pflichtstunden',
+            'icon' => 'fa-clock',
+            'keywords' => ['pflichtstunde'],
+        ],
+        'krankmeldung' => [
+            'label' => 'Krankmeldungen',
+            'icon' => 'fa-notes-medical',
+            'keywords' => ['krankmeldung'],
+        ],
+        'hort' => [
+            'label' => 'Hort & Schickzeiten',
+            'icon' => 'fa-child',
+            'keywords' => ['schickzeit', 'anwesenheit', 'abgeholt', 'abholvollmacht'],
+        ],
+        'import' => [
+            'label' => 'Import',
+            'icon' => 'fa-file-import',
+            'keywords' => ['import'],
+        ],
+        'ucs' => [
+            'label' => 'UCS & Synchronisation',
+            'icon' => 'fa-sync-alt',
+            'keywords' => ['ucs', '[sync'],
+        ],
+        'schuelerkonten' => [
+            'label' => 'Schülerkonten',
+            'icon' => 'fa-user-graduate',
+            'keywords' => ['schülerkonto', 'schuelerkonto'],
+        ],
+        'system' => [
+            'label' => 'System & Wartung',
+            'icon' => 'fa-cogs',
+            'keywords' => ['wartungsmodus', 'update', 'ausnahme', 'exception', 'schuljahreswechsel', 'cleanup', 'setting'],
+        ],
+    ];
+
+    /**
+     * Kategorien für den Filter. „Schülerkonten“ nur bei aktivem Modul
+     * (docs/konzept-schuelerkonten.md §1.1).
+     */
+    public static function categories(): array
+    {
+        $categories = self::CATEGORIES;
+
+        if (! \App\Support\StudentAccounts::enabled()) {
+            unset($categories['schuelerkonten']);
+        }
+
+        return $categories;
+    }
+
     /**
      * Display a listing of the logs with filtering
      */
@@ -26,20 +109,57 @@ class LogController extends Controller
             $query->where('channel', 'like', '%'.$request->channel.'%');
         }
 
-        // Search in message
+        // Filter by category (Login, E-Mail, ...)
+        $category = $request->input('category');
+        $categories = self::categories();
+
+        if (is_string($category) && isset($categories[$category])) {
+            $keywords = $categories[$category]['keywords'];
+            $query->where(function ($q) use ($keywords) {
+                foreach ($keywords as $keyword) {
+                    $q->orWhereRaw('LOWER(message) LIKE ?', ['%'.mb_strtolower($keyword).'%']);
+                }
+            });
+        }
+
+        // Filter by date range
+        if ($request->filled('from') && ($from = $this->parseDate($request->input('from')))) {
+            $query->where('created_at', '>=', $from->startOfDay());
+        }
+        if ($request->filled('to') && ($to = $this->parseDate($request->input('to')))) {
+            $query->where('created_at', '<=', $to->endOfDay());
+        }
+
+        // Search in message and context (z.B. E-Mail-Adresse oder User-ID)
         if ($request->filled('search')) {
-            $query->where('message', 'like', '%'.$request->search.'%');
+            $search = '%'.$request->search.'%';
+            $query->where(function ($q) use ($search) {
+                $q->where('message', 'like', $search)
+                    ->orWhere('context', 'like', $search);
+            });
         }
 
         $logs = $query->paginate(50)->withQueryString();
         $totalLogs = LogToDB::model()->count();
+        $channels = LogToDB::model()->whereNotNull('channel')->distinct()->orderBy('channel')->pluck('channel');
         $searchStats = $this->buildSearchStats();
 
         return view('logs.index', [
             'logs' => $logs,
             'totalLogs' => $totalLogs,
+            'channels' => $channels,
+            'categories' => $categories,
             'searchStats' => $searchStats,
         ]);
+    }
+
+    protected function parseDate($value): ?Carbon
+    {
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**
@@ -49,6 +169,7 @@ class LogController extends Controller
     {
         $log = LogToDB::model()->findOrFail($id);
         $log->delete();
+        SecurityLog::record('logs.deleted', null, ['type' => 'application_log', 'log_id' => (int) $id, 'count' => 1]);
 
         return redirect()->back()->with('success', 'Log-Eintrag wurde gelöscht.');
     }
@@ -64,6 +185,7 @@ class LogController extends Controller
         $deletedCount = LogToDB::model()
             ->where('created_at', '<', $date)
             ->delete();
+        SecurityLog::record('logs.deleted', null, ['type' => 'application_log', 'older_than_days' => (int) $days, 'count' => (int) $deletedCount]);
 
         return redirect()->back()->with('success', "Es wurden {$deletedCount} Log-Einträge gelöscht, die älter als {$days} Tage waren.");
     }
@@ -77,6 +199,7 @@ class LogController extends Controller
         $date = Carbon::now()->subDays($days);
 
         $deletedCount = SearchLog::where('created_at', '<', $date)->delete();
+        SecurityLog::record('logs.deleted', null, ['type' => 'search_log', 'older_than_days' => (int) $days, 'count' => (int) $deletedCount]);
 
         return redirect()->back()->with('success', "Es wurden {$deletedCount} Sucheinträge gelöscht, die älter als {$days} Tage waren.");
     }

@@ -12,7 +12,9 @@ use App\Http\Controllers\API\V1\AuthController;
 use App\Http\Controllers\API\V1\CommunityController;
 use App\Http\Controllers\API\V1\DashboardController;
 use App\Http\Controllers\API\V1\FeedbackController;
+use App\Http\Controllers\API\V1\InquiryController;
 use App\Http\Controllers\API\V1\InstanceController;
+use App\Http\Controllers\API\V1\LinkController;
 use App\Http\Controllers\API\V1\ListenController;
 use App\Http\Controllers\API\V1\MeController;
 use App\Http\Controllers\API\V1\MessengerController;
@@ -83,6 +85,9 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
 
     // Termine & Listen
     Route::get('termine', [TerminController::class, 'index'])->name('termine');
+    Route::get('termine/hidden', [TerminController::class, 'hidden'])->name('termine.hidden');
+    Route::post('termine/{termin}/hide', [TerminController::class, 'hide'])->whereNumber('termin')->name('termine.hide');
+    Route::delete('termine/{termin}/hide', [TerminController::class, 'unhide'])->whereNumber('termin')->name('termine.unhide');
     Route::get('listen', [ListenController::class, 'index'])->name('listen');
     Route::get('listen/{liste}', [ListenController::class, 'show'])->whereNumber('liste')->name('listen.show');
     Route::post('listen/termine/{termin}/reservation', [ListenController::class, 'reserveTermin'])->name('listen.termin.reserve');
@@ -95,10 +100,31 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
     Route::post('parent/krankmeldungen', [ParentController::class, 'storeKrankmeldung'])->name('krankmeldungen.store');
     Route::patch('parent/children/{child}', [ParentController::class, 'updateChild'])->name('children.update');
     Route::get('parent/children/{child}/stundenplan', [ParentController::class, 'stundenplan'])->name('children.stundenplan');
+    Route::put('parent/children/{child}/stundenplan-klasse', [ParentController::class, 'updateStundenplanKlasse'])->name('children.stundenplan-klasse');
+    Route::get('parent/stundenplan/klassen', [ParentController::class, 'stundenplanKlassen'])->name('stundenplan.klassen');
     Route::get('parent/ags', [ParentController::class, 'ags'])->name('ags');
     Route::post('parent/ags/{ag}/enrollments', [ParentController::class, 'enroll'])->name('ags.enroll');
     Route::get('parent/reinigung', [ParentController::class, 'reinigung'])->middleware('module:Reinigung')->name('reinigung');
     Route::get('vertretungsplan', [ParentController::class, 'vertretungsplan'])->name('vertretungsplan');
+
+    // Elternabfragen (je Kind; abgeben nur Sorgeberechtigte)
+    Route::middleware('module:Elternabfragen')->prefix('elternabfragen')->name('elternabfragen.')->group(function () {
+        Route::get('/', [InquiryController::class, 'index'])->name('index');
+        Route::get('{assignment}', [InquiryController::class, 'show'])->whereNumber('assignment')->name('show');
+        Route::put('{assignment}/draft', [InquiryController::class, 'saveDraft'])->whereNumber('assignment')->name('draft');
+        Route::delete('{assignment}/draft', [InquiryController::class, 'discardDraft'])->whereNumber('assignment')->name('draft.discard');
+        Route::post('{assignment}/submit', [InquiryController::class, 'submit'])->whereNumber('assignment')->middleware('throttle:20,1')->name('submit');
+        Route::post('{assignment}/change', [InquiryController::class, 'requestChange'])->whereNumber('assignment')->middleware('throttle:20,1')->name('change');
+        Route::delete('{assignment}/change', [InquiryController::class, 'withdrawChange'])->whereNumber('assignment')->name('change.withdraw');
+        Route::post('{assignment}/confirm', [InquiryController::class, 'confirm'])->whereNumber('assignment')->middleware('throttle:20,1')->name('confirm');
+        Route::get('{assignment}/pdf', [InquiryController::class, 'pdf'])->whereNumber('assignment')->name('pdf');
+        Route::get('{assignment}/files/{field}', [InquiryController::class, 'file'])->whereNumber('assignment')->name('file');
+        Route::get('{assignment}/quittungen/{uuid}/pdf', [InquiryController::class, 'receipt'])->whereNumber('assignment')->whereUuid('uuid')->name('receipts.pdf');
+        Route::post('{assignment}/widerruf', [InquiryController::class, 'withdraw'])->whereNumber('assignment')->middleware('throttle:20,1')->name('withdraw');
+    });
+
+    // Links (Modul „Links“)
+    Route::get('links', [LinkController::class, 'index'])->middleware('module:Links')->name('links');
 
     // Infoseiten & Elternrat
     Route::get('sites', [CommunityController::class, 'sites'])->name('sites');
@@ -121,5 +147,39 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
         Route::delete('messages/{message}', [MessengerController::class, 'destroy'])->name('destroy');
         Route::post('messages/{message}/report', [MessengerController::class, 'report'])->name('report');
         Route::get('messages/{message}/attachment', [MessengerController::class, 'attachment'])->name('attachment');
+        Route::post('conversations/{conversation}/close-student-chat', [\App\Http\Controllers\Students\TeacherStudentChatController::class, 'apiClose'])->middleware('student.messenger')->name('close-student-chat');
+    });
+});
+
+// ── Schülerkonten (docs/konzept-schuelerkonten.md §8, S-12) ─────────────────
+// Nur bei aktivem Modul; Tokens mit der Fähigkeit `student`. Alle anderen v1-Routen
+// lehnen Schülerkonten ab (RestrictStudentAccounts).
+Route::prefix('student')->name('student.')->middleware('student.enabled')->group(function () {
+    Route::post('token', [\App\Http\Controllers\API\V1\StudentApiController::class, 'login'])->middleware('throttle:login-student')->name('token');
+    Route::post('code', [\App\Http\Controllers\API\V1\StudentApiController::class, 'redeemCode'])->middleware('throttle:login-student')->name('code');
+
+    Route::middleware(['auth:sanctum', 'student', 'abilities:'.\App\Support\StudentAccounts::TOKEN_ABILITY])->group(function () {
+        Route::get('bootstrap', [\App\Http\Controllers\API\V1\StudentApiController::class, 'bootstrap'])->name('bootstrap');
+        Route::post('token/logout', [\App\Http\Controllers\API\V1\StudentApiController::class, 'logout'])->name('token.logout');
+        Route::post('token/refresh', [\App\Http\Controllers\API\V1\StudentApiController::class, 'refresh'])->name('token.refresh');
+        Route::get('posts', [\App\Http\Controllers\API\V1\StudentApiController::class, 'posts'])->name('posts');
+        Route::get('posts/{post}', [\App\Http\Controllers\API\V1\StudentApiController::class, 'showPost'])->whereNumber('post')->name('posts.show');
+        Route::get('posts/{post}/dateien/{media}', [\App\Http\Controllers\Students\StudentPortalController::class, 'media'])->whereNumber(['post', 'media'])->name('media');
+        Route::get('termine', [\App\Http\Controllers\API\V1\StudentApiController::class, 'termine'])->name('termine');
+        Route::get('vertretungsplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'vertretungsplan'])->name('vertretungsplan');
+        Route::get('stundenplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'stundenplan'])->name('stundenplan');
+        Route::get('ags', [\App\Http\Controllers\API\V1\StudentApiController::class, 'ags'])->name('ags');
+        Route::get('links', [\App\Http\Controllers\API\V1\StudentApiController::class, 'links'])->name('links');
+        Route::post('devices', [\App\Http\Controllers\API\V1\StudentApiController::class, 'storeDevice'])->name('devices.store');
+        Route::put('me/password', [\App\Http\Controllers\API\V1\StudentApiController::class, 'password'])->middleware('throttle:10,1')->name('me.password');
+
+        // Chat mit Lehrkräften (S-14)
+        Route::middleware('student.messenger')->prefix('messenger')->name('messenger.')->group(function () {
+            Route::get('conversations', [\App\Http\Controllers\Students\StudentMessengerController::class, 'apiIndex'])->name('conversations');
+            Route::post('conversations', [\App\Http\Controllers\Students\StudentMessengerController::class, 'apiStart'])->name('start');
+            Route::get('conversations/{conversation}/messages', [\App\Http\Controllers\Students\StudentMessengerController::class, 'apiShow'])->whereNumber('conversation')->name('messages');
+            Route::post('conversations/{conversation}/messages', [\App\Http\Controllers\Students\StudentMessengerController::class, 'apiSend'])->whereNumber('conversation')->name('send');
+        });
+        Route::delete('devices/{token}', [\App\Http\Controllers\API\V1\StudentApiController::class, 'destroyDevice'])->where('token', '.+')->name('devices.destroy');
     });
 });

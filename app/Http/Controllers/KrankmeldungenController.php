@@ -74,6 +74,28 @@ class KrankmeldungenController extends Controller
             }
         }
 
+        // Schutz gegen doppelte Meldungen (Doppelklick, erneutes Absenden): Ist der
+        // Zeitraum für dieses Kind bzw. diesen Namen bereits vollständig gemeldet, wird
+        // nichts erneut angelegt und keine weitere E-Mail versendet.
+        $duplicate = Krankmeldungen::query()
+            ->when(
+                $child,
+                fn ($q) => $q->where('child_id', $child->id),
+                fn ($q) => $q->whereNull('child_id')
+                    ->where('users_id', auth()->id())
+                    ->where('name', $request->name)
+            )
+            ->whereDate('start', '<=', $request->start)
+            ->whereDate('ende', '>=', $request->ende)
+            ->exists();
+
+        if ($duplicate) {
+            return redirect()->back()->with([
+                'type' => 'info',
+                'Meldung' => 'Für diesen Zeitraum liegt bereits eine Krankmeldung vor.',
+            ]);
+        }
+
         $disease = null;
 
         try {
@@ -102,14 +124,14 @@ class KrankmeldungenController extends Controller
             $meldung = 'Krankmeldung wurde erfolgreich eingetragen';
             $disease = null;
 
-            if (! empty($request->disease_id) && $request->disease_id != 0) {
+            if ($krankmeldung->disease_id) {
 
-                $disease = Disease::find($request->disease_id);
+                $disease = Disease::find($krankmeldung->disease_id);
 
                 if ($disease) {
                     ActiveDisease::insert([
                         'user_id' => auth()->id(),
-                        'disease_id' => $request->disease_id,
+                        'disease_id' => $disease->id,
                         'start' => $request->start,
                         'end' => $krankmeldung->start->addDays($disease->aushang_dauer),
                         'comment' => $request->kommentar,
@@ -191,9 +213,10 @@ class KrankmeldungenController extends Controller
     public function download()
     {
         if (auth()->user()->can('download krankmeldungen')) {
-            $pdf = PDF::loadView('pdf.krankmeldungen', [
-                'meldungen' => Krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get(),
-            ]);
+            $meldungen = Krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get();
+            $pdf = PDF::loadView('pdf.krankmeldungen', ['meldungen' => $meldungen]);
+
+            \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'krankmeldungen', 'format' => 'pdf', 'rows' => $meldungen->count()]);
 
             return $pdf->download(Carbon::now()->format('Y-m-d').'_Krankmeldungen.pdf');
         }

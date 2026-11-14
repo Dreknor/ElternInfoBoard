@@ -149,7 +149,7 @@
 
                             <!-- Post Content -->
                             <div class="p-6 prose max-w-none">
-                                {!! $beitrag->text !!}
+                                @safeHtml($beitrag->text)
                             </div>
 
                             <!-- Comments Section (Collapsible) -->
@@ -560,7 +560,7 @@
                     confirmButtonText: 'Ja, entfernen!',
                     cancelButtonText: 'Abbrechen'
                 }).then((result) => {
-                    if (result.isConfirmed) {
+                    if (result.isConfirmed || result.value) {
                         $.ajax({
                             url: '{{url("elternrat/file/")}}/' + fileId,
                             type: 'DELETE',
@@ -609,7 +609,7 @@
                     confirmButtonText: 'Ja, löschen!',
                     cancelButtonText: 'Abbrechen'
                 }).then((result) => {
-                    if (result.isConfirmed) {
+                    if (result.isConfirmed || result.value) {
                         $.ajax({
                             url: '{{url("elternrat/comment/")}}/' + commentId,
                             type: 'DELETE',

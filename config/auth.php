@@ -67,7 +67,8 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            // Wie „eloquent“, stellt aber auch Sitzungen von Schülerkonten wieder her (App\Auth\StudentAwareUserProvider).
+            'driver' => 'eloquent-students',
             'model' => App\Model\User::class,
         ],
 
