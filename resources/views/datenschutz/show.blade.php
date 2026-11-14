@@ -22,7 +22,7 @@
                     </p>
                     <p class="mb-0">
                         <strong>Hinweis:</strong> Die dargestellten Informationen beziehen sich ausschließlich auf die in dieser Anwendung gespeicherten Daten. Schulintern darüber hinausgehende Daten (z.&nbsp;B. in anderen Systemen des Schulzentrums) sind hier nicht erfasst.
-                        <strong>IP-Adressen werden von dieser Anwendung nicht gespeichert.</strong>
+                        IP-Adressen und Browserkennungen werden ausschließlich im Sicherheitsprotokoll gespeichert (siehe unten) und sind Teil der Auskunft im JSON- und PDF-Export.
                     </p>
                 </div>
             </div>
@@ -1094,6 +1094,17 @@
             <div>
                 <strong class="block mb-1">Hinweis: Änderungsprotokoll (Audit-Log)</strong>
                 Bestimmte Aktionen (z.&nbsp;B. Änderungen an Ihrem Benutzerkonto, Schickzeiten) werden in einem internen Änderungsprotokoll festgehalten. Dieses dient der Nachvollziehbarkeit und Sicherheit und wird ausschließlich von berechtigten Administratoren eingesehen. Auf Anfrage beim Datenschutzbeauftragten erhalten Sie auch darüber Auskunft.
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== HINWEIS SICHERHEITSPROTOKOLL ===== --}}
+    <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 text-sm text-slate-900">
+        <div class="flex items-start gap-3">
+            <i class="fas fa-shield-alt text-slate-600 text-lg mt-0.5 flex-shrink-0"></i>
+            <div>
+                <strong class="block mb-1">Hinweis: Sicherheitsprotokoll</strong>
+                Zur Erkennung unbefugter Zugriffe (Art. 32 DSGVO) werden Anmeldungen, fehlgeschlagene Anmeldeversuche, Downloads und Exporte mit Konto-ID, IP-Adresse, Browserkennung und technischen Kennzeichen protokolliert, keine Inhalte. Die Einträge werden nach {{ config('security_log.retention_days') }} Tagen gelöscht, die IP-Adresse bereits nach {{ config('security_log.anonymize_ip_after_days') }} Tagen gekürzt und die Browserkennung entfernt. Sie dienen nicht der Leistungs- oder Verhaltenskontrolle. Ihre eigenen Einträge finden Sie im JSON- und PDF-Export.
             </div>
         </div>
     </div>

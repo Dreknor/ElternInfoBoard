@@ -66,6 +66,7 @@ class ImageController extends Controller implements HasMiddleware
     private function serve(Request $request, Media $media): BinaryFileResponse
     {
         abort_unless(MediaAccess::canView($request->user(), $media), 403, 'Zugriff verweigert.');
+        MediaAccess::logDownload($media);
 
         $size = $request->query('size');
         $path = in_array($size, ['thumb', 'preview'], true) && $media->hasGeneratedConversion($size)

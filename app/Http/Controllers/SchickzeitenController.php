@@ -1048,6 +1048,8 @@ class SchickzeitenController extends Controller implements HasMiddleware
      */
     public function download()
     {
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'schickzeiten', 'format' => 'xlsx']);
+
         return Excel::download(new SchickzeitenExport, Carbon::now()->format('Ymd').'_schickzeiten.xlsx');
     }
 

@@ -101,6 +101,8 @@ class ICalController extends Controller
                         ->fullDay());
                 }
 
+                $this->logFetch($user);
+
                 return response($icalObject->get(), 200, [
                     'Content-Type' => 'text/calendar; charset=utf-8',
                     'Content-Disposition' => 'attachment; filename="'.config('app.name').'.ics"',
@@ -112,6 +114,24 @@ class ICalController extends Controller
             return response('Kalender nicht gefunden', 404);
         }
 
+    }
+
+    /**
+     * Sicherheitsprotokoll für den anmeldefreien Abruf: Kalender-Clients pollen mehrmals täglich,
+     * daher höchstens ein Eintrag je Konto und IP-Adresse und Tag.
+     */
+    private function logFetch(User $user): void
+    {
+        try {
+            $key = 'ical-fetch:'.$user->id.':'.hash('sha256', (string) request()->ip()).':'.now()->format('Y-m-d');
+            if (! \Illuminate\Support\Facades\Cache::add($key, 1, now()->endOfDay())) {
+                return;
+            }
+        } catch (\Throwable) {
+            return;
+        }
+
+        \App\Services\Security\SecurityLog::record('ical.fetch', $user->id);
     }
 
     /**

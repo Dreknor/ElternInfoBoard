@@ -136,7 +136,7 @@ class StudentAccountService
         }
 
         $student->forceFill(['is_active' => false, 'deactivated_at' => now()])->save();
-        $student->tokens()->delete();
+        \App\Services\Security\AccountSecurity::revokeTokens($student, 'account_deactivated');
         $this->forgetSessions($student);
 
         StudentAccountLog::info('Schülerkonto gesperrt', $student, ['grund' => $reason]);
@@ -209,7 +209,7 @@ class StudentAccountService
         $id = $student->id;
         DB::transaction(function () use ($student) {
             Child::query()->where('user_id', $student->id)->update(['user_id' => null]);
-            $student->tokens()->delete();
+            \App\Services\Security\AccountSecurity::revokeTokens($student, 'account_deleted');
             $this->forgetSessions($student);
             DB::table('notifications')->where('user_id', $student->id)->delete();
             $student->pushSubscriptions()->delete();

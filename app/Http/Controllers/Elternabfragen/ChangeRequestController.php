@@ -101,6 +101,8 @@ class ChangeRequestController extends Controller
         $value = $changeRequest->answers[$field] ?? null;
         abort_unless(is_array($value) && isset($value['path']) && Storage::disk(ResponseService::DISK)->exists($value['path']), 404);
 
+        \App\Services\Security\SecurityLog::record('inquiry.file_download', null, ['inquiry_id' => $changeRequest->inquiry_id, 'change_request_id' => $changeRequest->id]);
+
         return Storage::disk(ResponseService::DISK)->download($value['path'], $value['name'] ?? 'Datei');
     }
 }

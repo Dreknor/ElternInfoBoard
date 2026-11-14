@@ -57,7 +57,10 @@ class IntegrationTokens
 
         $expiresAt = $lifetime === 'never' ? null : now()->addDays((int) $lifetime);
 
-        return $user->createToken($name, $abilities, $expiresAt);
+        $token = $user->createToken($name, $abilities, $expiresAt);
+        \App\Services\Security\AccountSecurity::tokenIssued($token, ['scopes' => array_values(array_slice($abilities, 2))]);
+
+        return $token;
     }
 
     public static function isIntegration(mixed $token): bool

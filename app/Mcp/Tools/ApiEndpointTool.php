@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Mcp\ReadOnlyApiGateway;
+use App\Services\Security\SecurityLog;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -96,7 +97,20 @@ class ApiEndpointTool extends Tool
             }
         }
 
-        $result = $gateway->get($user, $uri, $query);
+        // Protokoll NACH dem Gateway: dieses rollt seine Transaktion zurück und würde einen früheren Eintrag verwerfen.
+        // Kontext nur Werkzeugname, Statuscode und Token-Kennung – keine Parameterwerte, keine Antwortinhalte.
+        // (Schlüssel „token“ filtert das Protokoll aus, daher „pat_id“ = ID des persönlichen Zugriffstokens.)
+        $patId = method_exists($user, 'currentAccessToken') ? $user->currentAccessToken()?->id : null;
+
+        try {
+            $result = $gateway->get($user, $uri, $query);
+        } catch (\Throwable $e) {
+            SecurityLog::record('mcp.tool_call', $user->id, ['tool' => $this->name, 'status' => 0, 'pat_id' => $patId]);
+
+            throw $e;
+        }
+
+        SecurityLog::record('mcp.tool_call', $user->id, ['tool' => $this->name, 'status' => $result['status'], 'pat_id' => $patId]);
 
         if ($result['status'] >= 400) {
             $message = json_decode($result['body'], true)['message'] ?? 'Die Anfrage konnte nicht ausgeführt werden.';

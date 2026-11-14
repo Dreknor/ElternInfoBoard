@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Services\Auth\SsoStudentDetector;
+use App\Services\Security\AccountSecurity;
+use App\Services\Security\AuthEventSubscriber;
+use App\Services\Security\SecurityLog;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
@@ -48,8 +51,15 @@ class AuthController extends Controller
         $user = User::whereRaw('LOWER(email) = ?', [Str::lower(trim($request->email))])->first();
 
         if (! $user || ! Hash::check($request->password, $user->password) || $user->is_active === false) {
+            SecurityLog::record('auth.failed', $user?->id, [
+                'guard' => 'sanctum', 'method' => 'password', 'client' => 'app',
+                'reason' => $user && $user->is_active === false ? 'inactive' : 'invalid_credentials',
+            ] + ($user ? [] : AuthEventSubscriber::identifierContext($request->email)));
+
             throw ValidationException::withMessages(['email' => ['E-Mail oder Passwort ist nicht korrekt.']]);
         }
+
+        SecurityLog::record('auth.login', $user->id, ['guard' => 'sanctum', 'method' => 'password', 'client' => 'app']);
 
         return $this->tokenResponse($user, $request->device_name);
     }
@@ -102,6 +112,7 @@ class AuthController extends Controller
                 ->user();
         } catch (\Throwable $e) {
             Log::warning('App-SSO: Keycloak-Rückmeldung fehlerhaft: '.$e->getMessage());
+            SecurityLog::record('auth.failed', null, ['method' => 'keycloak', 'client' => 'app', 'reason' => 'idp_error']);
 
             return $this->toApp(['error' => 'sso_failed']);
         }
@@ -151,6 +162,7 @@ class AuthController extends Controller
             $code = Str::random(48);
             Cache::put("app_login_code:{$code}", ['user_id' => $user->id, 'challenge' => null], now()->addMinutes(self::MAGIC_TTL_MINUTES));
             $user->notify(new \App\Notifications\SendPasswordLessLinkNotification(route('app.login.open', ['code' => $code])));
+            SecurityLog::record('auth.magic_link.sent', $user->id, ['channel' => 'app']);
         }
 
         return response()->json(['message' => 'Falls die Adresse bekannt ist, wurde ein Anmelde-Link gesendet.']);
@@ -175,11 +187,15 @@ class AuthController extends Controller
 
         $entry = Cache::pull('app_login_code:'.$request->code);
         if (! $entry) {
+            SecurityLog::record('auth.failed', null, ['guard' => 'sanctum', 'method' => 'app_code', 'client' => 'app', 'reason' => 'invalid_code']);
+
             return response()->json(['message' => 'Der Anmeldecode ist abgelaufen. Bitte erneut anmelden.'], 422);
         }
         if ($entry['challenge'] !== null) {
             $expected = rtrim(strtr(base64_encode(hash('sha256', (string) $request->code_verifier, true)), '+/', '-_'), '=');
             if (! hash_equals($entry['challenge'], $expected)) {
+                SecurityLog::record('auth.failed', (int) $entry['user_id'], ['guard' => 'sanctum', 'method' => 'sso', 'client' => 'app', 'reason' => 'pkce_mismatch']);
+
                 return response()->json(['message' => 'Die Anmeldung konnte nicht bestätigt werden.'], 422);
             }
         }
@@ -191,6 +207,8 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Der Anmeldecode ist abgelaufen. Bitte erneut anmelden.'], 422);
             }
 
+            SecurityLog::record('auth.login', $student->id, ['guard' => 'sanctum', 'method' => 'student_sso', 'client' => 'app']);
+
             return StudentApiController::tokenResponse($student, $request->device_name);
         }
 
@@ -199,6 +217,9 @@ class AuthController extends Controller
         if (! $user || $user->is_active === false) {
             return response()->json(['message' => 'Der Anmeldecode ist abgelaufen. Bitte erneut anmelden.'], 422);
         }
+
+        // SSO-Codes tragen eine PKCE-Challenge; Codes aus Anmelde-Link bzw. QR-Code nicht.
+        SecurityLog::record('auth.login', $user->id, ['guard' => 'sanctum', 'method' => $entry['challenge'] !== null ? 'sso' : 'app_code', 'client' => 'app']);
 
         return $this->tokenResponse($user, $request->device_name);
     }
@@ -210,7 +231,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $current = $user->currentAccessToken();
-        $response = $this->tokenResponse($user, $current->name ?? 'ElternInfo-App');
+        $response = $this->tokenResponse($user, $current->name ?? 'ElternInfo-App', $current);
         $current->delete();
 
         return $response;
@@ -221,6 +242,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
+        AccountSecurity::tokenRevoked($request->user()->currentAccessToken(), 'logout');
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Abgemeldet.']);
@@ -238,14 +260,16 @@ class AuthController extends Controller
 
         $generator = new LoginUrl($request->user());
         $generator->setRedirectUrl($request->path);
+        SecurityLog::record('auth.web_link.issued', $request->user()->id);
 
         return response()->json(['data' => ['url' => $generator->generate()]]);
     }
 
-    private function tokenResponse(User $user, string $deviceName): JsonResponse
+    private function tokenResponse(User $user, string $deviceName, mixed $replaces = null): JsonResponse
     {
         $minutes = config('sanctum.expiration');
         $token = $user->createToken(mb_substr($deviceName, 0, 100));
+        $replaces !== null ? AccountSecurity::tokenRefreshed($token, $replaces) : AccountSecurity::tokenIssued($token);
 
         return response()->json([
             'data' => [

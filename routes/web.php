@@ -84,10 +84,11 @@ Route::post('/auth/ucs/logout', [UcsLoginController::class, 'logout'])
      ->middleware('auth')
      ->name('auth.ucs.logout');
 
-// POST-Login mit Rate-Limit (schützt vor Brute-Force und Magic-Link-Spam)
-Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login')->name('login');
-
 Auth::routes(['register' => false]);
+
+// POST-Login mit Rate-Limit (schützt vor Brute-Force und Magic-Link-Spam). Muss NACH Auth::routes()
+// stehen, sonst überschreibt dessen ungedrosselte POST-login-Route diese. Name bleibt am GET-Formular.
+Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login');
 
 // Eltern-App: Anmelde-Link aus der E-Mail öffnet die App (einmaliger Code, 15 min gültig).
 Route::get('app/anmelden/{code}', function (string $code) {
@@ -631,7 +632,11 @@ Route::middleware('auth')->group(function () {
 
         Route::get('logoutAsUser', function () {
             if (session()->has('ownID')) {
+                $impersonatedId = auth()->id();
+                \App\Services\Security\AuthEventSubscriber::expect('impersonation');
                 Auth::loginUsingId(Crypt::decryptString(session()->get('ownID')));
+                // actor = Admin (noch aus ownID), user_id = bisher übernommenes Konto
+                \App\Services\Security\SecurityLog::record('impersonation.stop', $impersonatedId);
                 session()->remove('ownID');
             }
 
@@ -689,8 +694,14 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['can:see logs'])->group(function () {
         Route::get('logs', [LogController::class, 'index']);
         Route::delete('logs/search/cleanup', [LogController::class, 'cleanupSearchLogs'])->middleware('can:delete logs');
-        Route::delete('logs/{id}', [LogController::class, 'destroy'])->middleware('can:delete logs');
+        // cleanup vor {id}, sonst fängt logs/{id} den Aufruf ab
         Route::delete('logs/cleanup', [LogController::class, 'cleanup'])->middleware('can:delete logs');
+        Route::delete('logs/{id}', [LogController::class, 'destroy'])->middleware('can:delete logs');
+    });
+
+    // Sicherheitsprotokoll: ausschließlich lesend, bewusst ohne Lösch-/Export-Routen
+    Route::middleware(['can:see security log'])->group(function () {
+        Route::get('security-log', [\App\Http\Controllers\SecurityLogController::class, 'index'])->name('security-log.index');
     });
 
     Route::middleware(['can:edit schickzeiten'])->prefix('care')->group(function () {

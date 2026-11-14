@@ -28,6 +28,8 @@ return [
         'morph_prefix' => 'user',
         'guards' => [
             'web',
+            // App-API (Bearer-Token): ohne „sanctum“ blieben Audits aus der App ohne user_id
+            'sanctum',
             'api',
         ],
         'resolver' => OwenIt\Auditing\Resolvers\UserResolver::class,

@@ -293,6 +293,8 @@ class RueckmeldungenController extends Controller
             'rueckmeldungen' => $rueckmeldung->userRueckmeldungen()->where('users_id', $user_id)->get(),
         ]);
 
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'rueckmeldung_einzeln', 'format' => 'pdf', 'rueckmeldung_id' => $rueckmeldung->id]);
+
         return $pdf->download(Carbon::now()->format('Y-m-d').'_Rückmeldung.pdf');
     }
 
@@ -323,10 +325,14 @@ class RueckmeldungenController extends Controller
                     'rueckmeldungen' => $rueckmeldung->userRueckmeldungen,
                 ]);
 
+                \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'rueckmeldungen', 'format' => 'pdf', 'rueckmeldung_id' => $rueckmeldung->id]);
+
                 return $pdf->download(Carbon::now()->format('Y-m-d').'_Nachrichten.pdf');
                 break;
             case 'abfrage':
                 // Excel für Abfrage-Rückmeldungen
+                \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'rueckmeldungen', 'format' => 'xlsx', 'rueckmeldung_id' => $rueckmeldung->id]);
+
                 return Excel::download(new AbfrageExport($rueckmeldung->options, $rueckmeldung->userRueckmeldungen), 'Rueckmeldung_'.Carbon::now()->format('Ymd_Hi').'.xlsx');
                 break;
         }

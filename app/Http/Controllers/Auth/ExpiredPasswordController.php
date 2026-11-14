@@ -24,6 +24,7 @@ class ExpiredPasswordController extends Controller
             'password' => bcrypt($request->password),
             'changePassword' => 0,
         ]);
+        \App\Services\Security\AccountSecurity::passwordChanged($request->user(), 'account.password_changed', null, true, ['client' => 'web', 'reason' => 'expired']);
 
         return redirect(url('home'))->with(['status' => 'Password changed successfully']);
     }

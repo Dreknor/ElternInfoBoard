@@ -401,6 +401,8 @@ class MessengerController extends Controller
             abort(404, 'Datei nicht gefunden.');
         }
 
+        \App\Services\App\MediaAccess::logDownload($media);
+
         $response = new BinaryFileResponse($filePath);
         $response->headers->set('Content-Type', $media->mime_type);
         // Rasterbilder inline, alles andere (auch SVG) als Download, ohne Skriptausführung

@@ -105,6 +105,7 @@ return [
         'Modules' => 'adm-system',
         'Settings' => 'adm-system',
         'Logs' => 'adm-system',
+        'Sicherheitsprotokoll' => 'adm-system',
     ],
 
 ];

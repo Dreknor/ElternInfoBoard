@@ -35,7 +35,10 @@ class McpTokens
 
         self::prune($user);
 
-        return $user->createToken(self::NAME, [self::ABILITY, self::READ], $expiresAt);
+        $token = $user->createToken(self::NAME, [self::ABILITY, self::READ], $expiresAt);
+        \App\Services\Security\AccountSecurity::tokenIssued($token);
+
+        return $token;
     }
 
     public static function lifetime(): int

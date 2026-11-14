@@ -312,6 +312,8 @@ class ImportController extends Controller implements HasMiddleware
     {
         [$pdfContent, $filename] = $this->credentialsPdf($request, $newUsers, $importTypeLabel);
 
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'zugangsdaten', 'format' => 'pdf', 'rows' => count($newUsers)]);
+
         return response($pdfContent, 200, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -555,6 +557,8 @@ class ImportController extends Controller implements HasMiddleware
         $stored = Cache::get($this->vereinResultKey($request, $id));
         abort_if($stored === null, 404, 'Auswertung nicht mehr vorhanden – bitte den Import erneut starten.');
 
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'verein_auswertung', 'format' => 'xlsx']);
+
         return Excel::download(new VereinImportAuswertung($stored['evaluation']), 'verein-import-auswertung-'.now()->format('Y-m-d_H-i').'.xlsx');
     }
 
@@ -565,6 +569,8 @@ class ImportController extends Controller implements HasMiddleware
     {
         $stored = Cache::get($this->vereinResultKey($request, $id));
         abort_if(! isset($stored['pdf']), 404);
+
+        \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'zugangsdaten', 'format' => 'pdf']);
 
         return response(base64_decode($stored['pdf']), 200, [
             'Content-Type'        => 'application/pdf',

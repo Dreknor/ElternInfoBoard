@@ -213,9 +213,10 @@ class KrankmeldungenController extends Controller
     public function download()
     {
         if (auth()->user()->can('download krankmeldungen')) {
-            $pdf = PDF::loadView('pdf.krankmeldungen', [
-                'meldungen' => Krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get(),
-            ]);
+            $meldungen = Krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get();
+            $pdf = PDF::loadView('pdf.krankmeldungen', ['meldungen' => $meldungen]);
+
+            \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'krankmeldungen', 'format' => 'pdf', 'rows' => $meldungen->count()]);
 
             return $pdf->download(Carbon::now()->format('Y-m-d').'_Krankmeldungen.pdf');
         }

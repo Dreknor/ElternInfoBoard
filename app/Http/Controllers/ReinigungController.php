@@ -252,6 +252,8 @@ class ReinigungController extends Controller implements HasMiddleware
     public function export($bereich)
     {
         if (auth()->user()->can('edit reinigung')) {
+            \App\Services\Security\SecurityLog::record('export.download', null, ['export' => 'reinigung', 'format' => 'xlsx']);
+
             return Excel::download(new ReinigungExport($bereich), Carbon::now()->format('Y-m-d').'_'.$bereich.'_Reinigung.xlsx');
         }
 

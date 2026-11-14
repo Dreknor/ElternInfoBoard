@@ -24,6 +24,7 @@ class ImageController extends Controller implements HasMiddleware
     {
         // Zugriff nur für Berechtigte (vorher: jede Datei per fortlaufender ID abrufbar).
         abort_unless(MediaAccess::canView(auth()->user(), $media_id), 403, 'Zugriff verweigert.');
+        MediaAccess::logDownload($media_id);
 
         if (! str_starts_with((string) $media_id->mime_type, 'image/') || str_contains((string) $media_id->mime_type, 'svg')) {
             // Nicht-Bilder (und SVG, das Skripte enthalten kann) als Download ausliefern.

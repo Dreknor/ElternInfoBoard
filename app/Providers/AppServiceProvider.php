@@ -61,6 +61,9 @@ class AppServiceProvider extends ServiceProvider
             fn () => \App\Model\Scopes\ExcludeStudentAccounts::forgetColumn()
         );
 
+        // Sicherheitsprotokoll: Anmelde- und Kontoereignisse (nur Datensicherheit, keine Seitenaufrufe)
+        \Illuminate\Support\Facades\Event::subscribe(\App\Services\Security\AuthEventSubscriber::class);
+
         // Keine ausführbaren bzw. im Browser aktiven Dateien in der (öffentlich gespeicherten) Medienbibliothek
         \Spatie\MediaLibrary\MediaCollections\Models\Media::creating(fn ($media) => \App\Support\UploadGuard::assertAllowed($media));
 

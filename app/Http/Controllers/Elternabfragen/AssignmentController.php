@@ -147,6 +147,7 @@ class AssignmentController extends Controller
         $this->authorizeResponse($request, $response);
         $file = $responses->filePath($response, $field);
         abort_unless($file, 404);
+        \App\Services\Security\SecurityLog::record('inquiry.file_download', null, ['inquiry_id' => $response->inquiry_id ?? null, 'response_id' => $response->id]);
 
         return Storage::disk(ResponseService::DISK)->download($file['path'], $file['name']);
     }

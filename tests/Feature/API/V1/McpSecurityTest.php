@@ -204,7 +204,11 @@ class McpSecurityTest extends AppApiTestCase
             $this->assertStringNotContainsString('Fehler 500', $result['content'][0]['text'] ?? '', $tool->name());
         }
 
-        $this->assertSame($before, $this->tableCounts());
+        // Das Sicherheitsprotokoll (ein Eintrag je Werkzeugaufruf) ist gewollt und liegt außerhalb des Gateways.
+        $after = $this->tableCounts();
+        $this->assertGreaterThan(0, $after['security_events']);
+        unset($before['security_events'], $after['security_events']);
+        $this->assertSame($before, $after);
     }
 
     /** @test */

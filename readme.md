@@ -24,6 +24,7 @@
 - [Konfiguration (`.env`)](#konfiguration-env)
 - [Einstellungen in der Oberfläche](#einstellungen-in-der-oberfläche)
 - [Betrieb](#betrieb)
+- [Sicherheitsprotokoll und Datenschutz](#sicherheitsprotokoll-und-datenschutz)
 - [Updates](#updates)
 - [UCS@school-Integration](#ucsschool-integration)
 - [Eltern-App & MCP-Server](#eltern-app--mcp-server)
@@ -74,10 +75,10 @@ Es darf frei für nicht-kommerzielle Projekte im Bildungsbereich genutzt werden.
 
 | Komponente | Version / Hinweis |
 |---|---|
-| PHP | **8.4** (die `composer.lock` ist gegen PHP 8.4 aufgelöst) |
+| PHP | **8.4**
 | PHP-Erweiterungen | `curl`, `gd`, `mbstring`, `openssl`, `pdo_mysql`, `xml`, `zip`, `intl`, `bcmath`; empfohlen `imagick` |
 | Composer | ≥ 2.x |
-| Node.js / npm | Node ≥ 20.19 bzw. ≥ 22.12 (Vite 7) – nur zum Bauen der Assets |
+| Node.js / npm | Node ≥ 20.19 bzw. ≥ 22.12 (Vite 7) |
 | Datenbank | MySQL 8 / MariaDB 10.6+ |
 | Webserver | Apache (mit `mod_rewrite`) oder nginx, Document-Root auf `public/` |
 | Cron | ein Cronjob für `php artisan schedule:run` (Pflicht) |
@@ -332,6 +333,41 @@ Regelmäßig sichern:
 - Fehlgeschlagene Jobs: `php artisan queue:failed`, erneut ausführen mit `php artisan queue:retry all`
 - Mailversand testen: `php artisan mail:test adresse@schule.de`
 - App-Push testen: `php artisan push:check [email]`
+
+---
+
+## Sicherheitsprotokoll und Datenschutz
+
+Die Anwendung führt ein eigenes, datensparsames **Sicherheitsprotokoll** (Tabelle `security_events`). Es ist vom allgemeinen System-Log (*Logs*) getrennt und dient ausschließlich dazu, unbefugte Zugriffe zu erkennen und nachzuweisen.
+
+**Erfasste Ereignisse** (Punktnotation, in der Oberfläche mit deutscher Kurzbezeichnung): Anmeldung, fehlgeschlagene Anmeldung, Sperre nach zu vielen Versuchen, Abmeldung, Passwort-Reset und Anmeldelinks (`auth.*`), Ausstellen/Widerrufen/Erneuern von API-Tokens (`token.*`), Anmeldung als anderer Nutzer (`impersonation.*`), Rollen- und Rechteänderungen (`rbac.*`), Passwortänderungen (`account.*`), Löschen von System-Logs (`logs.deleted`), Exporte und Downloads (`export.download`, `media.download`, `inquiry.file_download`), MCP-Werkzeugaufrufe (`mcp.tool_call`), Abruf des Kalender-Feeds (`ical.fetch`), Download der Selbstauskunft (`privacy.export`) sowie die Einsichtnahme in das Protokoll selbst (`security_log.viewed`, höchstens einmal pro Nutzer und Stunde).
+
+**Gespeicherte Daten:** Zeitpunkt, Ereignis, Konto-ID (und ggf. ID der handelnden Person), IP-Adresse, User-Agent und wenige technische Kennzeichen. Es werden **keine Inhalte, Passwörter, Tokens oder Codes** gespeichert; Kennungen wie E-Mail-Adressen erscheinen höchstens als gekürzter Hash.
+
+**Zweck und Rechtsgrundlage (Hinweis, keine Rechtsberatung):** Gewährleistung der Sicherheit der Verarbeitung und Aufklärung von Sicherheitsvorfällen, Art. 6 Abs. 1 lit. f i. V. m. Art. 32 DSGVO. Für kirchliche Träger kommen § 6 Nr. 4 bzw. Nr. 8 i. V. m. § 27 DSG-EKD in Betracht. Eine Auswertung zur Leistungs- oder Verhaltenskontrolle ist nicht vorgesehen und darf nicht erfolgen. Die rechtliche Einordnung ist durch den Datenschutzbeauftragten des Trägers zu bestätigen.
+
+**Aufbewahrung:** Einträge werden nach 90 Tagen gelöscht, die IP-Adresse wird nach 30 Tagen gekürzt und der User-Agent entfernt (täglich per `security-log:cleanup`, siehe `schedule:list`). Das Protokoll hat bewusst keinen Fremdschlüssel auf Benutzer: Es bleibt auch nach dem Löschen eines Kontos bis zum Fristablauf erhalten (die Ansicht zeigt dann nur die ID).
+
+| Variable | Bedeutung |
+|---|---|
+| `SECURITY_LOG_ENABLED` | Protokollierung ein-/ausschalten (Standard `true`) |
+| `SECURITY_LOG_RETENTION_DAYS` | Aufbewahrung in Tagen (Standard `90`) |
+| `SECURITY_LOG_ANONYMIZE_IP_AFTER_DAYS` | IP kürzen / User-Agent entfernen nach Tagen (Standard `30`) |
+
+**Zugriff:** Nur Nutzer mit dem Recht `see security log` (standardmäßig die Rolle *admin*) sehen unter *Verwaltung → Sicherheitsprotokoll* (`/security-log`) eine **reine Leseansicht** mit Filtern. Das Protokoll lässt sich über die Oberfläche weder löschen noch exportieren; jeder Aufruf wird selbst protokolliert. Das Recht sollte nur an wenige, namentlich bekannte Personen vergeben werden.
+
+**Auskunftsrecht:** Die eigenen Einträge (Zeit, Ereignis, IP, User-Agent, Kontext; bei Auslösung durch eine andere Person nur „ja/nein“) sind Teil der Selbstauskunft unter *Datenschutz* (JSON und PDF). Der Download der Selbstauskunft wird als `privacy.export` protokolliert. Die Datenschutzseite für Nutzer weist auf das Sicherheitsprotokoll hin.
+
+**Checkliste für den Betreiber (organisatorisch):**
+
+- [ ] Verzeichnis der Verarbeitungstätigkeiten und Datenschutzerklärung um das Sicherheitsprotokoll ergänzen (Zweck, Daten, Fristen, Zugriffsberechtigte).
+- [ ] Mitarbeitervertretung beteiligen: Das Protokoll erfasst auch Beschäftigte; eine Leistungs- und Verhaltenskontrolle ist auszuschließen (z. B. per Dienstvereinbarung).
+- [ ] Webserver-Access-Logs (nginx/Apache) mit definierter, kurzer Aufbewahrungsfrist vorhalten und in der Dokumentation aufführen.
+- [ ] Hinter einem Reverse Proxy `TRUSTED_PROXIES` in der `.env` setzen, sonst wird die IP des Proxys statt der des Nutzers protokolliert.
+- [ ] `LOG_CHANNEL=stack` setzen, damit das Datenbank-Log (*Logs*) geschrieben wird.
+- [ ] `LOG_LEVEL` in Produktion nicht auf `debug` stellen (sonst landen unnötig viele Details in den Logs).
+- [ ] Kreis der Personen mit dem Recht `see security log` festlegen und dokumentieren.
+- [ ] Optional: Sentry nur nutzen, wenn ein Auftragsverarbeitungsvertrag besteht; ohne `SENTRY_LARAVEL_DSN` werden keine Fehlerdaten an Dritte übermittelt.
 
 ---
 
