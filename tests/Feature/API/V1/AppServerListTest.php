@@ -134,6 +134,13 @@ class AppServerListTest extends TestCase
         $expired = $list->statusForThisServer($at('2028-08-02'));
         $this->assertSame('expired', $expired['state']);
         $this->assertSame('2028-08-30', $expired['deadline']->toDateString());
+        // unbefristet (bis zur Kündigung): nie abgelaufen, kein Hinweis „läuft aus“
+        $this->travelTo($at('2030-01-01'));
+        $this->serve($this->signed([['host' => 'eltern.schule.example', 'kind' => 'supported', 'valid_until' => null]], '2030-01-01'));
+        $list->fetch();
+        $this->assertSame('ok', $list->statusForThisServer($at('2030-01-02'))['state']);
+        $this->assertSame('fetch_failing', $list->statusForThisServer($at('2030-02-01'))['state']);
+        $this->travelBack();
     }
 
     #[Test]

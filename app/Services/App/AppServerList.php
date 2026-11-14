@@ -18,11 +18,11 @@ use Illuminate\Support\Facades\Storage;
  *
  * Format: {"payload": "<base64 JSON>", "signature": "<base64 Ed25519>"}
  * Payload: {"version":1,"issued_at":"YYYY-MM-DD","servers":[{"host"|"host_sha256", "kind",
- *           "valid_until", "name"?, "listed"?}]}
+ *           "valid_until" (YYYY-MM-DD oder null = unbefristet), "name"?, "listed"?}]}
  *
  * Gleiche Regeln wie in der App (src/lib/serverLicense.ts):
  * - Sperre frühestens ab ENFORCE_FROM (Schuljahresbeginn)
- * - Eintrag bis valid_until gültig, danach GRACE_DAYS Kulanz
+ * - Ohne valid_until unbefristet; mit Datum (gekündigt/befristet) danach GRACE_DAYS Kulanz
  * Die Liste wird nur bei Änderungen neu signiert; ihr Alter spielt keine Rolle.
  */
 class AppServerList
@@ -148,18 +148,18 @@ class AppServerList
             return $result('unlisted', $enforceFrom);
         }
 
-        $validUntil = CarbonImmutable::parse($entry['valid_until'])->endOfDay();
-        if ($now->greaterThan($validUntil)) {
+        $validUntil = $entry['valid_until'] ? CarbonImmutable::parse($entry['valid_until'])->endOfDay() : null;
+        if ($validUntil && $now->greaterThan($validUntil)) {
             return $result('expired', $validUntil->addDays(self::GRACE_DAYS), $entry['valid_until']);
         }
 
         // Abruf klappt seit Längerem nicht: Verlängerungen kämen nicht an (nur Hinweis)
         $fetchedAt = $this->fetchedAt();
         if ($fetchedAt && $now->greaterThan($fetchedAt->addDays(self::FETCH_WARN_DAYS))) {
-            return $result('fetch_failing', $validUntil->addDays(self::GRACE_DAYS), $entry['valid_until']);
+            return $result('fetch_failing', $validUntil?->addDays(self::GRACE_DAYS), $entry['valid_until']);
         }
 
-        if ($now->addDays(self::WARN_DAYS)->greaterThan($validUntil)) {
+        if ($validUntil && $now->addDays(self::WARN_DAYS)->greaterThan($validUntil)) {
             return $result('expiring', $validUntil->addDays(self::GRACE_DAYS), $entry['valid_until']);
         }
 
@@ -186,9 +186,9 @@ class AppServerList
             $title = 'ElternInfo-App';
 
             return match ($status['state']) {
-                'expiring' => ['type' => 'info', 'title' => $title, 'text' => "Die Freischaltung dieses Servers für die ElternInfo-App läuft am {$validUntil} aus. Bitte verlängern Sie den Vertrag rechtzeitig beim Herausgeber der App."],
+                'expiring' => ['type' => 'info', 'title' => $title, 'text' => "Die Freischaltung dieses Servers für die ElternInfo-App endet am {$validUntil}. Danach funktioniert die App noch 30 Tage. Bei Fragen wenden Sie sich bitte an den Herausgeber der App."],
                 'expired' => ['type' => 'warning', 'title' => $title, 'text' => "Die Freischaltung für die ElternInfo-App ist am {$validUntil} ausgelaufen. Die App funktioniert noch bis zum {$deadline}. Bitte wenden Sie sich an den Herausgeber der App."],
-                'fetch_failing' => ['type' => 'warning', 'title' => $title, 'text' => "Die Freigabeliste der ElternInfo-App konnte seit über ".self::FETCH_WARN_DAYS." Tagen nicht abgerufen werden. Bitte prüfen Sie, ob der Cronjob läuft und dieser Server {$this->listHost()} erreichen kann. Sonst kommt eine Verlängerung der Freischaltung (bisher bis {$validUntil}) nicht an."],
+                'fetch_failing' => ['type' => 'warning', 'title' => $title, 'text' => "Die Freigabeliste der ElternInfo-App konnte seit über ".self::FETCH_WARN_DAYS." Tagen nicht abgerufen werden. Bitte prüfen Sie, ob der Cronjob läuft und dieser Server {$this->listHost()} erreichen kann. Sonst kommen Änderungen an der Freischaltung nicht an.".($validUntil ? " Sie gilt bisher bis zum {$validUntil}." : '')],
                 'unlisted', 'missing' => ['type' => 'warning', 'title' => $title, 'text' => "Dieser Server ist nicht für die ElternInfo-App freigeschaltet. Ab dem {$deadline} können sich Eltern nicht mehr mit der App anmelden; die Weboberfläche bleibt nutzbar. Bitte wenden Sie sich an den Herausgeber der App."],
                 default => ['type' => 'warning', 'title' => $title, 'text' => 'Die Freigabeliste der ElternInfo-App ist nicht eingerichtet (APP_SERVER_LIST_URL und APP_SERVER_LIST_PUBLIC_KEY in der .env). Ab dem '.$date(CarbonImmutable::parse(self::ENFORCE_FROM)).' funktioniert die App sonst nicht mehr.'],
             };
@@ -236,7 +236,8 @@ class AppServerList
     {
         $hash = hash('sha256', $label);
         foreach ($payload['servers'] ?? [] as $entry) {
-            if (! is_array($entry) || empty($entry['valid_until'])) {
+            // valid_until: Datum oder null (unbefristet); fehlt der Schlüssel, ist der Eintrag ungültig
+            if (! is_array($entry) || ! array_key_exists('valid_until', $entry)) {
                 continue;
             }
             if (($entry['host'] ?? null) === $label || ($entry['host_sha256'] ?? null) === $hash) {
