@@ -36,7 +36,7 @@ Route::middleware('throttle:login')->group(function () {
 });
 
 // ── Angemeldet ───────────────────────────────────────────────────────────────
-Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->group(function () {
+Route::middleware(['auth:sanctum', 'api.active', 'api.password', 'idempotency', 'etag'])->group(function () {
 
     // Sitzung & Profil
     Route::get('bootstrap', [MeController::class, 'bootstrap'])->name('bootstrap');

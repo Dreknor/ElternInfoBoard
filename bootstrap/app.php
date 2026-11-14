@@ -42,6 +42,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\EnsureUserHasEmail::class,
         ]);
 
+        // Sicherheits-Header für alle Antworten (Web und API)
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->throttleApi();
 
         // Integrations-Tokens: nur lesen bzw. freigegebene Bereiche schreiben
@@ -70,6 +73,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'student.enabled' => \App\Http\Middleware\EnsureStudentAccountsEnabled::class,
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'student.messenger' => \App\Http\Middleware\EnsureStudentMessengerEnabled::class,
+            'api.active' => \App\Http\Middleware\EnsureApiUserActive::class,
+            'same_origin' => \App\Http\Middleware\RequireSameOrigin::class,
         ]);
 
         $middleware->priority([

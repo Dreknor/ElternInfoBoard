@@ -41,6 +41,10 @@ return [
         'enabled' => env('KEYCLOAK_ENABLED', false),
         'button_text' => env('KEYCLOAK_BUTTON_TEXT', 'Login mit SSO'),
         'mail_domain' => env('KEYCLOAK_MAILDOMAIN', '*'),
+        // Konten werden über die E-Mail-Adresse zugeordnet. Deshalb nur Adressen akzeptieren, die der
+        // IdP als bestätigt meldet (Claim „email_verified“). Nur abschalten, wenn im Realm niemand
+        // seine E-Mail-Adresse selbst ändern oder sich selbst registrieren kann.
+        'require_verified_email' => env('KEYCLOAK_REQUIRE_VERIFIED_EMAIL', true),
     ],
 
 

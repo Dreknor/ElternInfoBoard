@@ -100,7 +100,7 @@ class KrankmeldungenController extends Controller
 
         try {
             $krankmeldung = new Krankmeldungen;
-            $krankmeldung->fill($request->validated());
+            $krankmeldung->fill($request->safe()->except(['files']));
 
             if ($child) {
                 $krankmeldung->name = $child->first_name.' '.$child->last_name;

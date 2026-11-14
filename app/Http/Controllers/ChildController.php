@@ -19,7 +19,8 @@ class ChildController extends Controller implements HasMiddleware
     {
         return [
             'auth',
-            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'createFromSchickzeit', 'edit', 'updateGuardianPhone']),
+            // Kinder anlegen (store) nur durch das Personal – vorher konnte jedes Konto Kinder zu beliebigen Eltern anlegen
+            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'store', 'createFromSchickzeit', 'edit', 'updateGuardianPhone']),
         ];
     }
 

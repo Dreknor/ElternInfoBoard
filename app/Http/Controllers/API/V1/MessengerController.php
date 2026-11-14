@@ -106,7 +106,7 @@ class MessengerController extends LegacyMessengerController
         $request->validate([
             'body' => ['required_without:attachment', 'nullable', 'string', 'max:'.$this->settings->max_message_length],
             'reply_to_id' => ['nullable', 'integer', 'exists:messages,id'],
-            'attachment' => ['nullable', 'file', 'max:'.($this->settings->max_file_size_mb * 1024)],
+            'attachment' => ['nullable', ...\App\Support\Uploads::fileRules($this->settings->max_file_size_mb * 1024)],
         ]);
         if ($request->hasFile('attachment') && ! $this->settings->allow_file_uploads) {
             return response()->json(['message' => 'Dateianhänge sind nicht erlaubt.'], 422);

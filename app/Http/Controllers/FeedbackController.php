@@ -82,9 +82,8 @@ class FeedbackController extends Controller implements HasMiddleware
 
         Log::debug('FeedbackController: send() method called', [
             'user_id' => $request->user()?->id,
-            'user_email' => $request->user()?->email,
             'text_length' => strlen($request->input('text')),
-            'betreff' => $request->input('betreff'),
+            'betreff_length' => strlen((string) $request->input('betreff')),
             'mitarbeiterIds' => $recipientIds,
             'has_files' => $request->hasFile('files'),
             'files_count' => $request->hasFile('files') ? count($request->file('files')) : 0,
@@ -154,10 +153,12 @@ class FeedbackController extends Controller implements HasMiddleware
             ];
 
         } catch (Exception $e) {
+            // Keine Fehlermeldung des Mailservers ausgeben oder loggen (kann Adressen enthalten)
+            Log::error('FeedbackController: Versand fehlgeschlagen', ['exception' => get_class($e)]);
 
             $feedback = [
                 'type' => 'danger',
-                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: '.$e->getMessage(),
+                'Meldung' => 'Fehler beim Versand der Nachricht. Bitte versuchen Sie es später erneut.',
             ];
         }
 
@@ -172,7 +173,7 @@ class FeedbackController extends Controller implements HasMiddleware
         if (! auth()->user()->can('see mails') and auth()->id() != $mail->senders_id) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Zugriff verweigert'.auth()->id().' != '.$mail->senders_id,
+                'Meldung' => 'Zugriff verweigert',
             ]);
         }
 

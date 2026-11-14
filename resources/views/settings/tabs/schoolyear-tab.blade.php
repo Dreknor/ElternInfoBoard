@@ -25,7 +25,7 @@
                 <form method="POST" action="{{ route('schoolyear.process') }}">
                     @csrf
                     <h3>Gruppen-Zuordnung</h3>
-                    <table class="table">
+                    <div class="table-responsive"><table class="table">
                         <thead>
                         <tr>
                             <th>Alte Gruppe</th>
@@ -48,9 +48,9 @@
                             </tr>
                         @endforeach
                         </tbody>
-                    </table>
+                    </table></div>
                     <h3>Rollen-Zuordnung</h3>
-                    <table class="table">
+                    <div class="table-responsive"><table class="table">
                         <thead>
                         <tr>
                             <th>Alte Rolle</th>
@@ -71,7 +71,7 @@
                             </tr>
                         @endforeach
                         </tbody>
-                    </table>
+                    </table></div>
                     <button type="submit" class="btn btn-danger" onclick="return confirm('Sind Sie sicher, dass Sie den Schuljahreswechsel starten möchten? Dieser Vorgang kann nicht rückgängig gemacht werden.')">
                         Schuljahreswechsel jetzt starten
                     </button>

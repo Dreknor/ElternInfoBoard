@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid px-4 py-3"
+<div class="container-fluid px-2 md:px-4 py-3"
      x-data="adminSettings()"
      x-init="init()">
 
     <div class="rounded-xl shadow-lg overflow-hidden flex flex-col" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
 
         {{-- Header – überspannt die gesamte Breite über Sidebar und Inhalt --}}
-        <div class="flex-none w-full px-6 py-4 flex items-center gap-4" style="background-color: var(--color-primary); border-bottom: 3px solid var(--color-primary-dark);">
+        <div class="flex-none w-full px-4 md:px-6 py-4 flex items-center gap-4" style="background-color: var(--color-primary); border-bottom: 3px solid var(--color-primary-dark);">
             <div class="flex items-center justify-center w-10 h-10 bg-white/20 rounded-xl flex-shrink-0">
                 <i class="fas fa-cog text-white text-xl"></i>
             </div>
@@ -19,11 +19,14 @@
         </div>
 
         {{-- Sidebar + Inhalt --}}
-        <div class="flex flex-1" style="min-height: 600px;">
+        <div class="flex flex-col md:flex-row flex-1 md:min-h-[600px]">
 
             {{-- Sidebar-Navigation --}}
-            <nav class="flex-shrink-0 border-r" style="width: 240px; background-color: var(--color-body-bg); border-color: var(--color-card-border);">
-                <div class="p-2 space-y-0.5">
+            {{-- Mobil: waagerecht scrollbare Leiste über dem Inhalt; ab md: feste Seitenleiste --}}
+            <nav class="settings-nav relative flex-shrink-0 w-full md:w-60 border-b md:border-b-0 md:border-r overflow-x-auto md:overflow-x-visible"
+                 style="background-color: var(--color-body-bg); border-color: var(--color-card-border);"
+                 aria-label="Einstellungsbereiche">
+                <div class="p-2 flex md:flex-col gap-1 md:gap-0.5 w-max md:w-auto">
                     @php
                         $navTabs = [
                             ['id' => 'home',          'label' => 'Allgemein',          'icon' => 'fas fa-home'],
@@ -36,7 +39,7 @@
                             ['id' => 'pflichtstunden','label' => 'Pflichtstunden',     'icon' => 'fas fa-tasks'],
                             ['id' => 'schoolyear',    'label' => 'Schuljahreswechsel', 'icon' => 'fas fa-graduation-cap'],
                             ['id' => 'stundenplan',   'label' => 'Stundenplan',        'icon' => 'fas fa-calendar-alt'],
-                            ['id' => 'reminder',      'label' => 'Erinnerungen',       'icon' => 'fas fa-alarm-clock'],
+                            ['id' => 'reminder',      'label' => 'Erinnerungen',       'icon' => 'fas fa-hourglass-half'],
                             ['id' => 'reinigung',     'label' => 'Reinigungsplan',     'icon' => 'fas fa-broom'],
                             ['id' => 'messenger',     'label' => 'Eltern-Nachrichten', 'icon' => 'fas fa-comments'],
                             ['id' => 'design',        'label' => 'Design',             'icon' => 'fas fa-palette'],
@@ -45,10 +48,13 @@
 
                     @foreach($navTabs as $navTab)
                         <button
+                            type="button"
+                            data-tab="{{ $navTab['id'] }}"
                             @click="activeTab = '{{ $navTab['id'] }}'"
+                            :aria-current="activeTab === '{{ $navTab['id'] }}' ? 'page' : null"
                             :class="activeTab === '{{ $navTab['id'] }}' ? 'font-semibold' : 'font-medium hover:bg-black/5 dark:hover:bg-white/5'"
                             :style="activeTab === '{{ $navTab['id'] }}' ? 'background-color: var(--color-primary); color: white;' : 'color: var(--color-text-primary);'"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all duration-150">
+                            class="md:w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-lg text-left text-sm whitespace-nowrap md:whitespace-normal transition-all duration-150">
                             <i class="{{ $navTab['icon'] }} w-4 text-center text-sm flex-shrink-0"
                                :style="activeTab === '{{ $navTab['id'] }}' ? 'color: white;' : 'color: var(--color-primary);'"></i>
                             <span class="leading-tight">{{ $navTab['label'] }}</span>
@@ -57,7 +63,7 @@
 
                     @if(\App\Services\CustomScripts\CustomScriptRenderer::enabled())
                         <a href="{{ route('settings.custom-scripts.edit') }}"
-                           class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                           class="md:w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-lg text-left text-sm whitespace-nowrap md:whitespace-normal font-medium transition-all duration-150 hover:bg-black/5 dark:hover:bg-white/5"
                            style="color: var(--color-text-primary);">
                             <i class="fas fa-code w-4 text-center text-sm flex-shrink-0" style="color: var(--color-primary);"></i>
                             <span class="leading-tight flex-1">Eigene Skripte</span>
@@ -67,7 +73,7 @@
                     @if(config('updater.enabled') && auth()->user()->can('manage updates'))
                         @php($updatesAvailable = app(\App\Services\Updater\UpdateService::class)->lastCheck()['behind'] ?? 0)
                         <a href="{{ route('updater.index') }}"
-                           class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                           class="md:w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-lg text-left text-sm whitespace-nowrap md:whitespace-normal font-medium transition-all duration-150 hover:bg-black/5 dark:hover:bg-white/5"
                            style="color: var(--color-text-primary);">
                             <i class="fas fa-cloud-download-alt w-4 text-center text-sm flex-shrink-0" style="color: var(--color-primary);"></i>
                             <span class="leading-tight flex-1">Online-Update</span>
@@ -80,51 +86,51 @@
             </nav>
 
             {{-- Tab-Inhalte --}}
-            <div class="flex-1 overflow-y-auto" id="settings-main-content" style="max-height: calc(100vh - 160px);">
-                <div x-show="activeTab === 'home'" x-cloak class="p-6">
+            <div class="flex-1 min-w-0 md:overflow-y-auto md:max-h-[calc(100vh-160px)]" id="settings-main-content">
+                <div x-show="activeTab === 'home'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.home-tab')
                 </div>
-                <div x-show="activeTab === 'email'" x-cloak class="p-6">
+                <div x-show="activeTab === 'email'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.email-tab')
                 </div>
-                <div x-show="activeTab === 'notify'" x-cloak class="p-6">
+                <div x-show="activeTab === 'notify'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.notify-tab')
                 </div>
-                <div x-show="activeTab === 'schickzeiten'" x-cloak class="p-6">
+                <div x-show="activeTab === 'schickzeiten'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.schickzeiten-tab')
                 </div>
-                <div x-show="activeTab === 'care'" x-cloak class="p-6">
+                <div x-show="activeTab === 'care'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.care-tab')
                 </div>
-                <div x-show="activeTab === 'keycloak'" x-cloak class="p-6">
+                <div x-show="activeTab === 'keycloak'" x-cloak class="p-3 md:p-6">
                     @if(View::exists('settings.tabs.keycloak-tab'))
                         @include('settings.tabs.keycloak-tab')
                     @endif
                 </div>
-                <div x-show="activeTab === 'ucs'" x-cloak class="p-6">
+                <div x-show="activeTab === 'ucs'" x-cloak class="p-3 md:p-6">
                     @if(View::exists('settings.tabs.ucs-tab'))
                         @include('settings.tabs.ucs-tab')
                     @endif
                 </div>
-                <div x-show="activeTab === 'pflichtstunden'" x-cloak class="p-6">
+                <div x-show="activeTab === 'pflichtstunden'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.pflichtstunden-tab')
                 </div>
-                <div x-show="activeTab === 'schoolyear'" x-cloak class="p-6">
+                <div x-show="activeTab === 'schoolyear'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.schoolyear-tab')
                 </div>
-                <div x-show="activeTab === 'stundenplan'" x-cloak class="p-6">
+                <div x-show="activeTab === 'stundenplan'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.stundenplan-tab')
                 </div>
-                <div x-show="activeTab === 'reminder'" x-cloak class="p-6">
+                <div x-show="activeTab === 'reminder'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.reminder-tab')
                 </div>
-                <div x-show="activeTab === 'reinigung'" x-cloak class="p-6">
+                <div x-show="activeTab === 'reinigung'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.reinigung-tab')
                 </div>
-                <div x-show="activeTab === 'messenger'" x-cloak class="p-6">
+                <div x-show="activeTab === 'messenger'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.messenger-tab')
                 </div>
-                <div x-show="activeTab === 'design'" x-cloak class="p-6">
+                <div x-show="activeTab === 'design'" x-cloak class="p-3 md:p-6">
                     @include('settings.tabs.design-tab')
                 </div>
             </div>{{-- Ende Tab-Inhalte --}}
@@ -143,6 +149,14 @@
         function adminSettings() {
             return {
                 activeTab: 'home',
+                // Auf dem Handy liegt die Navigation in einer waagerecht scrollbaren Leiste –
+                // den aktiven Eintrag dort sichtbar halten.
+                scrollNavToActive() {
+                    const btn = this.$root.querySelector(`.settings-nav [data-tab="${this.activeTab}"]`);
+                    const nav = btn?.closest('.settings-nav');
+                    if (!btn || !nav || nav.scrollWidth <= nav.clientWidth) return;
+                    nav.scrollTo({ left: btn.offsetLeft - (nav.clientWidth - btn.offsetWidth) / 2, behavior: 'smooth' });
+                },
                 init() {
                     const hash = window.location.hash?.slice(1);
                     const validTabs = ['home','email','notify','schickzeiten','care','keycloak','ucs',
@@ -152,8 +166,10 @@
                     }
                     this.$watch('activeTab', val => {
                         history.replaceState(null, '', '#' + val);
+                        this.scrollNavToActive();
                     });
                     this.$nextTick(() => {
+                        this.scrollNavToActive();
                         if (window.tinymce) {
                             tinymce.init({
                                 selector: '#settings-main-content textarea:not(.no-tinymce)',

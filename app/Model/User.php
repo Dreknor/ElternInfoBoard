@@ -73,6 +73,14 @@ class User extends Authenticatable implements Auditable
                 $user->family_id = null;
             }
         });
+
+        // Beim Deaktivieren eines Kontos alle App-/API-Tokens widerrufen (protokolliert im Sicherheitsprotokoll).
+        // Sanctum lehnt Tokens deaktivierter Konten ohnehin ab; so bleiben sie auch nach einer Reaktivierung ungültig.
+        static::updated(function (self $user) {
+            if ($user->wasChanged('is_active') && $user->is_active === false) {
+                \App\Services\Security\AccountSecurity::revokeTokens($user, 'account_deactivated');
+            }
+        });
     }
 
     /**

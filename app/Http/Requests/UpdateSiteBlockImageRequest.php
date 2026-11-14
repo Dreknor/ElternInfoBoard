@@ -24,6 +24,7 @@ class UpdateSiteBlockImageRequest extends FormRequest
         return [
             'title' => 'nullable|string',
             'files' => 'required|array',
+            'files.*' => \App\Support\Uploads::fileRules(),
         ];
     }
 }

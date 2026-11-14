@@ -55,7 +55,7 @@ class SsoStudentLoginTest extends TestCase
     private function ssoUser(string $email, array $raw = [], ?string $accessToken = null): SocialiteUser
     {
         $user = (new SocialiteUser)
-            ->setRaw(array_merge(['email' => $email, 'given_name' => 'Max', 'family_name' => 'Muster'], $raw))
+            ->setRaw(array_merge(['email' => $email, 'email_verified' => true, 'given_name' => 'Max', 'family_name' => 'Muster'], $raw))
             ->map(['id' => 'sub-'.$email, 'email' => $email, 'name' => 'Max Muster']);
 
         return $user->setToken($accessToken ?? self::jwt([]));
@@ -161,6 +161,31 @@ class SsoStudentLoginTest extends TestCase
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', ['email' => 'eltern@schule.de']);
+    }
+
+    /** @test */
+    public function web_login_rejects_unverified_email_addresses(): void
+    {
+        config(['services.keycloak.require_verified_email' => true]);
+        User::factory()->create(['email' => 'eltern@schule.de']);
+        $this->mockKeycloak($this->ssoUser('eltern@schule.de', ['email_verified' => false]));
+
+        $this->get('login/keycloak/callback')->assertRedirect(route('login'));
+
+        $this->assertGuest();
+    }
+
+    /** @test */
+    public function app_sso_rejects_unverified_email_addresses(): void
+    {
+        config(['services.keycloak.require_verified_email' => true]);
+        User::factory()->create(['email' => 'eltern@schule.de']);
+        Cache::put('app_sso_state:abc', 'challenge', now()->addMinutes(5));
+        $this->mockKeycloak($this->ssoUser('eltern@schule.de', ['email_verified' => false]));
+
+        $response = $this->get(route('api.v1.auth.sso.callback', ['state' => 'abc']));
+
+        $this->assertStringContainsString('error=email_not_verified', (string) $response->headers->get('Location'));
     }
 
     /** @test */

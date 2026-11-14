@@ -62,9 +62,23 @@ class PollController extends Controller
 
     public function vote(Post $post, Request $request)
     {
+        // Abstimmen nur für sichtbare Beiträge (vorher: jeder Beitrag per ID)
+        abort_unless($request->user()->can('view', $post), 403);
+
         $poll = $post->poll;
+        abort_if($poll === null, 404);
+
         $string = $poll->id.'_answers';
-        $answers = $request->$string;
+        $answers = array_values(array_unique(array_map('intval', (array) $request->input($string, []))));
+
+        // Nur Optionen dieser Umfrage zulassen (vorher: beliebige option_id)
+        $validOptions = $poll->options()->whereIn('id', $answers)->count();
+        if ($answers === [] || $validOptions !== count($answers)) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Ungültige Auswahl.',
+            ]);
+        }
 
         if ($poll->votes->firstWhere('author_id', auth()->id()) != null) {
             return redirect()->back()->with([

@@ -5,25 +5,28 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-2xl font-bold" style="color: var(--color-text-primary);">
+            {{-- Titel links, Aktionen als Gruppe rechts; schmal: Aktionen unter dem Titel, Beschriftungen ohne Umbruch --}}
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-4">
+                <h2 class="text-2xl font-bold flex items-center gap-2 mb-0" style="color: var(--color-text-primary);">
                     <i class="far fa-newspaper" style="color: var(--color-widget-primary-from);"></i> Alle Nachrichten
                 </h2>
-                <a href="{{ url('/') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-arrow-left"></i> Zurück zum Dashboard
-                </a>
-                @can('create posts')
-                    <a href="{{ url('/posts/create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Neue Nachricht
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ url('/') }}" class="btn btn-outline-primary inline-flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-arrow-left"></i> <span><span class="hidden sm:inline">Zurück zum </span>Dashboard</span>
                     </a>
-                @endcan
+                    @can('create posts')
+                        <a href="{{ url('/posts/create') }}" class="btn btn-primary inline-flex items-center gap-2 whitespace-nowrap">
+                            <i class="fas fa-plus"></i> Neue Nachricht
+                        </a>
+                    @endcan
+                </div>
             </div>
         </div>
     </div>
 
     @can('release posts')
         @if(($openReportsCount ?? 0) > 0)
-            <div class="rounded-xl shadow-md mb-4 p-4 flex items-center justify-between gap-4"
+            <div class="rounded-xl shadow-md mb-4 p-4 flex flex-wrap items-center justify-between gap-4"
                  style="background-color: var(--color-warning-bg); border: 1px solid var(--color-warning-border);">
                 <div class="flex items-center gap-3">
                     <span class="inline-flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0"

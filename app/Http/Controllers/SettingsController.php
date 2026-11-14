@@ -327,7 +327,8 @@ class SettingsController extends Controller implements HasMiddleware
             case 'general':
                 $validated = $request->validate([
                     'app_name' => 'required|max:255',
-                    'logo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                    // Feldname im Formular ist „app_logo“ – vorher wurde „logo“ validiert und die Datei damit gar nicht geprüft
+                    'app_logo' => 'sometimes|nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
                     'favicon' => 'sometimes|nullable|mimes:jpeg,png,jpg,gif,svg,ico|max:2048',
                     'login_tracking_mode' => 'required|in:user,always,never',
                     'protected_roles' => 'sometimes|array',

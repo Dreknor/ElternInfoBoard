@@ -65,16 +65,13 @@ class LoginController extends Controller implements HasMiddleware
                 SecurityLog::record('auth.magic_link.rejected', $known, $known === null
                     ? AuthEventSubscriber::identifierContext((string) $request->input('email'))
                     : []);
-
-                return redirect()->route('login')
-                    ->withErrors(['email' => 'Benutzer existiert nicht oder hat keine Berechtigung für den Passwortlosen Login.'])
-                    ->withInput();
             }
 
+            // Immer dieselbe Antwort – sonst ließe sich abfragen, welche E-Mail-Adressen ein Konto haben
             return redirect()->route('login')
                 ->with([
                     'type' => 'success',
-                    'Meldung' => 'Login-Link wurde an die angegebene E-Mail-Adresse gesendet.',
+                    'Meldung' => 'Falls die Adresse bekannt und für den passwortlosen Login freigeschaltet ist, wurde ein Login-Link gesendet.',
                 ]);
         }
 
@@ -105,7 +102,8 @@ class LoginController extends Controller implements HasMiddleware
 
         $user = User::where('email', $request->input('email'))->first();
 
-        if ($user and $user->can('allow password-less-login')) {
+        // Deaktivierte Konten erhalten keinen Login-Link
+        if ($user and $user->is_active !== false and $user->can('allow password-less-login')) {
 
             $generator = new LoginUrl($user);
             $generator->setRedirectUrl('/home');
@@ -232,10 +230,31 @@ class LoginController extends Controller implements HasMiddleware
             ]);
         }
 
+        // Das Konto wird über die E-Mail-Adresse zugeordnet – sie muss beim IdP bestätigt sein,
+        // sonst könnte sich jemand mit einer fremden Adresse anmelden und das Konto übernehmen.
+        if (! self::keycloakEmailIsVerified($keycloakUser)) {
+            Log::warning('Keycloak login rejected: email not verified');
+            SecurityLog::record('auth.failed', null, ['method' => 'keycloak', 'reason' => 'email_unverified']);
+
+            return redirect()->route('login')->with([
+                'type' => 'danger',
+                'Meldung' => 'Die E-Mail-Adresse Ihres Schulkontos ist nicht bestätigt. Bitte wenden Sie sich an die Schule.',
+            ]);
+        }
+
         // Find existing user
         $existingUser = User::where('email', $keycloakUser->email)->first();
 
         if ($existingUser) {
+            if ($existingUser->is_active === false) {
+                SecurityLog::record('auth.failed', $existingUser->id, ['method' => 'keycloak', 'reason' => 'inactive']);
+
+                return redirect()->route('login')->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Ihr Konto wurde deaktiviert. Bitte wenden Sie sich an die Verwaltung.',
+                ]);
+            }
+
             // Login existing user
             AuthEventSubscriber::expect('keycloak');
             auth()->login($existingUser);
@@ -337,6 +356,20 @@ class LoginController extends Controller implements HasMiddleware
         return $request->wantsJson()
             ? new \Illuminate\Http\JsonResponse([], 204)
             : redirect('/');
+    }
+
+    /**
+     * Meldet der IdP die E-Mail-Adresse als bestätigt? (abschaltbar über KEYCLOAK_REQUIRE_VERIFIED_EMAIL)
+     */
+    public static function keycloakEmailIsVerified($keycloakUser): bool
+    {
+        if (! config('services.keycloak.require_verified_email', true)) {
+            return true;
+        }
+
+        $raw = is_array($keycloakUser->user ?? null) ? $keycloakUser->user : [];
+
+        return filter_var($raw['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     private function ucsLoginEnabled(): bool

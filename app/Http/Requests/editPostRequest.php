@@ -28,6 +28,9 @@ class editPostRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Anhänge: nur erlaubte Dateitypen (config/uploads.php)
+            'files' => ['nullable', 'array'],
+            'files.*' => \App\Support\Uploads::fileRules(),
             'header' => [
                 'required', 'max:120',
             ],
