@@ -59,7 +59,10 @@ class ChildControllerTest extends TestCase
      * */
     public function user_can_create_child(): void
     {
+        // Kinder legt nur das Personal an (Recht „edit schickzeiten“)
         $user = User::factory()->create();
+        \Spatie\Permission\Models\Permission::findOrCreate('edit schickzeiten', 'web');
+        $user->givePermissionTo('edit schickzeiten');
 
         $response = $this->actingAs($user)->post(route('child.store'),
             [
@@ -74,6 +77,24 @@ class ChildControllerTest extends TestCase
             'first_name' => 'Max',
             'last_name' => 'Mustermann',
         ]);
+    }
+
+    /**
+     * @test
+     */
+    public function user_without_permission_cannot_create_child(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('child.store'), [
+            'first_name' => 'Max',
+            'last_name' => 'Mustermann',
+            'parent_id' => $other->id,
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('children', ['first_name' => 'Max', 'last_name' => 'Mustermann']);
     }
 
     /**

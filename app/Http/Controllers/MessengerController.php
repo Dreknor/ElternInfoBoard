@@ -97,7 +97,7 @@ class MessengerController extends Controller
         $request->validate([
             'body'        => ['required', 'string', 'max:' . $this->settings->max_message_length],
             'reply_to_id' => ['nullable', 'integer', 'exists:messages,id'],
-            'attachment'  => ['nullable', 'file', 'max:' . ($this->settings->max_file_size_mb * 1024)],
+            'attachment'  => ['nullable', ...\App\Support\Uploads::fileRules($this->settings->max_file_size_mb * 1024)],
         ]);
 
         $type = 'text';

@@ -131,6 +131,9 @@ class FileController extends Controller implements HasMiddleware
             ]);
         }
 
+        // Nur erlaubte Dateitypen (config/uploads.php)
+        $request->validate(['files' => ['nullable', ...\App\Support\Uploads::fileRules()]]);
+
         $gruppen = $request->input('gruppen');
         $gruppen = $this->grousRepository->getGroups($gruppen);
 
@@ -157,25 +160,57 @@ class FileController extends Controller implements HasMiddleware
      */
     public function saveFileRueckmeldung(Request $request, Post $posts, FeedbackService $feedback)
     {
-        // Nur Empfänger eines Beitrags mit offener Bild-Rückmeldung, nur Bilder (wie die App-API).
-        // Vorher konnte jedes Konto beliebige Dateien (auch HTML/SVG) an jeden Beitrag hängen.
-        try {
-            $feedback->requireFeedback($request->user(), $posts, 'bild');
-        } catch (HttpException $e) {
-            return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
+        // Autor bzw. „edit posts“: Bilder zu jedem eigenen bzw. bearbeitbaren Beitrag, wahlweise als
+        // Header- oder Beitragsbild, auch mehrere auf einmal.
+        // Alle anderen: nur Empfänger eines Beitrags mit offener Bild-Rückmeldung, nur als Beitragsbild
+        // (wie die App-API). Vorher konnte jedes Konto beliebige Dateien (auch HTML/SVG) an jeden Beitrag hängen.
+        $user = $request->user();
+        $mayEditPost = $user->can('edit posts') || (int) $posts->author === $user->id;
+
+        if (! $mayEditPost) {
+            try {
+                $feedback->requireFeedback($user, $posts, 'bild');
+            } catch (HttpException $e) {
+                return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
+            }
         }
+
         $request->validate([
             'name' => ['nullable', 'string', 'max:191'],
-            'files' => ['required', 'image', 'max:10240'],
+            'collection' => ['nullable', 'in:images,header'],
         ]);
 
-        if ($request->hasFile('files')) {
-            $posts->addMediaFromRequest('files')
-                ->usingName((string) $request->input('name', $request->user()->name))
-                ->withCustomProperties(['uploaded_by' => $request->user()->id])
-                ->toMediaCollection('images');
+        // Einzelne Datei (files) oder mehrere (files[]) – jede Datei muss ein Rasterbild sein (kein SVG)
+        $files = array_values(array_filter(\Illuminate\Support\Arr::wrap($request->file('files'))));
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            ['files' => $files],
+            ['files' => ['required', 'array', $mayEditPost ? 'max:20' : 'max:1'], 'files.*' => \App\Support\Uploads::imageRules(10240)],
+        );
+        if ($validator->fails()) {
+            // Fehler am Formularfeld „files“ melden (auch bei mehreren Dateien)
+            throw \Illuminate\Validation\ValidationException::withMessages(['files' => $validator->errors()->all()]);
+        }
 
-            @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header, $posts->id));
+        $collection = $mayEditPost && $request->input('collection') === 'header' ? 'header' : 'images';
+
+        if ($files !== []) {
+            foreach ($files as $file) {
+                $adder = $posts->addMedia($file)
+                    ->usingName((string) $request->input('name', $user->name))
+                    ->withCustomProperties(['uploaded_by' => $user->id]);
+
+                match (true) {
+                    $collection === 'header' => $adder->toMediaCollection('header'),
+                    // wie beim Anlegen/Bearbeiten eines Beitrags
+                    $mayEditPost => $adder->withResponsiveImages()->toMediaCollection('images'),
+                    default => $adder->toMediaCollection('images'),
+                };
+            }
+
+            // Autor nur benachrichtigen, wenn jemand anderes hochlädt
+            if (! $mayEditPost && $posts->autor?->email) {
+                @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($user->name, $posts->header, $posts->id));
+            }
         } else {
             return redirect()->to(url('home/'))->with([
                 'type' => 'warning',

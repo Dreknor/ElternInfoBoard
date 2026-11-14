@@ -49,6 +49,11 @@ class ImageController extends Controller implements HasMiddleware
 
     public function changeCollection(Media $media, string $collection_name)
     {
+        // Nur Dateien von Beiträgen und nur zwischen den dafür vorgesehenen Sammlungen verschieben
+        // (vorher: jede Mediendatei, z. B. Krankmeldungs- oder Messenger-Anhänge, in beliebige Sammlungen)
+        abort_unless($media->model_type === (new \App\Model\Post)->getMorphClass(), 404);
+        abort_unless(in_array($collection_name, ['images', 'files', 'header'], true), 404);
+
         $media->update([
             'collection_name' => $collection_name,
         ]);

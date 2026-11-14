@@ -48,10 +48,8 @@ class KontaktRequest extends FormRequest
                 'array',
                 'max:3',
             ],
-            'files.*' => [
-                'file',
-                'max:8000',
-            ],
+            // Nur erlaubte Dateitypen (config/uploads.php)
+            'files.*' => \App\Support\Uploads::fileRules(8000),
         ];
     }
 }

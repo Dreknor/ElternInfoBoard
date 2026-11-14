@@ -48,7 +48,7 @@ class ParentController extends ApiController
             'kommentar' => 'nullable|string|max:2000',
             'disease_id' => 'nullable|integer|exists:diseases,id',
             'files' => 'nullable|array|max:5',
-            'files.*' => 'file|max:10240',
+            'files.*' => \App\Support\Uploads::fileRules(10240),
         ]);
         $user = $request->user();
         abort_unless(Family::mayManage($user, (int) $data['child_id']), 403, 'Sie können nur Kinder krankmelden, für die Sie berechtigt sind.');

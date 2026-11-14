@@ -62,7 +62,7 @@ class PollControllerTest extends TestCase
     public function vote_allows_user_to_vote_on_poll(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
-        $post = Post::factory()->create();
+        $post = Post::factory()->create(['author' => $user->id]);
         $poll = Poll::factory()->create([
             'post_id' => $post->id,
             'max_number' => 1,
@@ -76,12 +76,12 @@ class PollControllerTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('type', 'success');
 
-        $this->assertDatabaseHas('poll__votes', [
+        $this->assertDatabaseHas('votes', [
             'poll_id' => $poll->id,
             'author_id' => $user->id,
         ]);
 
-        $this->assertDatabaseHas('poll__answers', [
+        $this->assertDatabaseHas('poll_answers', [
             'poll_id' => $poll->id,
             'option_id' => $option->id,
         ]);
@@ -93,7 +93,8 @@ class PollControllerTest extends TestCase
     public function vote_prevents_duplicate_votes(): void
     {
         $user = User::factory()->create();
-        $post = Post::factory()->create();
+        // Abstimmen darf nur, wer den Beitrag sehen kann (hier: der Autor)
+        $post = Post::factory()->create(['author' => $user->id]);
         $poll = Poll::factory()->create(['post_id' => $post->id]);
         $option = Poll_Option::factory()->create(['poll_id' => $poll->id]);
 
@@ -116,7 +117,8 @@ class PollControllerTest extends TestCase
     public function vote_prevents_too_many_answers(): void
     {
         $user = User::factory()->create();
-        $post = Post::factory()->create();
+        // Abstimmen darf nur, wer den Beitrag sehen kann (hier: der Autor)
+        $post = Post::factory()->create(['author' => $user->id]);
         $poll = Poll::factory()->create([
             'post_id' => $post->id,
             'max_number' => 1,

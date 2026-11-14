@@ -42,7 +42,7 @@ Route::middleware('throttle:external-api')->group(function () {
 /*
  * Stundenplan Query API (with authentication)
  */
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'api.active'])->group(function () {
     Route::get('stundenplan/classes', [\App\Http\Controllers\API\StundenplanController::class, 'getClasses']);
     Route::get('stundenplan/teachers', [\App\Http\Controllers\API\StundenplanController::class, 'getTeachers']);
     Route::get('stundenplan/rooms', [\App\Http\Controllers\API\StundenplanController::class, 'getRooms']);
@@ -58,7 +58,7 @@ Route::get('home/{post_id}', function () {
 // Rate-Limit wie beim Web-Login (B-08)
 Route::post('/token/create', [AuthController::class, 'login'])->middleware('throttle:login');
 
-Route::middleware(['auth:sanctum', 'idempotency'])->group(function () {
+Route::middleware(['auth:sanctum', 'api.active', 'idempotency'])->group(function () {
 
     Route::get('me', [AuthController::class, 'me']);
     Route::get('me/permissions', [\App\Http\Controllers\API\UserPermissionsController::class, 'index']);

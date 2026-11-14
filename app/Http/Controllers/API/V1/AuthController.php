@@ -135,7 +135,25 @@ class AuthController extends Controller
         }
 
         // Nur bestehende Konten – neue Konten entstehen über Import/UCS bzw. die Web-Anmeldung.
-        $user = $keycloakUser->email ? User::where('email', $keycloakUser->email)->first() : null;
+        // 1. Verknüpfte Schulkonten (UCS) über die unveränderliche Kennung des IdP bzw. den Benutzernamen zuordnen
+        $user = $kcSub !== '' ? User::where('ucs_oidc_sub', $kcSub)->first() : null;
+        if (! $user && $kcUsername) {
+            $user = User::where('ucs_username', $kcUsername)->first();
+        }
+
+        // 2. Sonst über die E-Mail-Adresse – aber nur, wenn der IdP sie als bestätigt meldet
+        //    (sonst könnte jemand mit einer fremden Adresse im IdP das Konto übernehmen)
+        if (! $user && $keycloakUser->email) {
+            if (! \App\Http\Controllers\Auth\LoginController::keycloakEmailIsVerified($keycloakUser)) {
+                Log::warning('App-SSO: E-Mail-Adresse des Schulkontos ist nicht bestätigt.');
+                SecurityLog::record('auth.failed', null, ['method' => 'keycloak', 'client' => 'app', 'reason' => 'email_unverified']);
+
+                return $this->toApp(['error' => 'email_not_verified']);
+            }
+
+            $user = User::where('email', $keycloakUser->email)->first();
+        }
+
         if (! $user || $user->is_active === false) {
             return $this->toApp(['error' => 'unknown_user']);
         }

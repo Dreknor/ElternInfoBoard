@@ -78,7 +78,7 @@ class KrankmeldungenController extends Controller implements HasMiddleware
             'start' => 'required|string',
             'ende' => 'required|string',
             'disease_id' => 'nullable|integer',
-            'files.*' => 'file|max:10240',
+            'files.*' => \App\Support\Uploads::fileRules(10240),
         ]);
 
         if (! $request->name && ! $request->child_id) {
