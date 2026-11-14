@@ -113,16 +113,22 @@ class AppServerListTest extends TestCase
         $this->assertFalse($status['enforced']);
 
         // per Hash eingetragen (privat betrieben, nicht öffentlich gelistet)
+        $this->travelTo($at('2027-09-01'));
         $this->serve($this->signed([['host_sha256' => hash('sha256', 'eltern.schule.example'), 'kind' => 'supported', 'valid_until' => '2028-07-31']], '2027-09-01'));
         $list->fetch();
         $this->assertSame('ok', $list->statusForThisServer($at('2027-09-05'))['state']);
-        // Liste älter als 14 Tage: 30 Tage Kulanz
-        $stale = $list->statusForThisServer($at('2027-09-20'));
-        $this->assertSame('stale', $stale['state']);
-        $this->assertSame('2027-10-15', $stale['deadline']->toDateString());
+        // alte Liste ist kein Problem, solange der Abruf klappt – sie wird nur bei Änderungen neu signiert
+        $this->travelTo($at('2028-01-10'));
+        $list->fetch();
+        $this->assertSame('ok', $list->statusForThisServer($at('2028-01-12'))['state']);
+        // Abruf klappt seit über 14 Tagen nicht: nur Hinweis, keine Sperre
+        $this->assertSame('fetch_failing', $list->statusForThisServer($at('2028-02-01'))['state']);
+        $this->travelBack();
         // kurz vor Ablauf
+        $this->travelTo($at('2028-07-01'));
         $this->serve($this->signed([['host' => 'eltern.schule.example', 'kind' => 'supported', 'valid_until' => '2028-07-31']], '2028-07-01'));
         $list->fetch();
+        $this->travelBack();
         $this->assertSame('expiring', $list->statusForThisServer($at('2028-07-05'))['state']);
         // abgelaufen: Kulanz bis valid_until + 30 Tage
         $expired = $list->statusForThisServer($at('2028-08-02'));
