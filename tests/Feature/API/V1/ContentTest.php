@@ -48,6 +48,25 @@ class ContentTest extends AppApiTestCase
     }
 
     /** @test */
+    public function post_search_also_finds_attachment_file_names(): void
+    {
+        $group = $this->group();
+        $user = $this->parentIn($group);
+        $withFile = $this->postIn($group, ['header' => 'Info', 'news' => '<p>Siehe Anhang</p>']);
+        $withFile->addMediaFromString('inhalt')->usingName('Speiseplan KW 47')->usingFileName('speiseplan.pdf')->toMediaCollection('files');
+        $byText = $this->postIn($group, ['header' => 'Neuer Speiseplan', 'news' => '<p>Text</p>']);
+        $this->postIn($group, ['header' => 'Anderes', 'news' => '<p>Text</p>']);
+        Sanctum::actingAs($user);
+
+        $ids = array_column($this->getJson('/api/v1/posts?q=speiseplan')->assertOk()->json('data'), 'id');
+        sort($ids);
+        $this->assertSame([$withFile->id, $byText->id], $ids);
+
+        // Platzhalter im Suchbegriff gelten wörtlich
+        $this->assertSame([], $this->getJson('/api/v1/posts?q=%25%25%25')->assertOk()->json('data'));
+    }
+
+    /** @test */
     public function post_detail_contains_sanitized_html(): void
     {
         $group = $this->group();

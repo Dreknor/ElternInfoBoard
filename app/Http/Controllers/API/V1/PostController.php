@@ -30,7 +30,7 @@ class PostController extends ApiController
      * @queryParam archived boolean Archivierte Beiträge. Example: 1
      * @queryParam month string Archiv-Monat `YYYY-MM`. Example: 2026-06
      * @queryParam external boolean Nur externe Angebote. Example: 1
-     * @queryParam q string Volltextsuche in Titel und Text.
+     * @queryParam q string Volltextsuche in Titel, Text und Dateinamen der Anhänge.
      * @queryParam cursor string Fortsetzung aus `meta.next_cursor`.
      */
     public function index(Request $request, TodoService $todos): JsonResponse
@@ -55,7 +55,11 @@ class PostController extends ApiController
             $query->whereYear('posts.updated_at', $y)->whereMonth('posts.updated_at', $m);
         }
         if ($q = $request->input('q')) {
-            $query->where(fn ($w) => $w->where('header', 'like', "%{$q}%")->orWhere('news', 'like', "%{$q}%"));
+            $like = '%'.addcslashes($q, '%_\\').'%';
+            $query->where(fn ($w) => $w->where('header', 'like', $like)
+                ->orWhere('news', 'like', $like)
+                // Anhänge: Anzeigename und Original-Dateiname (B-106)
+                ->orWhereHas('media', fn ($m) => $m->where('name', 'like', $like)->orWhere('file_name', 'like', $like)));
         }
         if ($request->input('filter') === 'todo') {
             $ids = collect($todos->forUser($user))->where('target.type', 'post')->pluck('target.id');
