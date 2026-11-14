@@ -98,6 +98,9 @@ try {
         Schedule::call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();
 
         // Alte Logs automatisch löschen (alle 7 Tage, Logs älter als 90 Tage)
+        // Freigabeliste der ElternInfo-App vom Herausgeber holen (nur mit APP_SERVER_LIST_URL)
+        Schedule::command('app:server-list')->dailyAt('04:17')->withoutOverlapping();
+
         Schedule::command('logs:cleanup --days=90')->weeklyOn(1, '02:00');
 
         // Alte CheckIns automatisch löschen (täglich, CheckIns älter als 3 Monate)

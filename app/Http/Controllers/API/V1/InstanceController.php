@@ -44,6 +44,8 @@ class InstanceController extends Controller
                 ] : []),
                 'api_version' => 1,
                 'min_app_version' => config('services.app.min_version'),
+                // Signierte Freigabeliste der App, unverändert weitergereicht (null, solange keine vorliegt)
+                'app_server_list' => app(\App\Services\App\AppServerList::class)->current(),
             ],
         ])->header('Cache-Control', 'public, max-age=300');
     }

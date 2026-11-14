@@ -1,0 +1,273 @@
+<?php
+
+namespace App\Services\App;
+
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
+/**
+ * Freigabeliste der ElternInfo-App.
+ *
+ * Der Herausgeber der App signiert eine Liste der Server, die die App nutzen dürfen
+ * (Ed25519, offline). Dieser Server holt sie täglich von APP_SERVER_LIST_URL ab und reicht sie
+ * unverändert über /v1/instance an die App weiter – so sprechen die Geräte der Eltern nur mit
+ * dem eigenen Schulserver. Durchsetzen tut die App; hier wird die Liste nur zwischengespeichert
+ * und für einen Hinweis an Admins ausgewertet.
+ *
+ * Format: {"payload": "<base64 JSON>", "signature": "<base64 Ed25519>"}
+ * Payload: {"version":1,"issued_at":"YYYY-MM-DD","servers":[{"host"|"host_sha256", "kind",
+ *           "valid_until", "name"?, "listed"?}]}
+ *
+ * Gleiche Regeln wie in der App (src/lib/serverLicense.ts):
+ * - Sperre frühestens ab ENFORCE_FROM (Schuljahresbeginn)
+ * - Liste höchstens MAX_AGE_DAYS alt, Eintrag bis valid_until gültig, danach GRACE_DAYS Kulanz
+ */
+class AppServerList
+{
+    public const ENFORCE_FROM = '2027-08-01';
+
+    public const GRACE_DAYS = 30;
+
+    public const MAX_AGE_DAYS = 14;
+
+    /** Hinweis an Admins so viele Tage vor dem Ablauf */
+    public const WARN_DAYS = 45;
+
+    private const FILE = 'app-server-list.json';
+
+    private const MAX_BYTES = 262144;
+
+    /**
+     * Liste vom Herausgeber holen. Ersetzt die gespeicherte nur durch eine gültig signierte,
+     * mindestens gleich neue Fassung (kein Zurückspielen alter Listen).
+     */
+    public function fetch(): bool
+    {
+        $url = config('services.app.server_list_url');
+        if (! $url) {
+            return false;
+        }
+
+        try {
+            $response = Http::timeout(15)->accept('application/json')->get($url);
+        } catch (\Throwable $e) {
+            Log::warning('App-Freigabeliste: Abruf fehlgeschlagen: '.$e->getMessage());
+
+            return false;
+        }
+
+        if (! $response->successful() || strlen($response->body()) > self::MAX_BYTES) {
+            Log::warning('App-Freigabeliste: ungültige Antwort (HTTP '.$response->status().').');
+
+            return false;
+        }
+
+        $signed = $response->json();
+        if (! self::isSignedShape($signed)) {
+            Log::warning('App-Freigabeliste: unbekanntes Format.');
+
+            return false;
+        }
+
+        $payload = $this->verify($signed);
+        if ($this->publicKey() && ! $payload) {
+            Log::warning('App-Freigabeliste: Signatur ungültig – Liste verworfen.');
+
+            return false;
+        }
+
+        $current = $this->payload();
+        if ($payload && $current && ($payload['issued_at'] ?? '') < ($current['issued_at'] ?? '')) {
+            Log::warning('App-Freigabeliste: ältere Fassung erhalten – verworfen.');
+
+            return false;
+        }
+
+        Storage::disk('local')->put(self::FILE, json_encode([
+            'payload' => $signed['payload'],
+            'signature' => $signed['signature'],
+        ]));
+        \Illuminate\Support\Facades\Cache::forget('app_server_list_notice');
+
+        return true;
+    }
+
+    /** Gespeicherte Liste im Originalformat (für /v1/instance) oder null. */
+    public function current(): ?array
+    {
+        if (! Storage::disk('local')->exists(self::FILE)) {
+            return null;
+        }
+
+        $signed = json_decode((string) Storage::disk('local')->get(self::FILE), true);
+
+        return self::isSignedShape($signed) ? $signed : null;
+    }
+
+    /** Geprüfter Inhalt der gespeicherten Liste – null ohne Liste, ohne Schlüssel oder bei falscher Signatur. */
+    public function payload(): ?array
+    {
+        $signed = $this->current();
+
+        return $signed ? $this->verify($signed) : null;
+    }
+
+    /**
+     * Freigabe dieses Servers für den Admin-Hinweis.
+     *
+     * @return array{state: string, deadline: ?CarbonImmutable, valid_until: ?string, enforced: bool}
+     *               state: ok | expiring | unlisted | expired | stale | missing | unconfigured
+     */
+    public function statusForThisServer(?CarbonImmutable $now = null): array
+    {
+        $now ??= CarbonImmutable::now();
+        $enforceFrom = CarbonImmutable::parse(self::ENFORCE_FROM)->startOfDay();
+        $result = fn (string $state, ?CarbonImmutable $deadline = null, ?string $validUntil = null) => [
+            'state' => $state,
+            'deadline' => $deadline ? max($deadline, $enforceFrom) : null,
+            'valid_until' => $validUntil,
+            'enforced' => $now->greaterThanOrEqualTo($enforceFrom),
+        ];
+
+        if (! $this->publicKey() || ! config('services.app.server_list_url')) {
+            return $result('unconfigured');
+        }
+
+        $payload = $this->payload();
+        if (! $payload) {
+            return $result('missing', $enforceFrom);
+        }
+
+        $entry = $this->findEntry($payload, self::hostLabel((string) config('app.url')));
+        if (! $entry) {
+            return $result('unlisted', $enforceFrom);
+        }
+
+        $validUntil = CarbonImmutable::parse($entry['valid_until'])->endOfDay();
+        if ($now->greaterThan($validUntil)) {
+            return $result('expired', $validUntil->addDays(self::GRACE_DAYS), $entry['valid_until']);
+        }
+
+        $staleAfter = CarbonImmutable::parse($payload['issued_at'])->endOfDay()->addDays(self::MAX_AGE_DAYS);
+        if ($now->greaterThan($staleAfter)) {
+            return $result('stale', $staleAfter->addDays(self::GRACE_DAYS), $entry['valid_until']);
+        }
+
+        if ($now->addDays(self::WARN_DAYS)->greaterThan($validUntil)) {
+            return $result('expiring', $validUntil->addDays(self::GRACE_DAYS), $entry['valid_until']);
+        }
+
+        return $result('ok', null, $entry['valid_until']);
+    }
+
+    /**
+     * Hinweis für Admins auf der Startseite oder null. Nur wenn die App hier tatsächlich genutzt
+     * wird (App-Anmeldungen vorhanden) – Schulen ohne App sehen nichts.
+     *
+     * @return array{type: string, title: string, text: string}|null
+     */
+    public function adminNotice(): ?array
+    {
+        return \Illuminate\Support\Facades\Cache::remember('app_server_list_notice', 3600, function () {
+            $status = $this->statusForThisServer();
+            if ($status['state'] === 'ok' || ! $this->appInUse()) {
+                return null;
+            }
+
+            $date = fn (?CarbonImmutable $d) => $d?->locale('de')->isoFormat('D. MMMM YYYY');
+            $validUntil = $status['valid_until'] ? $date(CarbonImmutable::parse($status['valid_until'])) : null;
+            $deadline = $date($status['deadline']);
+            $title = 'ElternInfo-App';
+
+            return match ($status['state']) {
+                'expiring' => ['type' => 'info', 'title' => $title, 'text' => "Die Freischaltung dieses Servers für die ElternInfo-App läuft am {$validUntil} aus. Bitte verlängern Sie den Vertrag rechtzeitig beim Herausgeber der App."],
+                'expired' => ['type' => 'warning', 'title' => $title, 'text' => "Die Freischaltung für die ElternInfo-App ist am {$validUntil} ausgelaufen. Die App funktioniert noch bis zum {$deadline}. Bitte wenden Sie sich an den Herausgeber der App."],
+                'stale' => ['type' => 'warning', 'title' => $title, 'text' => "Die Freigabeliste der ElternInfo-App konnte länger nicht aktualisiert werden. Bitte prüfen Sie, ob der Cronjob läuft und der Server {$this->listHost()} erreichen kann. Ohne Aktualisierung funktioniert die App ab dem {$deadline} nicht mehr."],
+                'unlisted', 'missing' => ['type' => 'warning', 'title' => $title, 'text' => "Dieser Server ist nicht für die ElternInfo-App freigeschaltet. Ab dem {$deadline} können sich Eltern nicht mehr mit der App anmelden; die Weboberfläche bleibt nutzbar. Bitte wenden Sie sich an den Herausgeber der App."],
+                default => ['type' => 'warning', 'title' => $title, 'text' => 'Die Freigabeliste der ElternInfo-App ist nicht eingerichtet (APP_SERVER_LIST_URL und APP_SERVER_LIST_PUBLIC_KEY in der .env). Ab dem '.$date(CarbonImmutable::parse(self::ENFORCE_FROM)).' funktioniert die App sonst nicht mehr.'],
+            };
+        });
+    }
+
+    private function appInUse(): bool
+    {
+        return \App\Model\PersonalAccessToken::query()->where('name', 'like', '%ElternInfo-App%')->exists();
+    }
+
+    private function listHost(): string
+    {
+        return parse_url((string) config('services.app.server_list_url'), PHP_URL_HOST) ?: 'den Herausgeber';
+    }
+
+    /**
+     * Server-Kennung wie in der App: Host (+ Port) + Pfad, klein, ohne Schema und Schrägstrich am Ende.
+     * `https://Eltern.Schule.de/eib/` → `eltern.schule.de/eib`
+     */
+    public static function hostLabel(string $url): string
+    {
+        $parts = parse_url(trim($url));
+        $host = strtolower($parts['host'] ?? '');
+        if (isset($parts['port'])) {
+            $host .= ':'.$parts['port'];
+        }
+        $path = rtrim($parts['path'] ?? '', '/');
+
+        return $host.$path;
+    }
+
+    private function findEntry(array $payload, string $label): ?array
+    {
+        $hash = hash('sha256', $label);
+        foreach ($payload['servers'] ?? [] as $entry) {
+            if (! is_array($entry) || empty($entry['valid_until'])) {
+                continue;
+            }
+            if (($entry['host'] ?? null) === $label || ($entry['host_sha256'] ?? null) === $hash) {
+                return $entry;
+            }
+        }
+
+        return null;
+    }
+
+    private function verify(array $signed): ?array
+    {
+        $key = $this->publicKey();
+        $payload = base64_decode($signed['payload'], true);
+        $signature = base64_decode($signed['signature'], true);
+        if (! $key || $payload === false || $signature === false || strlen($signature) !== SODIUM_CRYPTO_SIGN_BYTES) {
+            return null;
+        }
+
+        try {
+            if (! sodium_crypto_sign_verify_detached($signature, $payload, $key)) {
+                return null;
+            }
+        } catch (\SodiumException) {
+            return null;
+        }
+
+        $data = json_decode($payload, true);
+
+        return is_array($data) && isset($data['issued_at'], $data['servers']) && is_array($data['servers']) ? $data : null;
+    }
+
+    /** Öffentlicher Schlüssel (32 Byte, base64 oder base64url) oder null. */
+    private function publicKey(): ?string
+    {
+        $value = (string) config('services.app.server_list_public_key');
+        if ($value === '') {
+            return null;
+        }
+        $raw = base64_decode(strtr($value, '-_', '+/'), true);
+
+        return $raw !== false && strlen($raw) === SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES ? $raw : null;
+    }
+
+    private static function isSignedShape(mixed $value): bool
+    {
+        return is_array($value) && is_string($value['payload'] ?? null) && is_string($value['signature'] ?? null);
+    }
+}
