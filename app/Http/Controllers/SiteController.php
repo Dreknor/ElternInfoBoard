@@ -135,6 +135,16 @@ class SiteController extends Controller implements HasMiddleware
      */
     public function show(Site $site)
     {
+        // Seiten, die bestimmten Gruppen zugeordnet sind, nur für deren Mitglieder (wie die Übersicht).
+        // Vorher war jede Seite per ID abrufbar. Seiten ohne Gruppenzuordnung bleiben allgemein sichtbar.
+        $user = auth()->user();
+        $groupIds = $site->groups()->pluck('groups.id');
+        $mayView = $user->can('create sites')
+            || (int) $site->author_id === $user->id
+            || $groupIds->isEmpty()
+            || $user->groups()->whereIn('groups.id', $groupIds)->exists();
+        abort_unless($mayView, 403);
+
         return view('sites.show', [
             'site' => $site,
         ]);

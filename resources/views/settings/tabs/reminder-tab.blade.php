@@ -40,7 +40,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="small">Kanäle</label>
-                    <div class="d-flex gap-3">
+                    <div class="d-flex flex-wrap gap-3">
                         <div class="custom-control custom-checkbox">
                             <input type="checkbox" class="custom-control-input" id="level1_in_app" name="level1_in_app" value="1"
                                    {{ $reminderSettings->level1_in_app ? 'checked' : '' }}>
@@ -82,7 +82,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="small">Kanäle</label>
-                    <div class="d-flex gap-3">
+                    <div class="d-flex flex-wrap gap-3">
                         <div class="custom-control custom-checkbox">
                             <input type="checkbox" class="custom-control-input" id="level2_in_app" name="level2_in_app" value="1"
                                    {{ $reminderSettings->level2_in_app ? 'checked' : '' }}>
@@ -124,7 +124,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="small">Kanäle</label>
-                    <div class="d-flex gap-3">
+                    <div class="d-flex flex-wrap gap-3">
                         <div class="custom-control custom-checkbox">
                             <input type="checkbox" class="custom-control-input" id="level3_in_app" name="level3_in_app" value="1"
                                    {{ $reminderSettings->level3_in_app ? 'checked' : '' }}>

@@ -116,8 +116,10 @@ Route::middleware(['auth', 'permission:edit settings'])->group(function () {
         return response()->file(public_path('docs/index.html'));
     })->name('docs.index');
     Route::get('docs/{any}', function (string $any) {
-        $path = public_path('docs/' . $any);
-        if (file_exists($path) && is_file($path)) {
+        $base = realpath(public_path('docs'));
+        $path = realpath(public_path('docs/'.$any));
+        // realpath löst „../“ auf – nur Dateien unterhalb von public/docs ausliefern
+        if ($base && $path && str_starts_with($path, $base.DIRECTORY_SEPARATOR) && is_file($path)) {
             return response()->file($path);
         }
         abort(404);
@@ -132,6 +134,7 @@ Route::get('apple-touch-icon.png', function () {
     return response()->file(public_path('img/'.config('app.logo_small')));
 });
 
+// Hinweis: GET-Routen, die Daten ändern, tragen die Middleware „same_origin“ (CSRF-Schutz, siehe RequireSameOrigin).
 Route::middleware('auth')->group(function () {
 
     Route::get('password/expired', [ExpiredPasswordController::class, 'expired'])
@@ -231,7 +234,7 @@ Route::middleware('auth')->group(function () {
 
         // make a push notification.
         Route::post('/notification/read', [NotificationController::class, 'read'])->name('notification.read');
-        Route::get('/notification/read/all', [NotificationController::class, 'readAll'])->name('notification.readAll');
+        Route::get('/notification/read/all', [NotificationController::class, 'readAll'])->name('notification.readAll')->middleware('same_origin');
         Route::post('markNotificationAsRead', [NotificationController::class, 'readByType']);
         Route::post('/push', [PushController::class, 'store']);
         Route::delete('/push/{subscription}', [PushController::class, 'destroy'])->name('push.destroy');
@@ -301,7 +304,7 @@ Route::middleware('auth')->group(function () {
         Route::post('active-diseases/create', [ActiveDiseaseController::class, 'store'])->middleware('permission:manage diseases')->name('active-diseases.store');
         Route::put('active-diseases/{disease}/active', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases')->name('active-diseases.toggle');
         Route::delete('active-diseases/{disease}/delete', [ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases')->name('active-diseases.delete');
-        Route::get('active-diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases')->name('active-diseases.extend');
+        Route::get('active-diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases')->name('active-diseases.extend')->middleware('same_origin');
         // Termine
         Route::post('termine/{termin}/ausblenden', [TerminController::class, 'hide'])->whereNumber('termin')->name('termine.hide');
         Route::delete('termine/{termin}/ausblenden', [TerminController::class, 'unhide'])->whereNumber('termin')->name('termine.unhide');
@@ -337,8 +340,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
         Route::post('/rueckmeldung/{posts_id}/create/abfrage', [RueckmeldungenController::class, 'storeAbfrage']);
         Route::put('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'update']);
-        Route::get('rueckmeldungen/{posts_id}/createImageUpload', [RueckmeldungenController::class, 'createImageRueckmeldung']);
-        Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);
+        Route::get('rueckmeldungen/{posts_id}/createImageUpload', [RueckmeldungenController::class, 'createImageRueckmeldung'])->middleware('same_origin');
+        Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung'])->middleware('same_origin');
 
         // Dashboard
         Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index']);
@@ -358,7 +361,7 @@ Route::middleware('auth')->group(function () {
             ->name('nachrichten.read_receipt.confirm_for_user');
         // Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
-        Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
+        Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react'])->middleware('same_origin');
 
         // Beitrag melden (alle authentifizierten Nutzer)
         Route::post('post/{post}/report', [PostReportController::class, 'store'])->name('post.report');
@@ -396,8 +399,8 @@ Route::middleware('auth')->group(function () {
         Route::put('listen/{terminListe}', [ListenController::class, 'update']);
         Route::post('listen/{liste}/activate', [ListenController::class, 'activate']);
         Route::post('listen/{liste}/copy', [ListenController::class, 'copyEintragListe'])->name('listen.copy');
-        Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh']);
-        Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv']);
+        Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh'])->middleware('same_origin');
+        Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv'])->middleware('same_origin');
         Route::post('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
         Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
         Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport'])->name('listen.ical.export');
@@ -407,7 +410,7 @@ Route::middleware('auth')->group(function () {
         // TerminListe
         Route::post('listen/termine/{liste}/store', [ListenTerminController::class, 'store']);
         Route::put('listen/termine/{listen_termine}', [ListenTerminController::class, 'update']);
-        Route::get('listen/termine/{listen_termine}/copy', [ListenTerminController::class, 'copy']);
+        Route::get('listen/termine/{listen_termine}/copy', [ListenTerminController::class, 'copy'])->middleware('same_origin');
         Route::delete('listen/termine/{listen_termine}', [ListenTerminController::class, 'destroy']);
         Route::delete('listen/termine/absagen/{listen_termine}', [ListenTerminController::class, 'absagen']);
 
@@ -441,13 +444,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/posts/create', [NachrichtenController::class, 'create']);
         Route::get('/posts/edit/{posts}', [NachrichtenController::class, 'edit']);
         Route::get('/posts/edit/{posts}/{kiosk?}', [NachrichtenController::class, 'edit']);
-        Route::get('/posts/touch/{posts}', [NachrichtenController::class, 'touch']);
-        Route::get('/posts/release/{posts}', [NachrichtenController::class, 'release']);
-        Route::get('/posts/stick/{post}', [NachrichtenController::class, 'stickPost'])->middleware(['permission:make sticky']);
+        Route::get('/posts/touch/{posts}', [NachrichtenController::class, 'touch'])->middleware('same_origin');
+        Route::get('/posts/release/{posts}', [NachrichtenController::class, 'release'])->middleware('same_origin');
+        Route::get('/posts/stick/{post}', [NachrichtenController::class, 'stickPost'])->middleware(['permission:make sticky'])->middleware('same_origin');
         Route::post('/posts/archiv/{posts}', [NachrichtenController::class, 'archiv']);
         Route::put('/posts/{posts}/{kiosk?}', [NachrichtenController::class, 'update']);
         Route::post('/posts/', [NachrichtenController::class, 'store']);
-        Route::get('posts/{media}/changeCollection/{collection_name}', [ImageController::class, 'changeCollection'])->middleware(['permission:edit posts']);
+        Route::get('posts/{media}/changeCollection/{collection_name}', [ImageController::class, 'changeCollection'])->middleware(['permission:edit posts'])->middleware('same_origin');
 
         Route::delete('posts/{posts}', [NachrichtenController::class, 'destroy']);
         Route::delete('rueckmeldung/{rueckmeldung}', [RueckmeldungenController::class, 'destroy']);
@@ -456,7 +459,7 @@ Route::middleware('auth')->group(function () {
 
         // Comment posts
         Route::post('nachricht/{posts}/comment/create', [NachrichtenController::class, 'storeComment']);
-        Route::get('rueckmeldungen/{rueckmeldungen}/commentable', [RueckmeldungenController::class, 'updateCommentable']);
+        Route::get('rueckmeldungen/{rueckmeldungen}/commentable', [RueckmeldungenController::class, 'updateCommentable'])->middleware('same_origin');
 
         // user-Verwaltung
         Route::get('/einstellungen', [BenutzerController::class, 'show'])->name('einstellungen');
@@ -492,7 +495,7 @@ Route::middleware('auth')->group(function () {
         // Routen für Benutzerverwaltung
 
         Route::middleware('permission:edit user|import user')->group(function () {
-            Route::get('email/{daily}/{id?}', [NachrichtenController::class, 'email']);
+            Route::get('email/{daily}/{id?}', [NachrichtenController::class, 'email'])->middleware('same_origin');
             /*             Route::get('email/daily', [NachrichtenController::class, 'emailDaily']);
             */
 
@@ -526,7 +529,7 @@ Route::middleware('auth')->group(function () {
             Route::post('users/vereinsmitglieder/sync-role', [UserController::class, 'syncVereinsmitgliederRole']);
 
             Route::resource('users', UserController::class);
-            Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
+            Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung'])->middleware('same_origin');
             Route::post('users/{user}/resend-welcome', [UserController::class, 'resendWelcomeMail'])->name('users.resendWelcome');
             // Route::get('users/{user}/delete', [UserController::class, 'destroy']);
             // Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
@@ -577,8 +580,8 @@ Route::middleware('auth')->group(function () {
         Route::middleware('permission:edit settings')->group(function () {
             Route::get('modules', [SettingsController::class, 'module']);
             Route::post('modules/reorder', [SettingsController::class, 'reorder'])->name('modules.reorder');
-            Route::get('modules/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav']);
-            Route::get('modules/modul/{modul}', [SettingsController::class, 'change_status']);
+            Route::get('modules/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav'])->middleware('same_origin');
+            Route::get('modules/modul/{modul}', [SettingsController::class, 'change_status'])->middleware('same_origin');
             Route::get('settings/losungen/import', [LosungController::class, 'importView']);
             Route::post('settings/losungen/import', [LosungController::class, 'import']);
             Route::get('settings', [SettingsController::class, 'index']);
@@ -619,15 +622,15 @@ Route::middleware('auth')->group(function () {
         // Seitenverwaltung und -anzeige
         Route::middleware(['can:view sites'])->group(function () {
             Route::resource('sites', SiteController::class);
-            Route::get('sites/{site}/active', [SiteController::class, 'activate'])->name('sites.activate');
+            Route::get('sites/{site}/active', [SiteController::class, 'activate'])->name('sites.activate')->middleware('same_origin');
             Route::post('blocks', [SiteBlockController::class, 'store'])->name('blocks.store');
             Route::put('blocks/{block}', [SiteBlockController::class, 'update'])->name('blocks.text.update');
             Route::delete('blocks/{block}/delete', [SiteBlockController::class, 'destroy'])->name('blocks.delete');
             Route::delete('blocks/{block}/{media}/delete', [SiteBlockController::class, 'removeMedia'])->name('blocks.media.delete');
             Route::post('blocks/{block}/image', [SiteBlockController::class, 'storeImage'])->name('blocks.image.store');
             Route::post('blocks/{block}/files', [SiteBlockController::class, 'storeFile'])->name('blocks.files.store');
-            Route::get('blocks/{block}/move/up', [SiteBlockController::class, 'blockPostionUp'])->name('blocks.move.up');
-            Route::get('blocks/{block}/move/down', [SiteBlockController::class, 'blockPostionDown'])->name('blocks.move.down');
+            Route::get('blocks/{block}/move/up', [SiteBlockController::class, 'blockPostionUp'])->name('blocks.move.up')->middleware('same_origin');
+            Route::get('blocks/{block}/move/down', [SiteBlockController::class, 'blockPostionDown'])->name('blocks.move.down')->middleware('same_origin');
         });
 
         Route::get('logoutAsUser', function () {
@@ -641,7 +644,7 @@ Route::middleware('auth')->group(function () {
             }
 
             return redirect(url('/'));
-        });
+        })->middleware('same_origin');
         // Elternratsbereich
         Route::middleware('permission:view elternrat')->group(function () {
             // Events/Termine (VOR resource, um Konflikte zu vermeiden)

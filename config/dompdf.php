@@ -71,7 +71,8 @@ return [
          * direct class use like:
          * $dompdf = new DOMPDF();	$dompdf->load_html($htmldata); $dompdf->render(); $pdfdata = $dompdf->output();
          */
-        'chroot' => realpath(base_path()),
+        // Nur öffentliche Dateien und Schriftarten – nicht das gesamte Projekt (.env, storage/app …)
+        'chroot' => array_values(array_filter([realpath(public_path()), realpath(storage_path('fonts'))])),
 
         /**
          * Whether to enable font subsetting or not.
@@ -227,7 +228,9 @@ return [
          *
          * @var bool
          */
-        'enable_remote' => true,
+        // PDFs enthalten Nutzer-HTML: keine Abrufe fremder/interner URLs durch den Server (SSRF).
+        // Bilder werden vorab als data:-URI eingebettet (NachrichtenController::embedImagesAsBase64).
+        'enable_remote' => false,
 
         /**
          * A ratio applied to the fonts height to be more like browsers' line height

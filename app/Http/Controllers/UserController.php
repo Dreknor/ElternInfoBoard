@@ -377,6 +377,22 @@ class UserController extends Controller implements HasMiddleware
 
         $targetUser = User::findOrFail($id);
 
+        // Keine Rechteausweitung: nur Konten übernehmen, die nicht mehr dürfen als man selbst
+        $missing = $targetUser->getAllPermissions()->pluck('name')
+            ->diff($request->user()->getAllPermissions()->pluck('name'));
+        if ($missing->isNotEmpty()) {
+            Log::warning('loginAsUser: abgelehnt (Zielkonto hat weitergehende Rechte)', [
+                'requestor_id' => $request->user()->id,
+                'target_user_id' => $targetUser->id,
+            ]);
+            \App\Services\Security\SecurityLog::record('impersonation.denied', $targetUser->id, ['reason' => 'privilege_escalation']);
+
+            return redirect()->back()->with([
+                'Meldung' => 'Dieses Konto hat weitergehende Rechte als Ihr eigenes und kann nicht übernommen werden.',
+                'type' => 'danger',
+            ]);
+        }
+
         Log::warning('Impersonation gestartet', [
             'admin_id' => $request->user()->id,
             'target_id' => $targetUser->id,
@@ -386,7 +402,7 @@ class UserController extends Controller implements HasMiddleware
 
         // Kein auth.login: im Sicherheitsprotokoll als impersonation.start (actor = Admin aus ownID)
         \App\Services\Security\AuthEventSubscriber::expect('impersonation');
-        Auth::loginUsingId($id);
+        Auth::loginUsingId($targetUser->id);
         \App\Services\Security\SecurityLog::record('impersonation.start', $targetUser->id);
 
         return redirect()->to(url('/'));

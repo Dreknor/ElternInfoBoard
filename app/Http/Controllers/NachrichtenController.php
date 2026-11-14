@@ -353,7 +353,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             }
         }
 
-        $post = new Post($request->validated());
+        $post = new Post($request->safe()->except(['files']));
         \App\Support\AudienceField::apply($post, $request);
 
         $post->author = $user->id;
@@ -540,7 +540,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             ]);
         }
 
-        $posts->fill($request->validated());
+        $posts->fill($request->safe()->except(['files']));
         \App\Support\AudienceField::apply($posts, $request);
 
         $posts->updated_at = $request->input('updated_at');
@@ -1352,18 +1352,22 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         // /api/file/{uuid}
         if (preg_match('#^/api/file/([0-9a-f\-]{36})(?:\?.*)?$#i', $src, $m)) {
-            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::where('uuid', $m[1])->first();
-            if ($media && file_exists($media->getPath())) {
-                return 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($media->getPath()));
-            }
+            return $this->mediaToBase64(\Spatie\MediaLibrary\MediaCollections\Models\Media::where('uuid', $m[1])->first());
         }
 
-        // Lokale public/-Pfade (z. B. /img/logo.png)
-        if (str_starts_with($src, '/') && file_exists(public_path($src))) {
-            $path = public_path($src);
-            $mime = mime_content_type($path) ?: 'image/png';
+        // Lokale public/-Pfade (z. B. /img/logo.png) – nur Rasterbilder, die wirklich unterhalb von public/ liegen
+        // (vorher ließ sich mit „/../.env“ jede Datei des Servers ins PDF einbetten)
+        if (str_starts_with($src, '/')) {
+            $base = realpath(public_path());
+            $path = realpath(public_path((string) strtok($src, '?')));
 
-            return 'data:'.$mime.';base64,'.base64_encode(file_get_contents($path));
+            if ($base && $path && str_starts_with($path, $base.DIRECTORY_SEPARATOR) && is_file($path)) {
+                $mime = mime_content_type($path) ?: '';
+
+                if ($this->isRasterImage($mime)) {
+                    return 'data:'.$mime.';base64,'.base64_encode(file_get_contents($path));
+                }
+            }
         }
 
         return null;
@@ -1371,11 +1375,32 @@ class NachrichtenController extends Controller implements HasMiddleware
 
     private function mediaToBase64ById(int $id): ?string
     {
-        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($id);
-        if ($media && file_exists($media->getPath())) {
-            return 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($media->getPath()));
+        return $this->mediaToBase64(\Spatie\MediaLibrary\MediaCollections\Models\Media::find($id));
+    }
+
+    /**
+     * Bild nur einbetten, wenn der abrufende Nutzer es auch direkt sehen dürfte
+     * (sonst ließen sich fremde Dateien über eine Bild-URL im Beitragstext ins PDF ziehen).
+     */
+    private function mediaToBase64(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media): ?string
+    {
+        $user = auth()->user();
+
+        if (! $media
+            || ! $user
+            || ! \App\Services\App\MediaAccess::canView($user, $media)
+            || ! $this->isRasterImage((string) $media->mime_type)
+            || ! file_exists($media->getPath())) {
+            return null;
         }
 
-        return null;
+        return 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($media->getPath()));
+    }
+
+    private function isRasterImage(string $mime): bool
+    {
+        $mime = strtolower($mime);
+
+        return str_starts_with($mime, 'image/') && ! str_contains($mime, 'svg');
     }
 }

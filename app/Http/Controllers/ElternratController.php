@@ -238,6 +238,12 @@ class ElternratController extends Controller implements HasMiddleware
      */
     public function storeFile(Request $request)
     {
+        // Nur erlaubte Dateitypen (config/uploads.php); der Ordnername wird zum Sammlungsnamen
+        $request->validate([
+            'files' => ['nullable', ...\App\Support\Uploads::fileRules()],
+            'directory' => ['nullable', 'string', 'max:100'],
+        ]);
+
         $gruppe = Group::where('name', 'Elternrat')->first();
 
         if ($request->hasFile('files')) {
