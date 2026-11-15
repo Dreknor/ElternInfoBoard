@@ -78,8 +78,9 @@ return [
         // /v1/instance an die App weitergereicht. Leer setzen (APP_SERVER_LIST_URL=) schaltet den
         // Abruf ab. @see App\Services\App\AppServerList
         'server_list_url' => env('APP_SERVER_LIST_URL', 'https://verwaltung.elterninfo.schule/servers.json'),
-        // Öffentlicher Ed25519-Schlüssel (base64url), nur für den Hinweis an Admins und gegen gefälschte Listen
-        'server_list_public_key' => env('APP_SERVER_LIST_PUBLIC_KEY'),
+        // Öffentlicher Ed25519-Schlüssel des Herausgebers (base64url, nicht geheim) – für den Hinweis
+        // an Admins und gegen gefälschte Listen. Gleicher Schlüssel wie in der App (serverListKey.ts).
+        'server_list_public_key' => env('APP_SERVER_LIST_PUBLIC_KEY', 'tuI4ul6ggakwRERgs6mRqYzMkV8MZjvvn1uoGnWJEb0'),
         'privacy_contact' => env('APP_PRIVACY_CONTACT'),
     ],
 
