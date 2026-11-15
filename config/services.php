@@ -75,8 +75,9 @@ return [
         // Mehrzeilig mit \n, z. B. "Ev. Schulzentrum …\nMusterstraße 1\n01445 Radebeul\ndatenschutz@…"
         'privacy_publisher' => env('APP_PRIVACY_PUBLISHER'),
         // Freigabeliste der App (signiert vom Herausgeber): wird täglich abgeholt und über
-        // /v1/instance an die App weitergereicht. Ohne Adresse kein Abruf. @see App\Services\App\AppServerList
-        'server_list_url' => env('APP_SERVER_LIST_URL'),
+        // /v1/instance an die App weitergereicht. Leer setzen (APP_SERVER_LIST_URL=) schaltet den
+        // Abruf ab. @see App\Services\App\AppServerList
+        'server_list_url' => env('APP_SERVER_LIST_URL', 'https://verwaltung.elterninfo.schule/servers.json'),
         // Öffentlicher Ed25519-Schlüssel (base64url), nur für den Hinweis an Admins und gegen gefälschte Listen
         'server_list_public_key' => env('APP_SERVER_LIST_PUBLIC_KEY'),
         'privacy_contact' => env('APP_PRIVACY_CONTACT'),
