@@ -89,7 +89,7 @@ Es darf frei für nicht-kommerzielle Projekte im Bildungsbereich genutzt werden.
 
 ## Installation
 
-> Für eine schnelle Erstinstallation gibt es das interaktive Skript `install.sh`. Es fragt URL, Datenbank- und Mailzugang ab und erledigt die Schritte 2–4. Den Administrator (Schritt 5) und den Cronjob (Schritt 7) legt es **nicht** an.
+> Für eine schnelle Erstinstallation gibt es das interaktive Skript `install.sh`. Es fragt URL, Datenbank- und Mailzugang ab und erledigt die Schritte 2–4 (inkl. `npm ci` und `npm run build`, sofern npm vorhanden ist). Den Administrator (Schritt 5) und den Cronjob (Schritt 7) legt es **nicht** an.
 
 ### 1. Code holen
 

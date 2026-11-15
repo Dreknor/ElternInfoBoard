@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 CONFIG_FILE=".config_completed"
 
 if [ -f "$CONFIG_FILE" ]; then
@@ -52,6 +50,16 @@ ask_and_replace "Mail-Absender-Name" MAIL_FROM_NAME
 # Befehle ausführen (Beispiele)
 echo "Führe composer install aus..."
 composer install
+
+# Frontend-Assets bauen (public/build ist nicht versioniert)
+if command -v npm >/dev/null 2>&1; then
+  echo "Installiere Node-Abhängigkeiten und baue Frontend-Assets..."
+  npm ci --no-audit --no-fund
+  npm run build
+else
+  echo "WARNUNG: npm nicht gefunden – Assets bitte lokal mit 'npm ci && npm run build' bauen und public/build hochladen."
+  echo "Node.js >= 20.19 bzw. >= 22.12 wird benötigt (Vite 7)."
+fi
 
 echo "Führe php artisan migrate aus..."
 php artisan migrate
