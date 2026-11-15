@@ -74,6 +74,13 @@ return [
         // Datenschutzerklärung der App (/app/datenschutz, Pflicht-URL im Play Store / App Store).
         // Mehrzeilig mit \n, z. B. "Ev. Schulzentrum …\nMusterstraße 1\n01445 Radebeul\ndatenschutz@…"
         'privacy_publisher' => env('APP_PRIVACY_PUBLISHER'),
+        // Freigabeliste der App (signiert vom Herausgeber): wird täglich abgeholt und über
+        // /v1/instance an die App weitergereicht. Leere Einträge in der .env gelten als „nicht gesetzt“
+        // (Standardwert). @see App\Services\App\AppServerList
+        'server_list_url' => env('APP_SERVER_LIST_URL') ?: 'https://verwaltung.elterninfo.schule/servers.json',
+        // Öffentlicher Ed25519-Schlüssel des Herausgebers (base64url, nicht geheim) – für den Hinweis
+        // an Admins und gegen gefälschte Listen. Gleicher Schlüssel wie in der App (serverListKey.ts).
+        'server_list_public_key' => env('APP_SERVER_LIST_PUBLIC_KEY') ?: 'tuI4ul6ggakwRERgs6mRqYzMkV8MZjvvn1uoGnWJEb0',
         'privacy_contact' => env('APP_PRIVACY_CONTACT'),
     ],
 

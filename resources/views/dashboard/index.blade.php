@@ -12,6 +12,16 @@
                 <p class="mb-0" style="opacity: 0.85;">{{ $datum->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}</p>
             </div>
 
+            <!-- Freigabe der ElternInfo-App (nur Admins) -->
+            @if(!empty($appServerNotice))
+                <div class="{{ $appServerNotice['type'] === 'info' ? 'bg-blue-50 border-blue-500' : 'bg-orange-50 border-orange-500' }} border-l-4 rounded-lg shadow p-3 mb-4" role="status">
+                    <h6 class="font-bold mb-1 {{ $appServerNotice['type'] === 'info' ? 'text-blue-800' : 'text-orange-800' }}">
+                        <i class="fas fa-mobile-alt" aria-hidden="true"></i> {{ $appServerNotice['title'] }}
+                    </h6>
+                    <p class="text-sm mb-0 {{ $appServerNotice['type'] === 'info' ? 'text-blue-800' : 'text-orange-800' }}">{{ $appServerNotice['text'] }}</p>
+                </div>
+            @endif
+
             <!-- Hinweis auf offene Anwesenheitsabfragen -->
             @if($openAttendanceSurveys)
                 <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg shadow p-3 mb-4">
