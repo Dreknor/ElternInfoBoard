@@ -163,4 +163,48 @@ class AppServerListTest extends TestCase
             ->assertSee('nicht für die ElternInfo-App freigeschaltet');
         $this->withoutVite()->actingAs($parent)->get('/dashboard')->assertViewHas('appServerNotice', null);
     }
+
+    #[Test]
+    public function notice_names_broken_setting_and_does_not_go_stale(): void
+    {
+        $list = app(AppServerList::class);
+        User::factory()->create()->createToken('iPhone – ElternInfo-App');
+        $this->serve($this->signed([['host' => 'eltern.schule.example', 'kind' => 'managed', 'valid_until' => null]]));
+        $list->fetch();
+        $goodKey = config('services.app.server_list_public_key');
+
+        config(['services.app.server_list_public_key' => 'kaputt']);
+        $this->assertStringContainsString('APP_SERVER_LIST_PUBLIC_KEY', $list->adminNotice()['text']);
+
+        // nach Korrektur (oder Update) kein zwischengespeicherter alter Hinweis
+        config(['services.app.server_list_public_key' => $goodKey]);
+        $this->assertNull($list->adminNotice());
+    }
+
+    #[Test]
+    public function notice_fetches_list_at_once_when_none_is_stored(): void
+    {
+        $list = app(AppServerList::class);
+        User::factory()->create()->createToken('iPhone – ElternInfo-App');
+        $this->serve($this->signed([['host' => 'eltern.schule.example', 'kind' => 'managed', 'valid_until' => null]]));
+
+        $this->assertNull($list->adminNotice());
+        $this->assertNotNull($list->current());
+    }
+
+    #[Test]
+    public function empty_env_entries_fall_back_to_defaults(): void
+    {
+        putenv('APP_SERVER_LIST_URL=');
+        putenv('APP_SERVER_LIST_PUBLIC_KEY=');
+        try {
+            $services = require config_path('services.php');
+        } finally {
+            putenv('APP_SERVER_LIST_URL');
+            putenv('APP_SERVER_LIST_PUBLIC_KEY');
+        }
+
+        $this->assertSame('https://verwaltung.elterninfo.schule/servers.json', $services['app']['server_list_url']);
+        $this->assertSame('tuI4ul6ggakwRERgs6mRqYzMkV8MZjvvn1uoGnWJEb0', $services['app']['server_list_public_key']);
+    }
 }

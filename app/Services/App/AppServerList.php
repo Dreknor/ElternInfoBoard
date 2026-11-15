@@ -3,6 +3,7 @@
 namespace App\Services\App;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -92,7 +93,7 @@ class AppServerList
             'signature' => $signed['signature'],
             'fetched_at' => now()->toIso8601String(),
         ]));
-        \Illuminate\Support\Facades\Cache::forget('app_server_list_notice');
+        Cache::forget($this->noticeCacheKey());
 
         return true;
     }
@@ -174,7 +175,13 @@ class AppServerList
      */
     public function adminNotice(): ?array
     {
-        return \Illuminate\Support\Facades\Cache::remember('app_server_list_notice', 3600, function () {
+        // Noch keine Liste (z. B. direkt nach dem Update, der tägliche Abruf kommt erst nachts):
+        // einmal pro Stunde sofort abholen, statt fälschlich „nicht freigeschaltet“ zu melden.
+        if (! $this->current() && config('services.app.server_list_url') && Cache::add('app_server_list_fetch_attempt', true, 3600)) {
+            $this->fetch();
+        }
+
+        return Cache::remember($this->noticeCacheKey(), 3600, function () {
             $status = $this->statusForThisServer();
             if ($status['state'] === 'ok' || ! $this->appInUse()) {
                 return null;
@@ -190,9 +197,38 @@ class AppServerList
                 'expired' => ['type' => 'warning', 'title' => $title, 'text' => "Die Freischaltung für die ElternInfo-App ist am {$validUntil} ausgelaufen. Die App funktioniert noch bis zum {$deadline}. Bitte wenden Sie sich an den Herausgeber der App."],
                 'fetch_failing' => ['type' => 'warning', 'title' => $title, 'text' => "Die Freigabeliste der ElternInfo-App konnte seit über ".self::FETCH_WARN_DAYS." Tagen nicht abgerufen werden. Bitte prüfen Sie, ob der Cronjob läuft und dieser Server {$this->listHost()} erreichen kann. Sonst kommen Änderungen an der Freischaltung nicht an.".($validUntil ? " Sie gilt bisher bis zum {$validUntil}." : '')],
                 'unlisted', 'missing' => ['type' => 'warning', 'title' => $title, 'text' => "Dieser Server ist nicht für die ElternInfo-App freigeschaltet. Ab dem {$deadline} können sich Eltern nicht mehr mit der App anmelden; die Weboberfläche bleibt nutzbar. Bitte wenden Sie sich an den Herausgeber der App."],
-                default => ['type' => 'warning', 'title' => $title, 'text' => 'Die Freigabeliste der ElternInfo-App ist nicht eingerichtet (APP_SERVER_LIST_URL und APP_SERVER_LIST_PUBLIC_KEY in der .env). Ab dem '.$date(CarbonImmutable::parse(self::ENFORCE_FROM)).' funktioniert die App sonst nicht mehr.'],
+                // Nur bei ungültigen Werten in der .env – ohne Einträge gelten die Standardwerte
+                default => ['type' => 'warning', 'title' => $title, 'text' => 'Die Freigabeliste der ElternInfo-App ist falsch eingerichtet: '.$this->invalidSettings().' in der .env ist ungültig. Bitte den Eintrag entfernen (dann gilt der Standardwert) und `php artisan config:clear` ausführen. Ab dem '.$date(CarbonImmutable::parse(self::ENFORCE_FROM)).' funktioniert die App sonst nicht mehr.'],
             };
         });
+    }
+
+    /**
+     * Cache-Schlüssel des Hinweises: hängt an Code-Stand und Einstellungen, damit nach einem Update
+     * oder einer Änderung der .env kein veralteter Hinweis stehen bleibt (der Updater leert den
+     * Anwendungs-Cache bewusst nicht).
+     */
+    private function noticeCacheKey(): string
+    {
+        return 'app_server_list_notice:'.md5(implode('|', [
+            self::ENFORCE_FROM,
+            config('services.app.server_list_url'),
+            config('services.app.server_list_public_key'),
+            config('app.url'),
+        ]));
+    }
+
+    private function invalidSettings(): string
+    {
+        $invalid = [];
+        if (! config('services.app.server_list_url')) {
+            $invalid[] = 'APP_SERVER_LIST_URL';
+        }
+        if (! $this->publicKey()) {
+            $invalid[] = 'APP_SERVER_LIST_PUBLIC_KEY';
+        }
+
+        return implode(' und ', $invalid) ?: 'ein Eintrag';
     }
 
     /** Zeitpunkt des letzten erfolgreichen Abrufs */
