@@ -33,8 +33,20 @@ class CreateFirstAdminUser extends Command
     public function handle(): int
     {
         // Prüfen ob bereits ein Admin existiert
-        if (User::role('Administrator')->exists()) {
+        $existingAdmins = User::role('Administrator')->get(['id', 'name', 'email']);
+        if ($existingAdmins->isNotEmpty()) {
+            $connection = (new User)->getConnection();
             $this->error('Es existiert bereits mindestens ein Administrator-Benutzer. Abbruch.');
+            $this->line(sprintf(
+                'Datenbank: %s (Verbindung "%s", Tabelle "%s")',
+                $connection->getDatabaseName(),
+                $connection->getName(),
+                $connection->getTablePrefix() . (new User)->getTable()
+            ));
+            $this->table(
+                ['ID', 'Name', 'E-Mail'],
+                $existingAdmins->map(fn (User $u) => [$u->id, $u->name, $u->email])->all()
+            );
             return self::FAILURE;
         }
 
