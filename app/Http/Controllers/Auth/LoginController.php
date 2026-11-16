@@ -359,11 +359,11 @@ class LoginController extends Controller implements HasMiddleware
     }
 
     /**
-     * Meldet der IdP die E-Mail-Adresse als bestätigt? (abschaltbar über KEYCLOAK_REQUIRE_VERIFIED_EMAIL)
+     * Meldet der IdP die E-Mail-Adresse als bestätigt? (nur geprüft, wenn KEYCLOAK_REQUIRE_VERIFIED_EMAIL=true; Standard: aus)
      */
     public static function keycloakEmailIsVerified($keycloakUser): bool
     {
-        if (! config('services.keycloak.require_verified_email', true)) {
+        if (! config('services.keycloak.require_verified_email', false)) {
             return true;
         }
 

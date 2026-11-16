@@ -44,7 +44,7 @@ return [
         // Konten werden über die E-Mail-Adresse zugeordnet. Deshalb nur Adressen akzeptieren, die der
         // IdP als bestätigt meldet (Claim „email_verified“). Nur abschalten, wenn im Realm niemand
         // seine E-Mail-Adresse selbst ändern oder sich selbst registrieren kann.
-        'require_verified_email' => env('KEYCLOAK_REQUIRE_VERIFIED_EMAIL', true),
+        'require_verified_email' => env('KEYCLOAK_REQUIRE_VERIFIED_EMAIL', false),
     ],
 
 
