@@ -230,18 +230,20 @@
                     @endforeach
                 </div>
 
-                @can('view child')
+                @if(isset($modules) && $modules->where('setting', 'Schickzeiten')->isNotEmpty())
+                @can('view schickzeiten')
                     <div class="text-center mt-4 pt-4" style="border-top: 1px solid var(--color-card-border);">
-                        <a href="{{ url('/care/children') }}"
+                        <a href="{{ url('/schickzeiten') }}"
                            class="inline-flex items-center px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200"
                            style="background: var(--color-widget-success-from);"
                            onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-success-to')"
                            onmouseout="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-success-from')">
-                            <i class="fas fa-child mr-2"></i>
-                            Zur Kinderübersicht
+                            <i class="fas fa-clock mr-2"></i>
+                            Zum Hort / Schickzeiten
                         </a>
                     </div>
                 @endcan
+                @endif
             </div>
     </div>
 @endif
