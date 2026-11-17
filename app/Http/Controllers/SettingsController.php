@@ -25,7 +25,6 @@ use App\Settings\SchickzeitenSetting;
 use App\Settings\StundenplanSetting;
 use App\Themes\ThemeRegistry;
 use App\Settings\UcsSetting;
-use App\Support\MailConfigurator;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -419,7 +418,15 @@ class SettingsController extends Controller implements HasMiddleware
                 $mailSettings->contact_default_email = $validated['contact_default_email'] ?? null;
                 $mailSettings->save();
 
-                MailConfigurator::apply($mailSettings);
+                config([
+                    'mail.mailers.smtp.host' => $mailSettings->mail_server,
+                    'mail.mailers.smtp.port' => $mailSettings->mail_port,
+                    'mail.mailers.smtp.username' => $mailSettings->mail_username,
+                    'mail.mailers.smtp.password' => $mailSettings->mail_password,
+                    'mail.mailers.smtp.encryption' => $mailSettings->mail_encryption,
+                    'mail.from.address' => $mailSettings->mail_from_address,
+                    'mail.from.name' => $mailSettings->mail_from_name,
+                ]);
 
                 Artisan::call('config:clear');
                 Artisan::call('cache:clear');
