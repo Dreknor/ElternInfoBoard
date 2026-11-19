@@ -97,6 +97,7 @@ class ListenController extends Controller
             'eintragungen' => $eintragungen,
             'termine' => $termine,
             'archiv' => $oldListen,
+            ...app(\App\Services\App\ListenAnsicht::class)->uebersicht($request->user(), $listen),
         ]);
     }
 
@@ -206,24 +207,20 @@ class ListenController extends Controller
 
     private function renderListe(Liste $terminListe, bool $preview = false): View
     {
-        if ($terminListe->type == 'termin') {
-            $terminListe->load('termine');
-            $terminListe->termine->sortBy('termin');
-            $allTermineInPast = $terminListe->termine->isNotEmpty()
-                && $terminListe->termine->every(fn ($termin) => $termin->termin->lessThan(now()));
+        $ansicht = app(\App\Services\App\ListenAnsicht::class);
 
+        if ($terminListe->type == 'termin') {
             return view('listen.terminListen.terminAuswahl', [
                 'liste' => $terminListe,
-                'allTermineInPast' => $allTermineInPast,
                 'preview' => $preview,
+                ...$ansicht->terminliste(auth()->user(), $terminListe, $preview),
             ]);
         }
-
-        $terminListe->load('eintragungen');
 
         return view('listen.listenEintrag', [
             'liste' => $terminListe,
             'preview' => $preview,
+            ...$ansicht->eintragliste(auth()->user(), $terminListe, $preview),
         ]);
     }
 
