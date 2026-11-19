@@ -110,7 +110,7 @@ class ListenTerminController extends Controller
             ]);
         }
 
-        return redirect()->to(url('listen'))->with([
+        return redirect()->to(url('listen/'.$listen_termine->listen_id))->with([
             'type' => 'success',
             'Meldung' => 'Termin wurde reserviert.',
         ]);

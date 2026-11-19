@@ -1,112 +1,96 @@
-<div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-200 hover:border-teal-300 @if($eintrag->termin->lessThan(\Carbon\Carbon::now())) hide d-none @endif">
+{{-- Kachel für einen einzelnen Termin. Erwartet: $termin, $liste, $eigeneTermine, $gesperrt, $canManage, $preview --}}
+@php
+    $vergangen = $termin->termin->lessThan(now());
+    $frei = $termin->reserviert_fuer === null;
+    $eigen = $eigeneTermine->contains('id', $termin->id);
+    $buchbar = $frei && ! $vergangen && ! $gesperrt;
+    $namenSichtbar = ! $frei && app(\App\Services\App\ListenAnsicht::class)->namesVisible(auth()->user(), $liste, $preview, $eigen);
+    $zeit = $termin->termin->format('H:i').'–'.$termin->ende->format('H:i');
+    if ($termin->ende->toDateString() !== $termin->termin->toDateString()) {
+        $zeit .= ' ('.$termin->ende->format('d.m.').')';
+    }
 
-    <!-- Header Row -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3 pb-3 border-b border-gray-200">
-        <div class="text-xs font-semibold text-gray-600 uppercase">Von</div>
-        <div class="text-xs font-semibold text-gray-600 uppercase">Bis</div>
-        <div class="text-xs font-semibold text-gray-600 uppercase">Kommentar</div>
-        <div class="text-xs font-semibold text-gray-600 uppercase col-span-2 md:col-span-1">Reserviert für</div>
-    </div>
+    if ($eigen) {
+        $status = 'Ihr Termin';
+    } elseif ($frei) {
+        $status = $vergangen ? 'nicht gebucht' : 'frei';
+    } elseif ($namenSichtbar) {
+        $status = $termin->eingetragenePerson?->name ?? 'vergeben';
+    } else {
+        $status = 'vergeben';
+    }
+    $kind = ! $frei && $termin->child && ($namenSichtbar || $eigen) ? $termin->child->first_name : null;
 
-    <!-- Data Row -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4 items-center">
-        <!-- Von -->
-        <div class="text-sm">
-            <p class="font-medium text-gray-700">{{ $eintrag->termin->dayName }}</p>
-            <p class="text-gray-600"><strong>{{ $eintrag->termin->format('d.m.Y') }}</strong></p>
+    $kachel = match (true) {
+        $eigen => 'border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30',
+        $buchbar => 'border-2 border-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/30 cursor-pointer',
+        $frei && ! $vergangen => 'border-2 border-dashed border-sky-300 dark:border-sky-700',
+        default => 'border',
+    };
+    $label = $termin->termin->locale('de')->isoFormat('dd, DD.MM.').' '.$zeit.' Uhr';
+@endphp
+<div class="relative rounded-lg {{ $kachel }} {{ $vergangen ? 'opacity-60' : '' }}"
+     @if($vergangen) x-show="showPast" x-cloak
+     @elseif(! $eigen && ! $frei) x-show="!onlyFree" @endif
+     @if(! $frei && ! $eigen) style="background: var(--color-surface-subtle); border-color: var(--color-card-border);" @endif>
+    @if($buchbar)
+        <button type="button"
+                @click="buchen = { id: {{ $termin->id }}, label: @js($label), kommentar: @js($termin->comment ?? '') }"
+                class="w-full h-full text-left p-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                aria-label="{{ $zeit }} Uhr, frei – Termin reservieren{{ $termin->comment ? ', '.$termin->comment : '' }}">
+    @else
+        <div class="p-3" aria-label="{{ $zeit }} Uhr, {{ $status }}{{ $kind ? ', für '.$kind : '' }}">
+    @endif
+            <span class="block font-bold tabular-nums {{ $canManage ? 'pr-7' : '' }}" style="color: var(--color-text-primary);">{{ $zeit }}</span>
+            <span class="flex items-center gap-1 text-sm mt-0.5 min-w-0
+                {{ $eigen ? 'text-emerald-800 dark:text-emerald-300 font-semibold' : '' }}
+                {{ $buchbar ? 'text-sky-700 dark:text-sky-300 font-semibold' : '' }}"
+                  @if(! $eigen && ! $buchbar) style="color: var(--color-text-secondary);" @endif>
+                <i class="fas {{ $eigen ? 'fa-check-circle' : ($frei ? 'fa-plus-circle' : ($namenSichtbar ? 'fa-user' : 'fa-lock')) }} flex-shrink-0" aria-hidden="true"></i>
+                <span class="truncate">{{ $status }}</span>
+            </span>
+            @if($kind)
+                <span class="block text-xs truncate" style="color: var(--color-text-secondary);">für {{ $kind }}</span>
+            @endif
+            @if($termin->comment)
+                <span class="block text-xs mt-1 break-words" style="color: var(--color-text-secondary);">{{ $termin->comment }}</span>
+            @endif
+    @if($buchbar)
+        </button>
+    @else
         </div>
+    @endif
 
-        <!-- Bis -->
-        <div class="text-sm">
-            <p class="text-gray-600">
-                <strong>{{ $eintrag->termin->format('H:i') }}</strong> -
-                @if($eintrag->ende->day != $eintrag->termin->day)
-                    <p class="text-xs text-gray-500">{{ $eintrag->ende->format('d.m.Y') }}</p>
+    @if($canManage)
+        <div class="absolute top-1 right-1" x-data="{ open: false }" @click.outside="open = false">
+            <button type="button" @click.stop="open = !open" :aria-expanded="open.toString()" aria-haspopup="true"
+                    class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-black/10 dark:hover:bg-white/10"
+                    style="color: var(--color-text-secondary);" aria-label="Aktionen für Termin {{ $label }}">
+                <i class="fas fa-ellipsis-v text-xs" aria-hidden="true"></i>
+            </button>
+            <div x-show="open" x-transition x-cloak role="menu"
+                 class="absolute right-0 mt-1 w-48 rounded-lg shadow-xl py-1 z-40"
+                 style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);">
+                @php $item = 'flex w-full items-center gap-3 px-3 py-2 text-sm text-left hover:bg-black/5 dark:hover:bg-white/10'; @endphp
+                <a href="{{ url('listen/termine/'.$termin->id.'/copy') }}" role="menuitem" class="{{ $item }}" style="color: var(--color-text-primary);">
+                    <i class="fas fa-copy w-4" aria-hidden="true"></i> Kopieren
+                </a>
+                @if($frei)
+                    <form method="post" action="{{ url('listen/termine/'.$termin->id) }}" class="mb-0"
+                          onsubmit="return confirm(@js('Termin '.$label.' löschen?'))">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" role="menuitem" class="{{ $item }} text-red-600 dark:text-red-400">
+                            <i class="fas fa-trash-alt w-4" aria-hidden="true"></i> Termin löschen
+                        </button>
+                    </form>
+                @else
+                    <button type="button" role="menuitem" class="{{ $item }} text-red-600 dark:text-red-400"
+                            @click="open = false; absage = { id: {{ $termin->id }}, label: @js($label.($termin->eingetragenePerson ? ' ('.$termin->eingetragenePerson->name.')' : '')), eltern: false }">
+                        <i class="fas fa-times w-4" aria-hidden="true"></i> Absagen …
+                    </button>
                 @endif
-                <strong>{{ $eintrag->ende->format('H:i') }} Uhr</strong>
-            </p>
+            </div>
         </div>
-
-        <!-- Kommentar -->
-        <div class="text-sm text-gray-700">
-            {{ $eintrag->comment ?? '-' }}
-        </div>
-
-        <!-- Reserviert für -->
-        <div class="text-sm col-span-2 md:col-span-1">
-            @if($eintrag->reserviert_fuer != null)
-                <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                    <i class="fas fa-user mr-1"></i>
-                    @if($liste->visible_for_all or (! ($preview ?? false) and (auth()->user()->isFamilyMember($eintrag->reserviert_fuer) or auth()->user()->can('edit terminliste') or ($eintrag->child_id && \App\Services\App\Family::ownsChild(auth()->user(), $eintrag->child_id)))))
-                        {{ $eintrag->eingetragenePerson->name }}
-                        @if($eintrag->child)
-                            · für {{ $eintrag->child->first_name }}
-                        @endif
-                    @else
-                        reserviert
-                    @endif
-                </span>
-            @else
-                <span class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
-                    frei
-                </span>
-            @endif
-        </div>
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="flex flex-wrap gap-2">
-        @if(! ($canManage ?? (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))))
-            @if($eintrag->reserviert_fuer == null)
-                <form method="post" action="{{ url("listen/termine/" . $eintrag->id) }}" style="display: inline;">
-                    @csrf
-                    @method('PUT')
-                    @include('listen.partials.child_select')
-                    <button type="submit"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
-                        <i class="fas fa-check"></i>
-                        Reservieren
-                    </button>
-                </form>
-            @endif
-        @else
-            @if($eintrag->reserviert_fuer != null)
-                <button class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200 btnAbsage"
-                        data-toggle="modal"
-                        data-target="#deleteEintragungModal"
-                        data-terminID="{{ $eintrag->id }}">
-                    <i class="fas fa-times"></i>
-                    {{ $eintrag->eingetragenePerson->name }} absagen
-                </button>
-            @else
-                <form method="post" action="{{ url("listen/termine/" . $eintrag->id) }}" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors duration-200">
-                        <i class="fas fa-trash-alt"></i>
-                        Termin löschen
-                    </button>
-                </form>
-
-                <form method="post" action="{{ url("listen/termine/" . $eintrag->id) }}" style="display: inline;">
-                    @csrf
-                    @method('PUT')
-                    @include('listen.partials.child_select')
-                    <button type="submit"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
-                        <i class="fas fa-check"></i>
-                        Reservieren
-                    </button>
-                </form>
-            @endif
-
-            <a href="{{ url("listen/termine/" . $eintrag->id . "/copy") }}"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
-                <i class="fas fa-copy"></i>
-                Kopieren
-            </a>
-        @endif
-    </div>
+    @endif
 </div>
-
