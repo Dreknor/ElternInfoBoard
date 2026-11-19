@@ -180,7 +180,8 @@ class ListenController extends Controller
      */
     public function show(Liste $terminListe)
     {
-        if (! $terminListe->hasRecipient(auth()->user()) and !auth()->user()->can('edit terminliste')) {
+        // Empfänger, Listen-Ersteller und Verwaltung (gleiche Regel wie die App-API)
+        if (! app(\App\Services\App\ListenService::class)->canAccess(auth()->user(), $terminListe)) {
             return redirect()->back()->with([
                 'type' => 'error',
                 'Meldung' => 'Berechtigung fehlt',

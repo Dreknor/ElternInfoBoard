@@ -153,7 +153,6 @@ class ListenAnsichtTest extends TestCase
     {
         $liste = $this->liste('termin');
         $this->termin($liste, now()->addDays(2)->setTime(12, 0), $this->parent->id);
-        DB::table('group_user')->insert(['group_id' => $this->group->id, 'user_id' => $this->owner->id]);
 
         $this->actingAs($this->owner)->get("/listen/{$liste->id}")
             ->assertOk()
@@ -234,5 +233,20 @@ class ListenAnsichtTest extends TestCase
         $this->actingAs($this->parent)->get('/listen')
             ->assertOk()
             ->assertDontSee('Geheime Planung');
+    }
+
+    #[Test]
+    public function owner_can_open_own_list_without_being_a_recipient(): void
+    {
+        $liste = $this->liste('eintrag', ['active' => false]);
+
+        $this->actingAs($this->owner)->get("/listen/{$liste->id}")
+            ->assertOk()
+            ->assertSee('Sommerfest');
+
+        // Andere ohne Bezug zur Liste bleiben ausgeschlossen
+        $this->actingAs($this->makeParent(['changePassword' => false]))
+            ->get("/listen/{$liste->id}")
+            ->assertRedirect();
     }
 }
