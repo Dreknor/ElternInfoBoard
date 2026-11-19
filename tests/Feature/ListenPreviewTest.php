@@ -58,7 +58,9 @@ class ListenPreviewTest extends TestCase
             ->assertSee('So sehen Eltern diese Liste, sobald sie veröffentlicht ist.')
             ->assertDontSee('@if', false)
             ->assertSee('Kuchen')
-            ->assertSee('Reservieren')
+            ->assertSee('Übernehmen')
+            ->assertSee('Noch offen')
+            ->assertSee('Bereits vergeben')
             ->assertSee('vergeben')
             ->assertDontSee('Erika Muster')
             ->assertDontSee(route('listen.eintragungen.copy', $frei->id), false)
@@ -85,9 +87,10 @@ class ListenPreviewTest extends TestCase
         $this->actingAs($this->owner)->get(route('listen.preview', $liste->id))
             ->assertOk()
             ->assertSee('Vorschau beenden')
-            ->assertSee('Reservieren')
+            ->assertSee('Termin reservieren')
+            ->assertSee('1 von 1 Terminen frei')
             ->assertDontSee('Termin löschen')
-            ->assertDontSee('data-target="#createEintragungModal"', false);
+            ->assertDontSee('Neue Termine anlegen');
     }
 
     #[Test]
