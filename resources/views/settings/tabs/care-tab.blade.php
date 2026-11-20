@@ -4,15 +4,20 @@
         @method('PUT')
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
-                <label class="label-control w-100">
-                    ausführliche Ansicht der Anwesenheit
-                    <input type="checkbox" class="form-control" name="view_detailed_care"
-                           value="1" @if($careSettings->view_detailed_care) checked @endif>
+                <label class="label-control w-100" for="care_view_mode">
+                    Ansicht der Anwesenheitsliste
                 </label>
+                <select class="form-control" name="view_mode" id="care_view_mode">
+                    <option value="simple" @selected($careSettings->viewMode() === 'simple')>Einfache Liste</option>
+                    <option value="detailed" @selected($careSettings->viewMode() === 'detailed')>Detailansicht</option>
+                    <option value="board" @selected($careSettings->viewMode() === 'board')>Kachelansicht (für Tablets im Hortalltag)</option>
+                </select>
             </div>
             <div class="col-md-6 col-sm-12 m-auto">
                 <div class="small">
-                    Wenn diese Option aktiviert ist, wird die Anwesenheit in der Betreuungsansicht detailliert angezeigt. Dies umfasst das Bild des Kindes und auch die nächste Schickzeit.
+                    <b>Einfache Liste:</b> kompakte Liste je Gruppe und Klasse.<br>
+                    <b>Detailansicht:</b> zusätzlich nächste Schickzeit, Gruppenfilter und Suche.<br>
+                    <b>Kachelansicht:</b> große Kacheln mit Ein-Tipp-An-/Abmelden (mit Rückgängig), Leiste „Als Nächstes gehen“, Zähler, Filter und Suche. Übernimmt das Design-Theme.
                 </div>
             </div>
         </div>

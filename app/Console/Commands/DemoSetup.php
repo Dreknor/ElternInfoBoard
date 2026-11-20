@@ -752,6 +752,7 @@ class DemoSetup extends Command
         try {
             $care = app(CareSetting::class);
             $care->view_detailed_care = true;
+            $care->view_mode = 'detailed';
             $care->hide_childs_when_absent = false;
             $care->groups_list = array_values(array_filter([
                 $this->groups['hort'] ?? null,

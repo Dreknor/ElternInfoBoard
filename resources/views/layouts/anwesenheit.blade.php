@@ -1,5 +1,18 @@
+@php
+    /**
+     * Theme: Die Theme-Variablen gelten für alle Ansichten (bei dunklen Themes nur für die
+     * Kachelansicht). Dunkelmodus und Theme-Hintergrund nur für die Kachelansicht – die einfache
+     * Liste und die Detailansicht haben fest helle Farben.
+     */
+    $attendanceBoard = isset($careSettings) && $careSettings->viewMode() === 'board';
+    $darkTheme = isset($activeTheme)
+        && ($activeTheme->id() === 'dark' || str_contains($activeTheme->bodyClasses(), 'dark-mode'));
+    $htmlDarkClass = $attendanceBoard && $darkTheme ? 'dark' : '';
+    // Dunkle Theme-Werte würden die hellen Altansichten unlesbar machen
+    $applyThemeVars = $attendanceBoard || ! $darkTheme;
+@endphp
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" class="{{ $htmlDarkClass }}">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -28,10 +41,15 @@
     <!-- Anwesenheits-spezifische Styles NACH Vite, damit sie Vorrang haben -->
     <link href="{{asset('css/anwesenheit.css')}}" rel="stylesheet" />
 
+    {{-- Theme CSS Custom Properties (nach allen Stylesheets, damit Theme-Werte die Defaults überschreiben) --}}
+    @if($applyThemeVars)
+        <x-theme-vars />
+    @endif
+
     @stack('head')
     @include('layouts.elements.custom-scripts', ['position' => 'head'])
 </head>
-<body id="app-layout">
+<body id="app-layout" @class(["att-board-page" => $attendanceBoard])>
 <div class="content">
     @if(session('Meldung'))
         <div class="container">

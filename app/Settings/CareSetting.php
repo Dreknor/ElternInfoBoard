@@ -8,6 +8,9 @@ class CareSetting extends Settings
 {
     public bool $view_detailed_care;
 
+    /** Ansicht der Anwesenheitsliste: simple | detailed | board */
+    public string $view_mode;
+
     public bool $hide_childs_when_absent;
 
     public array $groups_list;
@@ -39,6 +42,26 @@ class CareSetting extends Settings
     public bool $auto_checkin_enabled_ferien;
 
     public string $auto_checkin_time_ferien;
+
+    public const VIEW_MODES = ['simple', 'detailed', 'board'];
+
+    /**
+     * Gültige Ansicht der Anwesenheitsliste; fällt auf die alte Ja/Nein-Einstellung zurück.
+     */
+    public function viewMode(): string
+    {
+        return in_array($this->view_mode, self::VIEW_MODES, true)
+            ? $this->view_mode
+            : ($this->view_detailed_care ? 'detailed' : 'simple');
+    }
+
+    /**
+     * Ansichten, die den Modus „Anwesende und erwartete Kinder“ anbieten.
+     */
+    public function supportsExpectedMode(): bool
+    {
+        return in_array($this->viewMode(), ['detailed', 'board'], true);
+    }
 
     public static function group(): string
     {
