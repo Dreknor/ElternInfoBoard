@@ -43,6 +43,21 @@ class CareController extends Controller implements HasMiddleware
      * @param bool \$showAll Decides whether to show all children or only those checked in.
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View Renders the attendance view.
      */
+    /**
+     * Ansicht der Anwesenheitsliste für dieses Gerät wählen (Cookie);
+     * „standard“ kehrt zur Einstellung zurück.
+     */
+    public function setDeviceView(string $view)
+    {
+        $redirect = redirect()->route('anwesenheit.index');
+
+        if (in_array($view, CareSetting::VIEW_MODES, true)) {
+            return $redirect->withCookie(cookie()->forever(CareSetting::DEVICE_VIEW_COOKIE, $view));
+        }
+
+        return $redirect->withCookie(cookie()->forget(CareSetting::DEVICE_VIEW_COOKIE));
+    }
+
     public function index($showAll = false)
     {
         $careSettings = new CareSetting;
@@ -56,9 +71,13 @@ class CareController extends Controller implements HasMiddleware
         }
 
         $viewMode = request()->cookie('showAll');
-        $viewMode = $viewMode === 'expected' && $careSettings->view_detailed_care
+        $viewMode = $viewMode === 'expected' && $careSettings->supportsExpectedMode()
             ? 'expected'
             : ($viewMode && $viewMode !== 'expected' ? 'all' : 'present');
+
+        // Die Kachelansicht lädt immer alle Kinder und filtert den Anzeigemodus im Browser –
+        // so stimmen die Zähler (z. B. „fehlt noch“) auch im Modus „nur anwesende“.
+        $isBoard = $careSettings->viewMode() === 'board';
 
         $configuredGroupIds = array_values((array) ($careSettings->groups_list ?? []));
         $configuredClassIds = array_values((array) ($careSettings->class_list ?? []));
@@ -79,13 +98,13 @@ class CareController extends Controller implements HasMiddleware
                 $childQuery->whereIn('class_id', $configuredClassIds);
             }
 
-            if ($careSettings->hide_childs_when_absent == true && $viewMode === 'present') {
+            if (! $isBoard && $careSettings->hide_childs_when_absent == true && $viewMode === 'present') {
                 $childQuery->whereHas('checkIns', function ($query) {
                     $query
                         ->checkedIn()
                         ->whereDate('date', now()->toDateString());
                 });
-            } elseif ($careSettings->hide_childs_when_absent == true && $viewMode === 'expected') {
+            } elseif (! $isBoard && $careSettings->hide_childs_when_absent == true && $viewMode === 'expected') {
                 $childQuery->whereHas('checkIns', function ($query) {
                     $query
                         ->whereDate('date', now()->toDateString())
@@ -166,6 +185,7 @@ class CareController extends Controller implements HasMiddleware
             'isFerientag' => $isFerientag,
             'parentContacts' => $parentContacts,
             'schickzeitenSettings' => new SchickzeitenSetting,
+            'attendanceMode' => $viewMode,
         ]);
     }
 

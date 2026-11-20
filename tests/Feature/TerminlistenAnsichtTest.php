@@ -46,7 +46,7 @@ class TerminlistenAnsichtTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Alle angelegten Termine liegen bereits in der Vergangenheit.');
-        $response->assertSee('Mit „Alle“ kannst du sie trotzdem einblenden.');
+        $response->assertSee('Mit „Vergangene anzeigen“ kannst du sie trotzdem einblenden.');
     }
 
     public function test_does_not_show_hint_when_future_termine_exist(): void

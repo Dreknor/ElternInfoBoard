@@ -715,7 +715,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/anwesenheit/{child}/abmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'abmelden']);
         Route::post('/anwesenheit/{child}/anmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'anmelden']);
         Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);
-        Route::get('/anwesenheit/{showAll?}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
+        Route::get('/anwesenheit/ansicht/{view}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'setDeviceView'])
+            ->whereIn('view', ['simple', 'detailed', 'board', 'standard'])
+            ->name('anwesenheit.view');
+        Route::get('/anwesenheit/{showAll?}',[\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
         Route::post('child/{child}/notice', [ChildNoticeController::class, 'noticeVerwaltung'])->name('child.notice.verwaltung');
 
         Route::middleware(['can:manage attendance queries'])->group(function () {

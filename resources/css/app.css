@@ -2066,9 +2066,321 @@ html.dark {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   HILFE – Themenkarten im Drawer und Artikel-Typografie
+   ═══════════════════════════════════════════════════════════════ */
+@layer components {
+  .help-topic-card {
+    @apply transition;
+    border: 1px solid var(--color-card-border);
+    background-color: var(--color-card-bg);
+  }
+  .help-topic-card:hover {
+    border-color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 6%, var(--color-card-bg));
+    text-decoration: none;
+  }
+  .help-topic-card-highlight {
+    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-card-border));
+    background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-card-bg));
+  }
+  .help-topic-icon {
+    background-color: var(--color-surface-subtle);
+    color: var(--color-text-secondary);
+  }
+  .help-topic-card-highlight .help-topic-icon,
+  .help-topic-card:hover .help-topic-icon {
+    background-color: var(--color-primary);
+    color: #fff;
+  }
+  .help-topic-chevron { color: var(--color-text-secondary); }
+  .help-topic-card:hover .help-topic-chevron { color: var(--color-primary); }
+
+  .help-muted-link { color: var(--color-text-secondary); }
+  .help-muted-link:hover { color: var(--color-text-primary); text-decoration: none; }
+
+  /* Markdown-Inhalt: Typografie-Farben aus dem Theme */
+  .prose.help-prose {
+    --tw-prose-body: var(--color-text-primary);
+    --tw-prose-headings: var(--color-text-primary);
+    --tw-prose-lead: var(--color-text-secondary);
+    --tw-prose-links: var(--color-primary);
+    --tw-prose-bold: var(--color-text-primary);
+    --tw-prose-counters: var(--color-text-secondary);
+    --tw-prose-bullets: color-mix(in srgb, var(--color-primary) 60%, transparent);
+    --tw-prose-hr: var(--color-card-border);
+    --tw-prose-quotes: var(--color-text-primary);
+    --tw-prose-quote-borders: var(--color-primary);
+    --tw-prose-captions: var(--color-text-secondary);
+    --tw-prose-code: var(--color-text-primary);
+    --tw-prose-pre-code: var(--color-text-primary);
+    --tw-prose-pre-bg: var(--color-surface-subtle);
+    --tw-prose-th-borders: var(--color-card-border);
+    --tw-prose-td-borders: var(--color-card-border);
+  }
+  .prose.help-prose a:hover { color: var(--color-primary-dark); }
+  .prose.help-prose code {
+    @apply rounded px-1 py-0.5 font-medium;
+    background-color: var(--color-surface-subtle);
+  }
+  .prose.help-prose code::before,
+  .prose.help-prose code::after { content: none; }
+  .prose.help-prose blockquote {
+    @apply rounded-r-lg not-italic py-1;
+    background-color: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+  .prose.help-prose pre { border: 1px solid var(--color-card-border); }
+}
+
 /* Dunkelmodus: farbige Flächen abdunkeln */
 html.dark .ea-alert-info    { background-color: rgba(30, 64, 175, 0.18);  border-color: rgba(96, 165, 250, 0.35); color: #bfdbfe; }
 html.dark .ea-alert-success { background-color: rgba(6, 95, 70, 0.22);    border-color: rgba(52, 211, 153, 0.35); color: #a7f3d0; }
 html.dark .ea-alert-warning { background-color: rgba(146, 64, 14, 0.22);  border-color: rgba(251, 191, 36, 0.35); color: #fde68a; }
 html.dark .ea-alert-danger  { background-color: rgba(153, 27, 27, 0.22);  border-color: rgba(248, 113, 113, 0.35); color: #fecaca; }
 html.dark .ea-btn-danger:hover { background-color: rgba(153, 27, 27, 0.2); color: #fca5a5; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ANWESENHEIT – Kachelansicht (att-*)
+   Tablet quer, Touch zuerst; Farben aus dem Theme, Statusfarben fest.
+   ═══════════════════════════════════════════════════════════════ */
+body.att-board-page {
+  background-color: var(--color-body-bg);
+  color: var(--color-text-primary);
+}
+body.att-board-page .anwesenheit-footer {
+  background: transparent;
+  border-top-color: var(--color-card-border);
+}
+
+@layer components {
+  .att-board {
+    --att-green: #16a34a;
+    --att-red: #dc2626;
+    --att-amber: #d97706;
+    --att-tile-min: 190px;
+    @apply pt-3 pb-24;
+    color: var(--color-text-primary);
+  }
+  .att-board.att-density-large { --att-tile-min: 270px; }
+
+  /* Kopfzeile */
+  .att-head {
+    @apply flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 mb-3 text-white shadow-lg;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  }
+  .att-clock-block { @apply flex items-baseline flex-wrap gap-x-3 gap-y-1; }
+  .att-date { @apply text-sm sm:text-base font-medium; color: rgba(255, 255, 255, 0.85); }
+  .att-clock { @apply text-3xl sm:text-4xl font-bold leading-none tabular-nums; }
+  .att-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .att-badge-holiday { background: rgba(255, 255, 255, 0.2); color: #fff; }
+  .att-stats { @apply grid grid-cols-4 gap-2 w-full sm:w-auto; }
+  .att-stat {
+    @apply flex flex-col items-center justify-center rounded-xl px-3 py-2 min-w-[4.5rem] text-white;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+  }
+  .att-stat-value { @apply text-2xl font-bold leading-none tabular-nums; }
+  .att-stat-label { @apply text-[11px] font-semibold uppercase tracking-wide mt-1; color: rgba(255, 255, 255, 0.85); }
+  button.att-stat { @apply cursor-pointer transition; }
+  button.att-stat:hover { background: rgba(255, 255, 255, 0.24); }
+  button.att-stat.is-active { @apply bg-white; color: var(--color-primary-dark); }
+  button.att-stat.is-active .att-stat-label { color: var(--color-primary-dark); }
+
+  /* Filter-Knopf in der Kopfzeile */
+  .att-head-btn {
+    @apply relative inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer transition;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+  }
+  .att-head-btn:hover { background: rgba(255, 255, 255, 0.24); }
+  .att-head-btn.is-active { @apply bg-white; color: var(--color-primary-dark); }
+  .att-filter-dot {
+    @apply absolute -top-1 -right-1 w-3 h-3 rounded-full;
+    background-color: var(--color-warning-border);
+    border: 2px solid #fff;
+  }
+  .att-filter-dot[hidden] { display: none; }
+
+  /* Werkzeugleiste (kompakt, einblendbar) */
+  .att-filters { @apply mb-2; }
+  .att-filters[hidden] { display: none; }
+  .att-toolbar { @apply flex flex-wrap items-center gap-1.5 mb-1.5; }
+  .att-search { @apply relative flex-1 min-w-[10rem]; }
+  .att-search > i { @apply absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-sm; color: var(--color-text-secondary); }
+  .att-search .ea-input { @apply text-sm py-1.5; padding-left: 2rem; padding-right: 2.25rem; }
+  .att-search .ea-input::-webkit-search-cancel-button { display: none; }
+  .att-search-clear {
+    @apply absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-sm;
+    color: var(--color-text-secondary);
+  }
+  .att-search-clear[hidden] { display: none; }
+  .att-search-clear:hover { background-color: var(--color-surface-subtle); color: var(--color-text-primary); }
+  .att-segment {
+    @apply inline-flex p-0.5 rounded-lg;
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+  }
+  .att-segment-btn {
+    @apply inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition;
+    color: var(--color-text-secondary);
+  }
+  .att-segment-btn:hover { background-color: var(--color-surface-subtle); color: var(--color-text-primary); text-decoration: none; }
+  .att-segment-btn.is-active,
+  .att-segment-btn.is-active:hover { background-color: var(--color-primary); color: #fff; }
+  .att-density-btn { @apply w-8 h-8 text-sm; }
+  .att-view-switch { color: var(--color-text-secondary); }
+  .att-view-select { @apply text-xs font-semibold py-1.5 pl-2 pr-7 w-auto; }
+  .att-chips { @apply flex gap-1.5 mb-1.5 overflow-x-auto pb-0.5; scrollbar-width: none; }
+  .att-chips .ea-chip { @apply py-1 px-3 text-xs whitespace-nowrap; }
+
+  /* Als Nächstes gehen */
+  .att-next {
+    @apply flex items-center gap-3 rounded-2xl px-3 py-2 mb-3;
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+  }
+  .att-next-title { @apply flex items-center gap-2 text-xs font-bold uppercase tracking-wide whitespace-nowrap; color: var(--color-text-secondary); }
+  .att-next-list { @apply flex gap-2 overflow-x-auto flex-1 py-0.5; scrollbar-width: thin; }
+  .att-next-empty { @apply text-sm hidden; color: var(--color-text-secondary); }
+  .att-next.is-empty .att-next-list { @apply hidden; }
+  .att-next.is-empty .att-next-empty { @apply block; }
+  .att-next-item {
+    @apply flex flex-col items-start rounded-xl px-3 py-1.5 text-left whitespace-nowrap transition;
+    background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-card-bg));
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+  .att-next-item:hover { border-color: var(--color-primary); }
+  .att-next-name { @apply text-sm font-semibold; color: var(--color-text-primary); }
+  .att-next-time { @apply text-xs font-medium tabular-nums; color: var(--color-text-secondary); }
+  .att-next-item.is-overdue { background-color: color-mix(in srgb, var(--att-red) 14%, var(--color-card-bg)); border-color: var(--att-red); }
+  .att-next-item.is-overdue .att-next-time { @apply font-bold; color: var(--att-red); }
+
+  /* Abschnitte und Raster */
+  .att-section { @apply mb-4; }
+  .att-section-title {
+    @apply sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 mb-2 rounded-xl text-base font-bold;
+    background-color: color-mix(in srgb, var(--color-body-bg) 88%, transparent);
+    backdrop-filter: blur(6px);
+    color: var(--color-text-primary);
+  }
+  .att-section-count { @apply text-sm font-medium tabular-nums; color: var(--color-text-secondary); }
+  .att-section-count b { color: var(--att-green); }
+  .att-grid { @apply grid gap-2; grid-template-columns: repeat(auto-fill, minmax(min(var(--att-tile-min), 100%), 1fr)); }
+
+  /* Kachel */
+  .att-tile {
+    @apply relative flex flex-col rounded-2xl overflow-hidden transition;
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-left: 5px solid var(--color-card-border);
+  }
+  .att-tile[hidden] { display: none; }
+  .att-tile-main { @apply flex items-start gap-2.5 px-3 pt-3 pb-1 text-left w-full; }
+  .att-tile-main:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+  .att-avatar { @apply w-10 h-10 text-sm; }
+  .att-tile-text { @apply flex flex-col min-w-0 flex-1; }
+  .att-name { @apply font-bold leading-tight break-words; color: var(--color-text-primary); }
+  .att-class { @apply text-xs mt-0.5; color: var(--color-text-secondary); }
+  .att-icons { @apply flex flex-wrap justify-end gap-1 flex-shrink-0 max-w-[4.5rem]; }
+  .att-icon { @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] text-white; }
+  .att-icon-notice { background-color: #ea580c; }
+  .att-icon-notice.is-new { animation: att-pulse 1.6s ease-in-out infinite; }
+  .att-icon-sick { background-color: var(--att-red); }
+  .att-icon-ag { background-color: var(--color-secondary); }
+  .att-icon-expected { background-color: #0891b2; }
+  .att-tile-info { @apply flex flex-wrap gap-x-3 gap-y-1 px-3 pb-2 text-sm min-h-[1.5rem]; color: var(--color-text-secondary); }
+  .att-pickup { @apply font-semibold tabular-nums; color: var(--color-text-primary); }
+  .att-pickup[hidden] { display: none; }
+  /* Schickzeit farbig wie in der Detailansicht (Zustand per JS, nur bei anwesenden Kindern) */
+  .att-pickup[data-state]:not([data-state=""]) { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white; }
+  .att-pickup[data-state="wait"] { background-color: var(--att-green); }
+  .att-pickup[data-state="due"] { background-color: var(--att-amber); }
+  .att-pickup[data-state="late"] { background-color: var(--att-red); }
+  .att-pickup[data-state="open"] { background-color: var(--color-primary); }
+  .att-gone-at, .att-ag-text { @apply hidden; }
+  .att-density-large .att-ag-text { @apply inline; }
+  .att-toggle {
+    @apply mt-auto flex items-center justify-center gap-2 w-full min-h-[48px] text-base font-bold transition;
+    border-top: 1px solid var(--color-card-border);
+  }
+  .att-density-large .att-toggle { @apply min-h-[56px] text-lg; }
+  .att-density-large .att-avatar { @apply w-12 h-12 text-base; }
+  .att-density-large .att-name { @apply text-lg; }
+  .att-toggle-in, .att-toggle-out { @apply hidden items-center gap-2; }
+
+  /* Status: anwesend */
+  .att-tile[data-status="present"] {
+    border-left-color: var(--att-green);
+    background-color: color-mix(in srgb, var(--att-green) 7%, var(--color-card-bg));
+  }
+  .att-tile[data-status="present"] .att-toggle-out { @apply inline-flex; }
+  .att-tile[data-status="present"] .att-toggle { color: var(--att-red); }
+  .att-tile[data-status="present"] .att-toggle:hover { background-color: color-mix(in srgb, var(--att-red) 10%, transparent); }
+
+  /* Status: nicht da (erwartet / nicht erwartet / krank / gegangen) */
+  .att-tile:not([data-status="present"]) .att-toggle-in { @apply inline-flex; }
+  .att-tile:not([data-status="present"]) .att-toggle { background-color: var(--att-green); color: #fff; border-top-color: var(--att-green); }
+  .att-tile:not([data-status="present"]) .att-toggle:hover { filter: brightness(0.94); }
+  .att-tile[data-status="expected"] { border-style: dashed; border-left-style: solid; border-left-color: #0891b2; }
+  .att-tile[data-status="sick"] { border-left-color: var(--att-red); }
+  .att-tile[data-status="sick"] .att-toggle {
+    background-color: var(--color-card-bg); color: var(--att-green); border-top-color: var(--color-card-border);
+  }
+  .att-tile[data-status="absent"] .att-toggle,
+  .att-tile[data-status="gone"] .att-toggle {
+    background-color: var(--color-card-bg); color: var(--att-green); border-top-color: var(--color-card-border);
+  }
+  .att-tile[data-status="absent"] .att-toggle:hover,
+  .att-tile[data-status="gone"] .att-toggle:hover,
+  .att-tile[data-status="sick"] .att-toggle:hover { background-color: color-mix(in srgb, var(--att-green) 10%, var(--color-card-bg)); filter: none; }
+  .att-tile[data-status="gone"] { opacity: 0.55; }
+  .att-tile[data-status="gone"] .att-gone-at { @apply inline; }
+  .att-tile[data-status="gone"] .att-pickup { @apply hidden; }
+
+  /* Überfällig, ausstehend, hervorgehoben */
+  .att-tile.is-overdue { border-left-color: var(--att-red); box-shadow: 0 0 0 2px color-mix(in srgb, var(--att-red) 45%, transparent); }
+  .att-tile.is-overdue .att-pickup:not([data-state]), .att-tile.is-overdue .att-pickup[data-state=""] { color: var(--att-red); }
+  .att-tile.is-pending { opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 45%, transparent); }
+  .att-tile.is-pending .att-toggle { background-color: var(--color-surface-subtle); color: var(--color-text-primary); border-top-color: var(--color-card-border); }
+  .att-tile.is-pending .att-toggle-in,
+  .att-tile.is-pending .att-toggle-out { @apply hidden; }
+  .att-tile.is-pending .att-toggle::after { content: 'Rückgängig'; }
+  .att-tile.is-flash { animation: att-flash 1.6s ease-out; }
+
+  /* Rückgängig-Hinweise */
+  .att-toasts {
+    @apply fixed left-1/2 -translate-x-1/2 bottom-4 z-[60] flex flex-col gap-2 w-[min(28rem,calc(100%-2rem))];
+  }
+  .att-toast {
+    @apply relative flex items-center justify-between gap-3 rounded-xl pl-4 pr-2 py-2 overflow-hidden shadow-xl;
+    background-color: #111827;
+    color: #fff;
+  }
+  .att-toast-text { @apply font-semibold; }
+  .att-toast-undo {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold;
+    color: #fde68a;
+  }
+  .att-toast-undo:hover { background: rgba(255, 255, 255, 0.12); }
+  .att-toast-bar {
+    @apply absolute left-0 bottom-0 h-1 w-full origin-left;
+    background-color: #fde68a;
+    animation-name: att-countdown;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+  .att-empty { @apply mt-2; }
+}
+
+@keyframes att-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes att-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+@keyframes att-flash {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 70%, transparent); }
+  30%  { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-primary) 55%, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .att-icon-notice.is-new, .att-tile.is-flash { animation: none; }
+}

@@ -8,6 +8,9 @@ class CareSetting extends Settings
 {
     public bool $view_detailed_care;
 
+    /** Ansicht der Anwesenheitsliste: simple | detailed | board */
+    public string $view_mode;
+
     public bool $hide_childs_when_absent;
 
     public array $groups_list;
@@ -39,6 +42,47 @@ class CareSetting extends Settings
     public bool $auto_checkin_enabled_ferien;
 
     public string $auto_checkin_time_ferien;
+
+    public const VIEW_MODES = ['simple', 'detailed', 'board'];
+
+    /** Cookie mit der auf diesem Gerät gewählten Ansicht (überschreibt die Einstellung) */
+    public const DEVICE_VIEW_COOKIE = 'attView';
+
+    /**
+     * In den Einstellungen festgelegte Ansicht; fällt auf die alte Ja/Nein-Einstellung zurück.
+     */
+    public function configuredViewMode(): string
+    {
+        return in_array($this->view_mode, self::VIEW_MODES, true)
+            ? $this->view_mode
+            : ($this->view_detailed_care ? 'detailed' : 'simple');
+    }
+
+    /**
+     * Auf diesem Gerät gewählte Ansicht oder null, wenn die Einstellung gilt.
+     */
+    public function deviceViewMode(): ?string
+    {
+        $mode = app()->bound('request') ? request()->cookie(self::DEVICE_VIEW_COOKIE) : null;
+
+        return in_array($mode, self::VIEW_MODES, true) ? $mode : null;
+    }
+
+    /**
+     * Tatsächlich angezeigte Ansicht: Gerätewahl vor Einstellung.
+     */
+    public function viewMode(): string
+    {
+        return $this->deviceViewMode() ?? $this->configuredViewMode();
+    }
+
+    /**
+     * Ansichten, die den Modus „Anwesende und erwartete Kinder“ anbieten.
+     */
+    public function supportsExpectedMode(): bool
+    {
+        return in_array($this->viewMode(), ['detailed', 'board'], true);
+    }
 
     public static function group(): string
     {

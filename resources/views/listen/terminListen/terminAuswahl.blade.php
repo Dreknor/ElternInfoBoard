@@ -4,296 +4,216 @@
 @section('content')
     @php
         $preview ??= false;
-        $canManage = ! $preview && (auth()->id() == $liste->besitzer or auth()->user()->can('edit terminliste'));
+        $canManage ??= ! $preview && (auth()->id() == $liste->besitzer or auth()->user()->can('edit terminliste'));
     @endphp
-    <div class="w-full max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <!-- Back Button -->
-        <div class="flex items-center gap-2">
-            <a href="{{ url('listen') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-colors duration-200">
-                <i class="fas fa-arrow-left"></i>
-                Zurück zur Übersicht
-            </a>
-        </div>
+    <div class="w-full max-w-5xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-5"
+         x-data="{ onlyFree: false, showPast: false, buchen: null, absage: null, neuerTermin: false }"
+         x-init="$watch('buchen', v => v && $nextTick(() => $refs.buchenOk.focus())); $watch('absage', v => v && $nextTick(() => $refs.absageText.focus()))"
+         @keydown.escape.window="buchen = null; absage = null; neuerTermin = false">
 
-        @if($preview)
-            @include('listen.partials.preview_banner')
-        @endif
+        @include('listen.partials.kopf', [
+            'zaehler' => $gesamt > 0 ? "$frei von $gesamt Terminen frei" : null,
+            'werkzeuge' => 'listen.terminListen.werkzeuge',
+        ])
 
-        <!-- Main Card -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden" @if($preview) inert @endif>
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 border-b border-teal-700 @if($liste->active == 0) from-cyan-500 to-cyan-600 border-cyan-700 @endif">
-                <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
-                    <h2 class="text-xl sm:text-2xl font-bold text-white flex flex-wrap items-center gap-2 mb-0">
-                        <i class="fas fa-calendar-check"></i>
-                        {{ $liste->listenname }}
-                        @if($liste->active == 0)
-                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-400 text-yellow-900 rounded-full text-sm font-semibold">
-                                inaktiv
-                            </span>
-                        @endif
+        <div class="space-y-5" @if($preview) inert @endif>
+
+            {{-- Eigene Buchung(en) --}}
+            @if($eigeneTermine->isNotEmpty())
+                <section aria-labelledby="eigene-termine" class="rounded-lg p-4 border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20">
+                    <h2 id="eigene-termine" class="text-base font-bold mb-3 flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        {{ $eigeneTermine->count() > 1 ? 'Ihre Termine' : 'Ihr Termin' }}
                     </h2>
-
-                    @if($canManage)
-                        <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
-                            <button class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200"
-                                    data-toggle="modal" data-target="#createEintragungModal">
-                                <i class="fas fa-plus"></i>
-                                <span>Termin</span>
-                            </button>
-                            <a href="{{ url('listen/' . $liste->id . '/export') }}"
-                               class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200">
-                                <i class="fas fa-print"></i>
-                                <span>Druck</span>
-                            </a>
-                            <a href="{{ route('listen.preview', $liste->id) }}"
-                               class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-amber-700 font-medium rounded-lg transition-colors duration-200">
-                                <i class="fas fa-eye"></i>
-                                <span>Vorschau</span>
-                            </a>
-
-                            {{-- iCal-Download-Dropdown --}}
-                            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                                <button @click="open = !open"
-                                        class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200">
-                                    <i class="fas fa-calendar-download"></i>
-                                    <span>Kalender</span>
-                                    <i class="fas fa-chevron-down text-xs ml-1"></i>
-                                </button>
-                                <div x-show="open"
-                                     x-transition:enter="transition ease-out duration-100"
-                                     x-transition:enter-start="opacity-0 scale-95"
-                                     x-transition:enter-end="opacity-100 scale-100"
-                                     x-transition:leave="transition ease-in duration-75"
-                                     x-transition:leave-start="opacity-100 scale-100"
-                                     x-transition:leave-end="opacity-0 scale-95"
-                                     class="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
-                                     style="display: none;">
-                                    <div class="px-4 py-2 border-b border-gray-100">
-                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">iCal herunterladen (.ics)</p>
-                                    </div>
-                                    <a href="{{ route('listen.ical.export', $liste) }}"
-                                       class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-150">
-                                        <i class="fas fa-calendar-day text-teal-500 w-4"></i>
-                                        <div>
-                                            <div class="font-medium">Termine einzeln</div>
-                                            <div class="text-xs text-gray-500">Jeder Termin als eigener Eintrag</div>
-                                        </div>
-                                    </a>
-                                    <a href="{{ route('listen.ical.export', $liste) }}?block=1"
-                                       class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-150 rounded-b-lg">
-                                        <i class="fas fa-layer-group text-teal-500 w-4"></i>
-                                        <div>
-                                            <div class="font-medium">Als Blöcke</div>
-                                            <div class="text-xs text-gray-500">Aufeinanderfolgende Termine zusammengefasst</div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-
-                            <button type="button" id="showAll"
-                                    class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200">
-                                <i class="fas fa-eye"></i>
-                                <span>Alle</span>
-                            </button>
-                        </div>
-                    @endif
-                </div>
-
-                @if($liste->comment)
-                    <p class="text-teal-100">@safeHtml($liste->comment)</p>
-                @endif
-            </div>
-
-            <!-- Termine List -->
-            <div class="px-6 py-6">
-                @if($liste->termine->count() > 0)
-                    @if($allTermineInPast)
-                        <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
-                            <div class="flex items-start gap-3">
-                                <i class="fas fa-exclamation-triangle mt-1 text-amber-500"></i>
-                                <div>
-                                    <p class="font-semibold">Alle angelegten Termine liegen bereits in der Vergangenheit.</p>
-                                    @if($canManage)
-                                        <p class="text-sm text-amber-800">Mit „Alle“ kannst du sie trotzdem einblenden.</p>
-                                    @else
-                                        <p class="text-sm text-amber-800">Aktuell sind daher keine buchbaren Termine mehr vorhanden.</p>
+                    <ul class="space-y-3 mb-0 pl-0 list-none">
+                        @foreach($eigeneTermine as $termin)
+                            <li class="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg p-3" style="background: var(--color-card-bg);">
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold mb-0" style="color: var(--color-text-primary);">
+                                        {{ $termin->termin->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}
+                                    </p>
+                                    <p class="mb-0" style="color: var(--color-text-primary);">
+                                        {{ $termin->termin->format('H:i') }}–{{ $termin->ende->format('H:i') }} Uhr
+                                    </p>
+                                    @if($termin->comment)
+                                        <p class="text-sm mb-0" style="color: var(--color-text-secondary);">{{ $termin->comment }}</p>
+                                    @endif
+                                    @if($termin->child)
+                                        <p class="text-xs mb-0" style="color: var(--color-text-secondary);"><i class="fas fa-child mr-1" aria-hidden="true"></i>für {{ $termin->child->first_name }}</p>
                                     @endif
                                 </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    @php $bookableChildren = app(\App\Services\App\ListenService::class)->bookableChildren(auth()->user(), $liste); @endphp
-                    <div class="space-y-3">
-                        @foreach($liste->termine->sortBy('termin') as $eintrag)
-                            @include('listen.terminListen.termin', ['bookableChildren' => $bookableChildren])
+                                <div class="flex flex-wrap items-center gap-2">
+                                    @include('listen.partials.kalender_links', ['termin' => $termin])
+                                    <button type="button"
+                                            @click="absage = { id: {{ $termin->id }}, label: @js($termin->termin->format('d.m.Y').', '.$termin->termin->format('H:i').' Uhr'), eltern: true }"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors">
+                                        <i class="fas fa-times" aria-hidden="true"></i> Absagen
+                                    </button>
+                                </div>
+                            </li>
                         @endforeach
+                    </ul>
+                </section>
+            @endif
+
+            @if($gesperrt && ! $canManage)
+                <div class="rounded-lg px-4 py-3 flex items-start gap-3 bg-sky-50 text-sky-900 border border-sky-200 dark:bg-sky-900/20 dark:text-sky-200 dark:border-sky-800" role="status">
+                    <i class="fas fa-info-circle mt-1" aria-hidden="true"></i>
+                    <p class="mb-0 text-sm">
+                        {{ $liste->bookingPerChild() ? 'Für alle Ihre Kinder ist bereits ein Termin gebucht.' : 'Sie haben bereits einen Termin.' }}
+                        Zum Umbuchen bitte zuerst absagen.
+                    </p>
+                </div>
+            @endif
+
+            @if($liste->termine->isEmpty())
+                <div class="rounded-lg p-6 text-center" style="background: var(--color-card-bg); border: 2px dashed var(--color-card-border);">
+                    <i class="fas fa-calendar-times text-3xl mb-2" style="color: var(--color-text-secondary);" aria-hidden="true"></i>
+                    <p class="text-lg mb-0" style="color: var(--color-text-secondary);">Es wurden bisher keine Termine angelegt.</p>
+                    @if($canManage)
+                        <p class="text-sm mt-1 mb-0" style="color: var(--color-text-secondary);">Lege mit „+ Termin“ die ersten Termine an.</p>
+                    @endif
+                </div>
+            @else
+                @if($allTermineInPast)
+                    <div class="rounded-lg px-4 py-3 flex items-start gap-3 bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800">
+                        <i class="fas fa-exclamation-triangle mt-1" aria-hidden="true"></i>
+                        <div>
+                            <p class="font-semibold mb-0">Alle angelegten Termine liegen bereits in der Vergangenheit.</p>
+                            <p class="text-sm mb-0">
+                                {{ $canManage ? 'Mit „Vergangene anzeigen“ kannst du sie trotzdem einblenden.' : 'Aktuell sind daher keine buchbaren Termine mehr vorhanden.' }}
+                            </p>
+                        </div>
                     </div>
-                @else
-                    <div class="bg-gray-50 rounded-lg p-6 text-center border-2 border-dashed border-gray-300">
-                        <i class="fas fa-calendar-times text-4xl text-gray-400 mb-3"></i>
-                        <p class="text-gray-600 text-lg">Es wurden bisher keine Termine angelegt.</p>
+                @elseif($frei === 0 && $eigeneTermine->isEmpty() && ! $canManage)
+                    <div class="rounded-lg px-4 py-3 flex items-start gap-3 bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800">
+                        <i class="fas fa-calendar-times mt-1" aria-hidden="true"></i>
+                        <p class="mb-0 text-sm">
+                            Alle Termine sind vergeben.
+                            @if($liste->ersteller)
+                                Bei Fragen wenden Sie sich an {{ $liste->ersteller->name }}.
+                            @endif
+                        </p>
                     </div>
                 @endif
-            </div>
+
+                {{-- Filter --}}
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                    <label class="inline-flex items-center gap-2 text-sm cursor-pointer" style="color: var(--color-text-primary);">
+                        <input type="checkbox" x-model="onlyFree" class="w-4 h-4 rounded">
+                        Nur freie Termine
+                    </label>
+                    @if($canManage)
+                        <label class="inline-flex items-center gap-2 text-sm cursor-pointer" style="color: var(--color-text-primary);">
+                            <input type="checkbox" x-model="showPast" class="w-4 h-4 rounded">
+                            Vergangene anzeigen
+                        </label>
+                    @endif
+                    <span class="flex items-center gap-3 text-xs ml-auto" style="color: var(--color-text-secondary);" aria-hidden="true">
+                        <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded border-2 border-sky-500"></span> frei</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500"></span> Ihr Termin</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded" style="background: var(--color-card-border);"></span> vergeben</span>
+                    </span>
+                </div>
+
+                <template x-if="onlyFree && {{ $frei }} === 0">
+                    <p class="text-sm" style="color: var(--color-text-secondary);">Es gibt aktuell keine freien Termine.</p>
+                </template>
+
+                {{-- Termine nach Tagen --}}
+                @foreach($tage as $tag)
+                    @php
+                        $hatEigenen = $tag['termine']->contains(fn ($t) => $eigeneTermine->contains('id', $t->id));
+                    @endphp
+                    @continue($tag['vergangen'] && ! $canManage)
+                    <section aria-label="{{ $tag['datum']->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}"
+                             class="rounded-lg overflow-hidden shadow-sm"
+                             style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);"
+                             @if($tag['vergangen']) x-show="showPast" x-cloak
+                             @elseif($tag['frei'] === 0 && ! $hatEigenen) x-show="!onlyFree" @endif>
+                        <h2 class="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3 mb-0 text-base font-bold"
+                            style="background: var(--color-surface-subtle); border-bottom: 1px solid var(--color-card-border); color: var(--color-text-primary);">
+                            <span>
+                                <i class="far fa-calendar mr-1" aria-hidden="true"></i>
+                                {{ $tag['datum']->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}
+                            </span>
+                            <span class="text-sm font-medium {{ $tag['frei'] > 0 ? 'text-sky-700 dark:text-sky-300' : '' }}"
+                                  @if($tag['frei'] === 0) style="color: var(--color-text-secondary);" @endif>
+                                {{ $tag['vergangen'] ? 'vergangen' : $tag['frei'].' von '.$tag['gesamt'].' frei' }}
+                            </span>
+                        </h2>
+                        <div class="p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                            @foreach($tag['termine'] as $termin)
+                                @include('listen.terminListen.termin')
+                            @endforeach
+                        </div>
+                    </section>
+                @endforeach
+            @endif
         </div>
-    </div>
 
-    <!-- Modal zum Anlegen von Terminen -->
-    <div class="modal fade" id="createEintragungModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content rounded-lg">
-                <div class="modal-header bg-gradient-to-r from-teal-500 to-teal-600 border-0">
-                    <h5 class="modal-title text-white font-semibold">
-                        <i class="fas fa-calendar-plus mr-2"></i>
-                        Neuen Termin erstellen
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+        {{-- Dialog: Termin reservieren --}}
+        <div x-show="buchen" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="buchen-titel">
+            <div class="absolute inset-0 bg-black/50" @click="buchen = null"></div>
+            <form method="post" :action="buchen ? @js(url('listen/termine')) + '/' + buchen.id : '#'"
+                  class="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 space-y-4"
+                  style="background: var(--color-card-bg);">
+                @csrf
+                @method('PUT')
+                <h2 id="buchen-titel" class="text-lg font-bold mb-0" style="color: var(--color-text-primary);">Termin reservieren</h2>
+                <div class="rounded-lg p-3" style="background: var(--color-surface-subtle); border: 1px solid var(--color-card-border);">
+                    <p class="text-sm mb-1" style="color: var(--color-text-secondary);">{{ $liste->listenname }}</p>
+                    <p class="font-semibold mb-0" style="color: var(--color-text-primary);" x-text="buchen?.label"></p>
+                    <p class="text-sm mb-0" style="color: var(--color-text-secondary);" x-show="buchen?.kommentar" x-text="buchen?.kommentar"></p>
                 </div>
-                <div class="modal-body p-6">
-                    <form method="post" action="{{ url("listen/termine/$liste->id/store") }}" id="terminForm" class="space-y-4">
-                        @csrf
-
-                        <div>
-                            <label for="termin" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Datum <span class="text-red-500">*</span>
-                            </label>
-                            <input type="date" name="termin" id="termin"
-                                   class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 outline-none"
-                                   required>
-                        </div>
-
-                        <div>
-                            <label for="zeit" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Uhrzeit <span class="text-red-500">*</span>
-                            </label>
-                            <input type="time" name="zeit" id="zeit"
-                                   class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 outline-none"
-                                   required>
-                        </div>
-
-                        <div>
-                            <label for="duration" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Dauer (Minuten)
-                            </label>
-                            <input type="number" name="duration" id="duration"
-                                   class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 outline-none"
-                                   value="{{ $liste->duration }}">
-                        </div>
-
-                        <div>
-                            <label for="comment" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Anmerkung
-                            </label>
-                            <input type="text" name="comment" id="comment"
-                                   class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 outline-none"
-                                   placeholder="z.B. Turnhalle A">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="weekly" class="block text-sm font-semibold text-gray-700 mb-2">
-                                    Wöchentlich?
-                                </label>
-                                <select name="weekly" id="weekly"
-                                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 outline-none">
-                                    <option value="0">Nein</option>
-                                    <option value="1">Ja</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="repeat" class="block text-sm font-semibold text-gray-700 mb-2">
-                                    Anzahl
-                                </label>
-                                <input type="number" name="repeat" id="repeat"
-                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 outline-none"
-                                       min="1" step="1" value="1">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer bg-gray-50 border-t px-6 py-4">
-                    <button type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-colors duration-200"
-                            data-dismiss="modal">
-                        <i class="fas fa-times"></i>
-                        Schließen
-                    </button>
-                    <button type="submit" id="submitBtn" form="terminForm"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
-                        <i class="fas fa-check"></i>
-                        Speichern
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal zur Absage -->
-    <div class="modal fade" id="deleteEintragungModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content rounded-lg">
-                <div class="modal-header bg-gradient-to-r from-red-600 to-red-700 border-0">
-                    <h5 class="modal-title text-white font-semibold">
-                        <i class="fas fa-calendar-times mr-2"></i>
-                        Termin absagen
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body p-6">
-                    <form method="post" action="" id="absagenForm" class="space-y-4">
-                        @csrf
-                        @method('DELETE')
-
-                        <div>
-                            <label for="text" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Nachricht an Teilnehmer
-                            </label>
-                            <textarea name="text" id="text" rows="4"
-                                      class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 outline-none resize-none"
-                                      placeholder="Grund der Absage (optional)"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer bg-gray-50 border-t px-6 py-4">
-                    <button type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-colors duration-200"
-                            data-dismiss="modal">
-                        <i class="fas fa-times"></i>
+                @include('listen.partials.child_select', ['selectSuffix' => 'termin'])
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                    <button type="button" @click="buchen = null"
+                            class="px-4 py-2.5 rounded-lg font-medium" style="border: 1px solid var(--color-card-border); color: var(--color-text-primary);">
                         Abbrechen
                     </button>
-                    <button type="submit" form="absagenForm"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
-                        <i class="fas fa-trash-alt"></i>
-                        Absagen
+                    <button type="submit" x-ref="buchenOk" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-white bg-emerald-600 hover:bg-emerald-700">
+                        <i class="fas fa-check" aria-hidden="true"></i> Verbindlich reservieren
                     </button>
                 </div>
-            </div>
+            </form>
         </div>
+
+        {{-- Dialog: Termin absagen --}}
+        <div x-show="absage" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="absage-titel">
+            <div class="absolute inset-0 bg-black/50" @click="absage = null"></div>
+            <form method="post" :action="absage ? @js(url('listen/termine/absagen')) + '/' + absage.id : '#'"
+                  class="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 space-y-4"
+                  style="background: var(--color-card-bg);">
+                @csrf
+                @method('DELETE')
+                <h2 id="absage-titel" class="text-lg font-bold mb-0" style="color: var(--color-text-primary);">Termin absagen</h2>
+                <p class="mb-0" style="color: var(--color-text-primary);">
+                    Termin am <strong x-text="absage?.label"></strong> wirklich absagen?
+                </p>
+                <div>
+                    <label for="absage-text" class="block text-sm font-semibold mb-1" style="color: var(--color-text-primary);">
+                        Nachricht <span class="font-normal" style="color: var(--color-text-secondary);">(optional)</span>
+                    </label>
+                    <textarea name="text" id="absage-text" rows="3" x-ref="absageText"
+                              class="w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-red-300 resize-none"
+                              style="border: 1px solid var(--color-input-border); background: var(--color-input-bg); color: var(--color-text-primary);"
+                              :placeholder="absage?.eltern ? 'z. B. Grund der Absage' : 'Nachricht an die Familie'"></textarea>
+                </div>
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                    <button type="button" @click="absage = null"
+                            class="px-4 py-2.5 rounded-lg font-medium" style="border: 1px solid var(--color-card-border); color: var(--color-text-primary);">
+                        Abbrechen
+                    </button>
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-white bg-red-600 hover:bg-red-700">
+                        <i class="fas fa-times" aria-hidden="true"></i> Termin absagen
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        @if($canManage)
+            @include('listen.terminListen.neuer_termin')
+        @endif
     </div>
-
 @endsection
-
-@push('js')
-    <script>
-        $('#submitBtn').on('click', function () {
-            $("#terminForm").submit();
-        });
-
-        $('#showAll').on('click', function () {
-            $(this).addClass('d-none');
-            $('.hide').removeClass('d-none');
-        });
-
-        $('.btnAbsage').on('click', function () {
-            const id = $(this).data('terminid');
-            const url = "{{ url('listen/termine/absagen/') }}" + "/" + id;
-            $('#absagenForm').attr('action', url);
-        });
-    </script>
-@endpush

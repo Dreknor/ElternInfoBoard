@@ -427,14 +427,14 @@
                                                     <div class="flex gap-1">
                                                         <button type="button"
                                                                 @click="responses['{{ $checkIn->id }}'] = true"
-                                                                :class="responses['{{ $checkIn->id }}'] === true ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                                :class="responses['{{ $checkIn->id }}'] === true ? 'bg-green-600 text-white shadow-sm border border-green-600' : 'ea-btn-secondary border'"
                                                                 class="px-3 py-1 rounded text-xs font-semibold transition-all"
                                                                 {{ $locked ? 'disabled' : '' }}>
                                                             <i class="fas fa-check"></i> Ja
                                                         </button>
                                                         <button type="button"
                                                                 @click="responses['{{ $checkIn->id }}'] = false"
-                                                                :class="responses['{{ $checkIn->id }}'] === false ? 'bg-red-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                                :class="responses['{{ $checkIn->id }}'] === false ? 'bg-red-500 text-white shadow-sm border border-red-500' : 'ea-btn-secondary border'"
                                                                 class="px-3 py-1 rounded text-xs font-semibold transition-all"
                                                                 {{ $locked ? 'disabled' : '' }}>
                                                             <i class="fas fa-times"></i> Nein

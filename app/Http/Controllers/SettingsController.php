@@ -189,6 +189,7 @@ class SettingsController extends Controller implements HasMiddleware
             case 'care':
                 $validated = $request->validate([
                     'view_detailed_care' => 'nullable|boolean',
+                    'view_mode' => 'nullable|in:'.implode(',', CareSetting::VIEW_MODES),
                     'hide_childs_when_absent' => 'nullable|boolean',
                     'groups_list' => 'nullable|array',
                     'class_list' => 'nullable|array',
@@ -222,7 +223,9 @@ class SettingsController extends Controller implements HasMiddleware
                     \App\Model\Holiday::where('bundesland', $oldBundesland)->delete();
                 }
 
-                $careSettings->view_detailed_care = $validated['view_detailed_care'] ?? false;
+                $careSettings->view_mode = $validated['view_mode']
+                    ?? (($validated['view_detailed_care'] ?? false) ? 'detailed' : 'simple');
+                $careSettings->view_detailed_care = $careSettings->view_mode === 'detailed';
                 $careSettings->hide_childs_when_absent = $validated['hide_childs_when_absent'] ?? false;
                 $careSettings->groups_list = $validated['groups_list'] ?? [];
                 $careSettings->class_list = $validated['class_list'] ?? [];

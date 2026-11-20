@@ -20,12 +20,15 @@ class ChildController extends Controller implements HasMiddleware
         return [
             'auth',
             // Kinder anlegen (store) nur durch das Personal – vorher konnte jedes Konto Kinder zu beliebigen Eltern anlegen
-            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'store', 'createFromSchickzeit', 'edit', 'updateGuardianPhone']),
+            // index prüft selbst auf 'view children overview' oder 'edit schickzeiten'
+            new Middleware('can:edit schickzeiten', only: ['create', 'store', 'createFromSchickzeit', 'edit', 'updateGuardianPhone']),
         ];
     }
 
     public function index()
     {
+        abort_unless(auth()->user()->canAny(['view children overview', 'edit schickzeiten']), 403);
+
         $childs = Child::query()
             ->with(['group', 'class', 'parents'])
             ->orderBy('last_name')
