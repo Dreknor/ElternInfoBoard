@@ -1,4 +1,7 @@
 <div class="container-fluid">
+    <div class="flex justify-end py-1 text-slate-500">
+        @include('anwesenheit.partials.view_switch')
+    </div>
     {{-- id wird von refreshAttendanceList() in index.blade.php zum Austauschen genutzt --}}
     <div class="row" id="groups-container">
         @foreach($groups as $group)

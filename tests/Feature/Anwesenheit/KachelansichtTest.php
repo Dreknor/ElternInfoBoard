@@ -117,6 +117,66 @@ class KachelansichtTest extends TestCase
     }
 
     #[Test]
+    public function device_view_route_sets_and_clears_cookie(): void
+    {
+        $this->configure('simple');
+
+        $this->actingAs($this->staff)->get(route('anwesenheit.view', 'board'))
+            ->assertRedirect(route('anwesenheit.index'))
+            ->assertCookie(CareSetting::DEVICE_VIEW_COOKIE, 'board');
+
+        $this->actingAs($this->staff)->get(route('anwesenheit.view', 'standard'))
+            ->assertRedirect(route('anwesenheit.index'))
+            ->assertCookieExpired(CareSetting::DEVICE_VIEW_COOKIE);
+
+        $this->actingAs($this->staff)->get(url('care/anwesenheit/ansicht/unsinn'))->assertNotFound();
+    }
+
+    #[Test]
+    public function device_view_overrides_setting_in_all_views(): void
+    {
+        $this->configure('simple');
+        $this->child();
+
+        // Ohne Gerätewahl: Einstellung, Umschalter zeigt „Standard“
+        $html = $this->actingAs($this->staff)->get(route('anwesenheit.index'))->assertOk()->getContent();
+        $this->assertStringNotContainsString('id="att-board"', $html);
+        $this->assertStringContainsString('Standard (Einfache Liste)', $html);
+        $this->assertStringContainsString(route('anwesenheit.view', 'board'), $html);
+
+        $markers = [
+            'board' => 'id="att-board"',
+            'detailed' => 'id="sort-schickzeit-btn"',
+            'simple' => 'custom-list-item',
+        ];
+        foreach ($markers as $view => $marker) {
+            $html = $this->actingAs($this->staff)
+                ->withCookie(CareSetting::DEVICE_VIEW_COOKIE, $view)
+                ->get(route('anwesenheit.index'))->assertOk()->getContent();
+
+            $this->assertStringContainsString($marker, $html, "Ansicht $view");
+            $this->assertMatchesRegularExpression(
+                '#<option value="'.preg_quote(route('anwesenheit.view', $view), '#').'"\s+selected#', $html, "Auswahl $view");
+        }
+    }
+
+    #[Test]
+    public function settings_page_shows_configured_view_not_device_view(): void
+    {
+        $this->configure('detailed');
+
+        $settings = new CareSetting;
+        $this->assertSame('detailed', $settings->configuredViewMode());
+
+        request()->cookies->set(CareSetting::DEVICE_VIEW_COOKIE, 'board');
+        $this->assertSame('board', $settings->viewMode());
+        $this->assertSame('detailed', $settings->configuredViewMode());
+
+        request()->cookies->set(CareSetting::DEVICE_VIEW_COOKIE, 'kaputt');
+        $this->assertSame('detailed', $settings->viewMode());
+    }
+
+    #[Test]
     public function settings_store_view_mode(): void
     {
         Permission::findOrCreate('edit settings', 'web');

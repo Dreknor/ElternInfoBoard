@@ -101,6 +101,8 @@
         <button type="button" class="ea-icon-btn att-density-btn" id="att-density" title="Kachelgröße umschalten" aria-label="Kachelgröße umschalten">
             <i class="fas fa-th-large" aria-hidden="true"></i>
         </button>
+
+        @include('anwesenheit.partials.view_switch', ['selectClass' => 'ea-input att-view-select'])
     </div>
 
     @if($displayGroups->count() > 1 || $otherChildren->isNotEmpty())

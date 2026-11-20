@@ -8,9 +8,9 @@
                     Ansicht der Anwesenheitsliste
                 </label>
                 <select class="form-control" name="view_mode" id="care_view_mode">
-                    <option value="simple" @selected($careSettings->viewMode() === 'simple')>Einfache Liste</option>
-                    <option value="detailed" @selected($careSettings->viewMode() === 'detailed')>Detailansicht</option>
-                    <option value="board" @selected($careSettings->viewMode() === 'board')>Kachelansicht (für Tablets im Hortalltag)</option>
+                    <option value="simple" @selected($careSettings->configuredViewMode() === 'simple')>Einfache Liste</option>
+                    <option value="detailed" @selected($careSettings->configuredViewMode() === 'detailed')>Detailansicht</option>
+                    <option value="board" @selected($careSettings->configuredViewMode() === 'board')>Kachelansicht (für Tablets im Hortalltag)</option>
                 </select>
             </div>
             <div class="col-md-6 col-sm-12 m-auto">
@@ -18,6 +18,7 @@
                     <b>Einfache Liste:</b> kompakte Liste je Gruppe und Klasse.<br>
                     <b>Detailansicht:</b> zusätzlich nächste Schickzeit, Gruppenfilter und Suche.<br>
                     <b>Kachelansicht:</b> große Kacheln mit Ein-Tipp-An-/Abmelden (mit Rückgängig), Leiste „Als Nächstes gehen“, Zähler, Filter und Suche. Übernimmt das Design-Theme.
+                    <br><i>Jedes Gerät kann in der Anwesenheitsliste eine eigene Ansicht wählen; diese Einstellung gilt für alle übrigen.</i>
                 </div>
             </div>
         </div>

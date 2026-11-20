@@ -62,6 +62,10 @@
                     </button>
                 </div>
 
+                <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white/80 px-2 py-1.5 text-slate-500">
+                    @include('anwesenheit.partials.view_switch')
+                </div>
+
                 <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white/80 px-2 py-1.5">
                     <a href="{{url('/home')}}" class="inline-flex items-center rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-1" title="Zurück zur Übersicht">
                         <i class="fas fa-arrow-left mr-1"></i> Zurück

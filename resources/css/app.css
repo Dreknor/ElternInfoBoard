@@ -2246,6 +2246,8 @@ body.att-board-page .anwesenheit-footer {
   .att-segment-btn.is-active,
   .att-segment-btn.is-active:hover { background-color: var(--color-primary); color: #fff; }
   .att-density-btn { @apply w-8 h-8 text-sm; }
+  .att-view-switch { color: var(--color-text-secondary); }
+  .att-view-select { @apply text-xs font-semibold py-1.5 pl-2 pr-7 w-auto; }
   .att-chips { @apply flex gap-1.5 mb-1.5 overflow-x-auto pb-0.5; scrollbar-width: none; }
   .att-chips .ea-chip { @apply py-1 px-3 text-xs whitespace-nowrap; }
 

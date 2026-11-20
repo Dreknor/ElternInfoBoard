@@ -45,14 +45,35 @@ class CareSetting extends Settings
 
     public const VIEW_MODES = ['simple', 'detailed', 'board'];
 
+    /** Cookie mit der auf diesem Gerät gewählten Ansicht (überschreibt die Einstellung) */
+    public const DEVICE_VIEW_COOKIE = 'attView';
+
     /**
-     * Gültige Ansicht der Anwesenheitsliste; fällt auf die alte Ja/Nein-Einstellung zurück.
+     * In den Einstellungen festgelegte Ansicht; fällt auf die alte Ja/Nein-Einstellung zurück.
      */
-    public function viewMode(): string
+    public function configuredViewMode(): string
     {
         return in_array($this->view_mode, self::VIEW_MODES, true)
             ? $this->view_mode
             : ($this->view_detailed_care ? 'detailed' : 'simple');
+    }
+
+    /**
+     * Auf diesem Gerät gewählte Ansicht oder null, wenn die Einstellung gilt.
+     */
+    public function deviceViewMode(): ?string
+    {
+        $mode = app()->bound('request') ? request()->cookie(self::DEVICE_VIEW_COOKIE) : null;
+
+        return in_array($mode, self::VIEW_MODES, true) ? $mode : null;
+    }
+
+    /**
+     * Tatsächlich angezeigte Ansicht: Gerätewahl vor Einstellung.
+     */
+    public function viewMode(): string
+    {
+        return $this->deviceViewMode() ?? $this->configuredViewMode();
     }
 
     /**
