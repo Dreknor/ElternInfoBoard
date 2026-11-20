@@ -175,7 +175,7 @@
                     <i class="fas fa-calculator"></i> Vorschau berechnen
                 </button>
                 <template x-if="preview">
-                    <div class="table-responsive"><table class="table table-sm mt-2 bg-white">
+                    <div class="table-responsive"><table class="table table-sm mt-2">
                         <thead><tr><th></th><th>Einheiten</th><th>Soll (h)</th><th>Ist (h)</th><th>Offen (h)</th><th>Beitrag (€)</th></tr></thead>
                         <tbody>
                             <tr><td>aktuell</td><td x-text="preview.aktuell.einheiten"></td><td x-text="preview.aktuell.soll_stunden"></td><td x-text="preview.aktuell.ist_stunden"></td><td x-text="preview.aktuell.offen_stunden"></td><td x-text="preview.aktuell.beitrag"></td></tr>
