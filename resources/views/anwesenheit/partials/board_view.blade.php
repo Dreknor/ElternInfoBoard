@@ -169,7 +169,7 @@
 
                             // Schickzeit heute: früheste Angabe zählt
                             $pickFrom = $pickDeadline = null;
-                            $pickLabel = '';
+                            $pickLabel = $pickType = '';
                             foreach ($child->getSchickzeitenForToday() ?? [] as $sz) {
                                 if ($sz->type === 'genau' && $sz->time) {
                                     $from = $deadline = $minutes($sz->time);
@@ -187,6 +187,7 @@
                                     $pickFrom = $from;
                                     $pickDeadline = $deadline;
                                     $pickLabel = $label;
+                                    $pickType = $sz->type === 'genau' ? 'genau' : 'ab';
                                 }
                             }
 
@@ -223,6 +224,7 @@
                                  data-pick-from="{{ $pickFrom }}"
                                  data-pick-deadline="{{ $pickDeadline }}"
                                  data-pick-label="{{ $pickLabel }}"
+                                 data-pick-type="{{ $pickType }}"
                                  data-gone-at="{{ $status === 'gone' ? $checkIn?->checked_out_at?->format('H:i') : '' }}">
                             <button type="button" class="att-tile-main child-item"
                                     data-child='@json($childData)'
@@ -389,6 +391,26 @@
                 return statusOf(tile) === 'present' && deadline !== '' && Number(deadline) < nowMinutes();
             }
 
+            /*
+             * Farbe der Schickzeit wie in der Detailansicht (nur für anwesende Kinder):
+             * wait = grün (noch nicht so weit), due = gelb (Abholfenster offen),
+             * late = rot (spätestens/genau überschritten), open = blau (sonst)
+             */
+            function pickState(tile) {
+                if (statusOf(tile) !== 'present' || !tile.dataset.pickType) return '';
+                const now = nowMinutes();
+                const from = tile.dataset.pickFrom === '' ? null : Number(tile.dataset.pickFrom);
+                const deadline = tile.dataset.pickDeadline === '' ? null : Number(tile.dataset.pickDeadline);
+                if (tile.dataset.pickType === 'genau') {
+                    if (from === null) return 'open';
+                    return now < from ? 'wait' : 'late';
+                }
+                if (from !== null && now < from) return 'wait';
+                if (deadline !== null && now > deadline) return 'late';
+                if (from !== null && deadline !== null) return 'due';
+                return 'open';
+            }
+
             function render() {
                 applyPendingVisuals();
                 const search = state.search.trim().toLowerCase();
@@ -414,6 +436,8 @@
                             : scoped && matchesMode(status, tile);
                         tile.hidden = !show;
                         tile.classList.toggle('is-overdue', isOverdue(tile));
+                        const pickup = tile.querySelector('.att-pickup');
+                        if (pickup) pickup.dataset.state = pickState(tile);
                         if (show) visible++;
                     });
 

@@ -2309,6 +2309,12 @@ body.att-board-page .anwesenheit-footer {
   .att-tile-info { @apply flex flex-wrap gap-x-3 gap-y-1 px-3 pb-2 text-sm min-h-[1.5rem]; color: var(--color-text-secondary); }
   .att-pickup { @apply font-semibold tabular-nums; color: var(--color-text-primary); }
   .att-pickup[hidden] { display: none; }
+  /* Schickzeit farbig wie in der Detailansicht (Zustand per JS, nur bei anwesenden Kindern) */
+  .att-pickup[data-state]:not([data-state=""]) { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white; }
+  .att-pickup[data-state="wait"] { background-color: var(--att-green); }
+  .att-pickup[data-state="due"] { background-color: var(--att-amber); }
+  .att-pickup[data-state="late"] { background-color: var(--att-red); }
+  .att-pickup[data-state="open"] { background-color: var(--color-primary); }
   .att-gone-at, .att-ag-text { @apply hidden; }
   .att-density-large .att-ag-text { @apply inline; }
   .att-toggle {
@@ -2351,7 +2357,7 @@ body.att-board-page .anwesenheit-footer {
 
   /* Überfällig, ausstehend, hervorgehoben */
   .att-tile.is-overdue { border-left-color: var(--att-red); box-shadow: 0 0 0 2px color-mix(in srgb, var(--att-red) 45%, transparent); }
-  .att-tile.is-overdue .att-pickup { color: var(--att-red); }
+  .att-tile.is-overdue .att-pickup:not([data-state]), .att-tile.is-overdue .att-pickup[data-state=""] { color: var(--att-red); }
   .att-tile.is-pending { opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 45%, transparent); }
   .att-tile.is-pending .att-toggle { background-color: var(--color-surface-subtle); color: var(--color-text-primary); border-top-color: var(--color-card-border); }
   .att-tile.is-pending .att-toggle-in,

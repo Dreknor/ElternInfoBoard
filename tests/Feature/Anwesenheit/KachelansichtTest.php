@@ -117,6 +117,28 @@ class KachelansichtTest extends TestCase
     }
 
     #[Test]
+    public function board_tile_carries_pickup_type_for_coloring(): void
+    {
+        $this->configure('board');
+        $child = $this->child();
+        $child->checkIns()->create(['date' => today(), 'checked_in' => true, 'checked_out' => false]);
+        \App\Model\Schickzeiten::create([
+            'child_id' => $child->id,
+            'users_id' => $this->staff->id,
+            'child_name' => $child->first_name,
+            'specific_date' => today(),
+            'type' => 'ab',
+            'time_ab' => '14:00:00',
+            'time_spaet' => '15:30:00',
+        ]);
+
+        $html = $this->actingAs($this->staff)->get(route('anwesenheit.index'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/data-child-id="'.$child->id.'".*?data-pick-from="840"\s+data-pick-deadline="930".*?data-pick-type="ab"/s', $html);
+    }
+
+    #[Test]
     public function device_view_route_sets_and_clears_cookie(): void
     {
         $this->configure('simple');
