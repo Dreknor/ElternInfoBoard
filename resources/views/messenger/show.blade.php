@@ -325,13 +325,13 @@ function cancelReply() {
 }
 
 function openEditModal(id, body) {
-    document.getElementById('editForm').action = '/messenger/message/' + id;
+    document.getElementById('editForm').action = '{{ url('messenger/message') }}/' + id;
     document.getElementById('editBody').value = body;
     document.getElementById('editModal').classList.remove('hidden');
 }
 
 function openReportModal(id) {
-    document.getElementById('reportForm').action = '/messenger/message/' + id + '/report';
+    document.getElementById('reportForm').action = '{{ url('messenger/message') }}/' + id + '/report';
     document.getElementById('reportModal').classList.remove('hidden');
 }
 

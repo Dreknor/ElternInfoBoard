@@ -1201,7 +1201,7 @@ $(document).ready(function() {
         let child_id = $(this).data('child_id');
         let notification = $(this).data('notification');
         $.ajax({
-            url: '/child/' + child_id + '/notification',
+            url: '{{ url('child') }}/' + child_id + '/notification',
             type: 'POST',
             data: { _token: '{{csrf_token()}}', child_id: child_id, notification: notification == 1 ? 0 : 1 },
             success: function(data) {

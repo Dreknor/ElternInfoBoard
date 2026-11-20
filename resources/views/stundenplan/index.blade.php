@@ -172,7 +172,7 @@ function loadClassTimetable(className) {
     `;
 
     // Fetch timetable for selected class
-    window.location.href = `/stundenplan/klassen/${className}`;
+    window.location.href = `{{ url('stundenplan/klassen') }}/${className}`;
 }
 
 function loadTeacherTimetable(teacherName) {
@@ -195,7 +195,7 @@ function loadTeacherTimetable(teacherName) {
     `;
 
     // Fetch timetable for selected teacher
-    window.location.href = `/stundenplan/lehrer/${teacherName}`;
+    window.location.href = `{{ url('stundenplan/lehrer') }}/${teacherName}`;
 }
 
 // Add event listener for teacher select

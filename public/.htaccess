@@ -4,7 +4,8 @@
     </IfModule>
 
     RewriteEngine On
-    RewriteBase /
+    # Kein RewriteBase: Regeln gelten relativ zu diesem Ordner, damit die App
+    # auch in einem Unterverzeichnis läuft (index.php statt /index.php).
 
     # Suppress 404 errors for source map files (development only)
     RewriteCond %{REQUEST_URI} \.map$

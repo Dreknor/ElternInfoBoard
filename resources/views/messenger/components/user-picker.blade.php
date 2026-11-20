@@ -88,7 +88,7 @@ if (searchInput) {
 function startDirect(userId) {
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/messenger/direct/' + userId;
+    form.action = '{{ url('messenger/direct') }}/' + userId;
     const csrf = document.createElement('input');
     csrf.type  = 'hidden';
     csrf.name  = '_token';

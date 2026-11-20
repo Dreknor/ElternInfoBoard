@@ -16,12 +16,14 @@ const STATIC_DESTINATIONS = ['style', 'script', 'image', 'font', 'manifest'];
 
 // App-Shell: nur garantiert vorhandene, statische Assets.
 // Wird "best effort" gecacht – fehlende Dateien brechen die Installation NICHT ab.
+// Pfade relativ zum Scope, damit auch eine Installation im Unterverzeichnis funktioniert.
+const SCOPE = self.registration.scope;
 const APP_SHELL = [
-    '/',
-    '/img/app_logo.png',
-    '/favicon.ico',
-    '/img/icons/icon-192.png',
-];
+    '',
+    'img/app_logo.png',
+    'favicon.ico',
+    'img/icons/icon-192.png',
+].map((path) => new URL(path, SCOPE).href);
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
@@ -72,7 +74,7 @@ self.addEventListener('fetch', (event) => {
             fetch(request).catch(() =>
                 caches
                     .match(request)
-                    .then((res) => res || caches.match('/'))
+                    .then((res) => res || caches.match(SCOPE))
                     .then((res) => res || offlineResponse())
             )
         );
@@ -126,8 +128,8 @@ self.addEventListener('push', function (e) {
 });
 
 self.addEventListener('notificationclick', function (event) {
-    // In Service-Worker-Kontext ist "window" nicht verfügbar -> self.location verwenden
-    const appUrl = self.location.origin;
+    // Startseite der Installation (Scope des Service Workers, auch im Unterverzeichnis)
+    const appUrl = SCOPE;
 
     event.notification.close();
     event.waitUntil(

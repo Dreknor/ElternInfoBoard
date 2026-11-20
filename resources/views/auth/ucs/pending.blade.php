@@ -22,6 +22,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('/css/all.css') }}?v=1" rel="stylesheet">
+    @include('include.base-path')
     @vite(['resources/css/app.css'])
 
     <style>

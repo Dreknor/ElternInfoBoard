@@ -76,12 +76,17 @@
         });
     }
 
+    // Installationspfad (leer in der Domain-Wurzel), gesetzt von include/base-path.blade.php
+    function appBase() {
+        return window.appBasePath || '';
+    }
+
     function initSW() {
         if (!('serviceWorker' in navigator)) {
             return;
         }
 
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register(appBase() + '/sw.js', { scope: appBase() + '/' })
             .then(() => {
                 if (pushSupported() && Notification.permission === 'granted' && !optedOut()) {
                     subscribeUser();
@@ -161,7 +166,7 @@
     function storePushSubscription(pushSubscription) {
         const token = document.querySelector('meta[name=csrf-token]').getAttribute('content');
 
-        return fetch('/push', {
+        return fetch(appBase() + '/push', {
             method: 'POST',
             body: JSON.stringify(Object.assign(pushSubscription.toJSON(), { platform: platform() })),
             headers: {

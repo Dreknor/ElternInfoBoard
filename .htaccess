@@ -1,18 +1,23 @@
+# Greift nur, wenn der Webserver auf den Projektordner statt auf public/ zeigt
+# (z. B. Shared Hosting mit Aufruf über …/elterninfoboard/public/).
+# Empfohlen bleibt: DocumentRoot direkt auf public/ setzen.
+#
+# Öffentlich ist nur public/. Alles andere (.env, storage/, vendor/, config/ …)
+# wird gesperrt; der Aufruf des Projektordners selbst leitet nach public/ weiter.
+
 <IfModule mod_rewrite.c>
- <IfModule mod_negotiation.c>
+    <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
-RewriteEngine On
-RewriteBase /
 
-RewriteCond %{REQUEST_FILENAME} -d [OR]
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^ ^$1 [N]
+    RewriteEngine On
 
-RewriteCond %{REQUEST_URI} (\.\w+$) [NC]
-RewriteRule ^(.*)$ public/$1
+    RewriteRule ^public(/.*)?$ - [L]
+    RewriteRule ^$ %{REQUEST_URI}public/ [R=302,L]
+    RewriteRule ^ - [F]
+</IfModule>
 
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^ index.php
+# Ohne mod_rewrite: nichts aus dem Projektordner ausliefern
+<IfModule !mod_rewrite.c>
+    Require all denied
 </IfModule>

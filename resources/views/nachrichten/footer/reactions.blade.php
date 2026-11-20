@@ -127,7 +127,7 @@
 
             // AJAX request to react
             $.ajax({
-                url: '/posts/' + postId + '/react/' + reactionType,
+                url: '{{ url('posts') }}/' + postId + '/react/' + reactionType,
                 type: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -168,7 +168,7 @@
                 error: function(xhr, status, error) {
                     console.error('Error reacting to post:', error);
                     // Fallback to redirect if AJAX fails
-                    window.location.href = '/posts/' + postId + '/react/' + reactionType;
+                    window.location.href = '{{ url('posts') }}/' + postId + '/react/' + reactionType;
                 }
             });
         }

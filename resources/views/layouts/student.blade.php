@@ -25,6 +25,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('include.base-path')
     <meta name="robots" content="noindex">
     <meta name="theme-color" content="#1f6feb">
     <link rel="shortcut icon" href="{{ asset('img/app_logo.png') }}" type="image/x-icon">

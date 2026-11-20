@@ -6,7 +6,7 @@
 <div class="container mx-auto px-4 py-8">
     <!-- Header with back button -->
     <div class="mb-8">
-        <a href="/stundenplan" class="inline-flex items-center mb-4 hover:underline"
+        <a href="{{ url('stundenplan') }}" class="inline-flex items-center mb-4 hover:underline"
            style="color: var(--color-widget-primary-from)">
             <i class="fas fa-arrow-left mr-2"></i>
             {{ __('stundenplan.back_to_overview') }}

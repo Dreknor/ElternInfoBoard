@@ -100,6 +100,8 @@ cd elterninfo
 
 Den Webserver so einrichten, dass das Document-Root auf `public/` zeigt. Die Verzeichnisse `storage/` und `bootstrap/cache/` müssen für den Webserver-Benutzer beschreibbar sein.
 
+> **Installation in einem Unterverzeichnis** (z. B. Shared Hosting ohne eigene (Sub-)Domain, Aufruf über `https://schule.de/elterninfoboard/public/`) wird unterstützt: Livewire, Schriften, Manifest, Service Worker und die JavaScript-Aufrufe arbeiten relativ zum Installationspfad. `APP_URL` auf die vollständige Adresse inklusive Pfad setzen (`https://schule.de/elterninfoboard/public`). Die `.htaccess` im Projektordner sperrt dann alles außerhalb von `public/` (`.env`, `storage/`, `vendor/` …) und leitet den Aufruf des Projektordners nach `public/` weiter. Prüfen: `https://schule.de/elterninfoboard/.env` muss **403** liefern. Eine eigene (Sub-)Domain mit Document-Root auf `public/` bleibt die empfohlene Variante.
+
 ### 2. Umgebungsdatei anlegen
 
 ```bash

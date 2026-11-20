@@ -337,7 +337,7 @@
         button.disabled = true;
         button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Lädt...';
 
-        fetch(`/post/${postId}/readReceipt/${userId}`, {
+        fetch(`{{ url('post') }}/${postId}/readReceipt/${userId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

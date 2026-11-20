@@ -42,6 +42,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\EnsureUserHasEmail::class,
         ]);
 
+        // Betrieb in einem Unterverzeichnis: Livewire-Script unter dem Installationspfad einbinden
+        $middleware->append(\App\Http\Middleware\ApplyBasePath::class);
+
         // Sicherheits-Header für alle Antworten (Web und API)
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
