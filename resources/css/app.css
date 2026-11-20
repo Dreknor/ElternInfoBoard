@@ -2082,6 +2082,72 @@ html.dark {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   HILFE – Themenkarten im Drawer und Artikel-Typografie
+   ═══════════════════════════════════════════════════════════════ */
+@layer components {
+  .help-topic-card {
+    @apply transition;
+    border: 1px solid var(--color-card-border);
+    background-color: var(--color-card-bg);
+  }
+  .help-topic-card:hover {
+    border-color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 6%, var(--color-card-bg));
+    text-decoration: none;
+  }
+  .help-topic-card-highlight {
+    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-card-border));
+    background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-card-bg));
+  }
+  .help-topic-icon {
+    background-color: var(--color-surface-subtle);
+    color: var(--color-text-secondary);
+  }
+  .help-topic-card-highlight .help-topic-icon,
+  .help-topic-card:hover .help-topic-icon {
+    background-color: var(--color-primary);
+    color: #fff;
+  }
+  .help-topic-chevron { color: var(--color-text-secondary); }
+  .help-topic-card:hover .help-topic-chevron { color: var(--color-primary); }
+
+  .help-muted-link { color: var(--color-text-secondary); }
+  .help-muted-link:hover { color: var(--color-text-primary); text-decoration: none; }
+
+  /* Markdown-Inhalt: Typografie-Farben aus dem Theme */
+  .prose.help-prose {
+    --tw-prose-body: var(--color-text-primary);
+    --tw-prose-headings: var(--color-text-primary);
+    --tw-prose-lead: var(--color-text-secondary);
+    --tw-prose-links: var(--color-primary);
+    --tw-prose-bold: var(--color-text-primary);
+    --tw-prose-counters: var(--color-text-secondary);
+    --tw-prose-bullets: color-mix(in srgb, var(--color-primary) 60%, transparent);
+    --tw-prose-hr: var(--color-card-border);
+    --tw-prose-quotes: var(--color-text-primary);
+    --tw-prose-quote-borders: var(--color-primary);
+    --tw-prose-captions: var(--color-text-secondary);
+    --tw-prose-code: var(--color-text-primary);
+    --tw-prose-pre-code: var(--color-text-primary);
+    --tw-prose-pre-bg: var(--color-surface-subtle);
+    --tw-prose-th-borders: var(--color-card-border);
+    --tw-prose-td-borders: var(--color-card-border);
+  }
+  .prose.help-prose a:hover { color: var(--color-primary-dark); }
+  .prose.help-prose code {
+    @apply rounded px-1 py-0.5 font-medium;
+    background-color: var(--color-surface-subtle);
+  }
+  .prose.help-prose code::before,
+  .prose.help-prose code::after { content: none; }
+  .prose.help-prose blockquote {
+    @apply rounded-r-lg not-italic py-1;
+    background-color: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+  .prose.help-prose pre { border: 1px solid var(--color-card-border); }
+}
+
 /* Dunkelmodus: farbige Flächen abdunkeln */
 html.dark .ea-alert-info    { background-color: rgba(30, 64, 175, 0.18);  border-color: rgba(96, 165, 250, 0.35); color: #bfdbfe; }
 html.dark .ea-alert-success { background-color: rgba(6, 95, 70, 0.22);    border-color: rgba(52, 211, 153, 0.35); color: #a7f3d0; }
