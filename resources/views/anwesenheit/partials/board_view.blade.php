@@ -61,9 +61,17 @@
                 <span class="att-stat-label">krank</span>
             </div>
         </div>
+        <button type="button" class="att-head-btn" id="att-filters-toggle"
+                aria-expanded="false" aria-controls="att-filters" title="Filter ein-/ausblenden">
+            <i class="fas fa-sliders-h" aria-hidden="true"></i>
+            <span>Filter</span>
+            <span class="att-filter-dot" id="att-filter-dot" hidden aria-hidden="true"></span>
+            <span class="sr-only" id="att-filter-dot-sr" hidden>(aktiv)</span>
+        </button>
     </header>
 
-    {{-- Werkzeugleiste --}}
+    {{-- Filterleiste (einblendbar, pro Gerät gemerkt) --}}
+    <div class="att-filters" id="att-filters" hidden>
     <div class="att-toolbar">
         <div class="att-search">
             <i class="fas fa-search" aria-hidden="true"></i>
@@ -111,6 +119,7 @@
             @endforeach
         </div>
     @endif
+    </div>
 
     {{-- Als Nächstes gehen (wird im Browser aus den Kacheln berechnet) --}}
     <section class="att-next" id="att-next" aria-label="Als Nächstes gehen">
@@ -297,6 +306,7 @@
                 cls: store.get('class', ''),
                 sort: store.get('sort', 'name'),
                 density: store.get('density', 'compact'),
+                filtersOpen: store.get('filtersOpen', '0') === '1',
                 search: '',
                 onlyMissing: false,
             };
@@ -469,6 +479,15 @@
                 missing.classList.toggle('is-active', state.onlyMissing);
                 missing.setAttribute('aria-pressed', state.onlyMissing);
                 document.getElementById('att-search-clear').hidden = state.search === '';
+
+                // Filterleiste ein-/ausgeblendet; Punkt am Knopf zeigt aktive Filter bei eingeklappter Leiste
+                document.getElementById('att-filters').hidden = !state.filtersOpen;
+                const toggleBtn = document.getElementById('att-filters-toggle');
+                toggleBtn.setAttribute('aria-expanded', state.filtersOpen);
+                toggleBtn.classList.toggle('is-active', state.filtersOpen);
+                const filtered = !state.filtersOpen && (state.group !== '' || state.cls !== '' || state.search.trim() !== '');
+                document.getElementById('att-filter-dot').hidden = !filtered;
+                document.getElementById('att-filter-dot-sr').hidden = !filtered;
             }
 
             // Ungültige gespeicherte Filter (z. B. Gruppe entfernt) zurücksetzen
@@ -565,6 +584,13 @@
 
                 const sortBtn = event.target.closest('[data-sort]');
                 if (sortBtn) { state.sort = sortBtn.dataset.sort; store.set('sort', state.sort); render(); return; }
+
+                if (event.target.closest('#att-filters-toggle')) {
+                    state.filtersOpen = !state.filtersOpen;
+                    store.set('filtersOpen', state.filtersOpen ? '1' : '0');
+                    render();
+                    return;
+                }
 
                 if (event.target.closest('#att-filter-missing')) { state.onlyMissing = !state.onlyMissing; render(); return; }
 

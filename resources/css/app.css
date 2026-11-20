@@ -2204,33 +2204,50 @@ body.att-board-page .anwesenheit-footer {
   button.att-stat.is-active { @apply bg-white; color: var(--color-primary-dark); }
   button.att-stat.is-active .att-stat-label { color: var(--color-primary-dark); }
 
-  /* Werkzeugleiste */
-  .att-toolbar { @apply flex flex-wrap items-center gap-2 mb-2; }
-  .att-search { @apply relative flex-1 min-w-[12rem]; }
-  .att-search > i { @apply absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none; color: var(--color-text-secondary); }
-  .att-search .ea-input { @apply text-base py-3; padding-left: 2.5rem; padding-right: 3rem; }
+  /* Filter-Knopf in der Kopfzeile */
+  .att-head-btn {
+    @apply relative inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer transition;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+  }
+  .att-head-btn:hover { background: rgba(255, 255, 255, 0.24); }
+  .att-head-btn.is-active { @apply bg-white; color: var(--color-primary-dark); }
+  .att-filter-dot {
+    @apply absolute -top-1 -right-1 w-3 h-3 rounded-full;
+    background-color: var(--color-warning-border);
+    border: 2px solid #fff;
+  }
+  .att-filter-dot[hidden] { display: none; }
+
+  /* Werkzeugleiste (kompakt, einblendbar) */
+  .att-filters { @apply mb-2; }
+  .att-filters[hidden] { display: none; }
+  .att-toolbar { @apply flex flex-wrap items-center gap-1.5 mb-1.5; }
+  .att-search { @apply relative flex-1 min-w-[10rem]; }
+  .att-search > i { @apply absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-sm; color: var(--color-text-secondary); }
+  .att-search .ea-input { @apply text-sm py-1.5; padding-left: 2rem; padding-right: 2.25rem; }
   .att-search .ea-input::-webkit-search-cancel-button { display: none; }
   .att-search-clear {
-    @apply absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg flex items-center justify-center text-lg;
+    @apply absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-sm;
     color: var(--color-text-secondary);
   }
   .att-search-clear[hidden] { display: none; }
   .att-search-clear:hover { background-color: var(--color-surface-subtle); color: var(--color-text-primary); }
   .att-segment {
-    @apply inline-flex p-1 rounded-xl;
+    @apply inline-flex p-0.5 rounded-lg;
     background-color: var(--color-card-bg);
     border: 1px solid var(--color-card-border);
   }
   .att-segment-btn {
-    @apply inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition;
+    @apply inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition;
     color: var(--color-text-secondary);
   }
   .att-segment-btn:hover { background-color: var(--color-surface-subtle); color: var(--color-text-primary); text-decoration: none; }
   .att-segment-btn.is-active,
   .att-segment-btn.is-active:hover { background-color: var(--color-primary); color: #fff; }
-  .att-density-btn { @apply w-11 h-11 text-base; }
-  .att-chips { @apply flex gap-2 mb-2 overflow-x-auto pb-1; scrollbar-width: none; }
-  .att-chips .ea-chip { @apply py-2 px-4 whitespace-nowrap; }
+  .att-density-btn { @apply w-8 h-8 text-sm; }
+  .att-chips { @apply flex gap-1.5 mb-1.5 overflow-x-auto pb-0.5; scrollbar-width: none; }
+  .att-chips .ea-chip { @apply py-1 px-3 text-xs whitespace-nowrap; }
 
   /* Als Nächstes gehen */
   .att-next {
