@@ -470,6 +470,66 @@ class MessengerTest extends TestCase
     }
 
     #[Test]
+    public function api_send_rejects_reply_to_message_from_another_conversation(): void
+    {
+        // Eigene Konversation von userA
+        $ownConv = $this->createGroupConversation($this->userA, $this->userB);
+
+        // Fremde Konversation, an der userA NICHT beteiligt ist, mit einer Nachricht
+        $strangerA = User::factory()->create(['password_changed_at' => now()]);
+        $strangerB = User::factory()->create(['password_changed_at' => now()]);
+        $foreignConv = $this->createGroupConversation($strangerA, $strangerB);
+        $foreignMessage = Message::create([
+            'conversation_id' => $foreignConv->id,
+            'sender_id'       => $strangerA->id,
+            'body'            => 'Geheime fremde Nachricht',
+            'type'            => 'text',
+        ]);
+
+        Sanctum::actingAs($this->userA);
+
+        // reply_to_id auf die FREMDE Nachricht -> muss abgelehnt werden (IDOR-Schutz)
+        $this->postJson("/api/messenger/conversations/{$ownConv->id}/messages", [
+                'body'        => 'Versuch, fremde Nachricht zu referenzieren',
+                'reply_to_id' => $foreignMessage->id,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('reply_to_id');
+
+        // Es darf KEINE Nachricht mit dem fremden reply_to_id angelegt worden sein
+        $this->assertDatabaseMissing('messages', [
+            'conversation_id' => $ownConv->id,
+            'reply_to_id'     => $foreignMessage->id,
+        ]);
+    }
+
+    #[Test]
+    public function api_send_allows_reply_to_message_within_same_conversation(): void
+    {
+        $conv = $this->createGroupConversation($this->userA, $this->userB);
+        $original = Message::create([
+            'conversation_id' => $conv->id,
+            'sender_id'       => $this->userB->id,
+            'body'            => 'Ursprungsnachricht',
+            'type'            => 'text',
+        ]);
+
+        Sanctum::actingAs($this->userA);
+
+        $this->postJson("/api/messenger/conversations/{$conv->id}/messages", [
+                'body'        => 'Antwort in derselben Konversation',
+                'reply_to_id' => $original->id,
+            ])
+            ->assertCreated();
+
+        $this->assertDatabaseHas('messages', [
+            'conversation_id' => $conv->id,
+            'sender_id'       => $this->userA->id,
+            'reply_to_id'     => $original->id,
+        ]);
+    }
+
+    #[Test]
     public function api_unread_count_returns_integer(): void
     {
         Sanctum::actingAs($this->userA);

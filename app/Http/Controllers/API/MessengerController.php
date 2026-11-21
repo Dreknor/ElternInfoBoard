@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 
 class MessengerController extends Controller
 {
@@ -102,7 +103,9 @@ class MessengerController extends Controller
 
         $request->validate([
             'body'        => ['required', 'string', 'max:' . $this->settings->max_message_length],
-            'reply_to_id' => ['nullable', 'integer', 'exists:messages,id'],
+            // reply_to_id muss zur SELBEN Konversation gehören, sonst können fremde
+            // Nachrichten über die reply_to-Vorschau ausgelesen werden (IDOR).
+            'reply_to_id' => ['nullable', 'integer', Rule::exists('messages', 'id')->where('conversation_id', $conversation->id)],
         ]);
 
         $message = $conversation->messages()->create([
