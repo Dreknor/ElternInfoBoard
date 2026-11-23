@@ -32,6 +32,7 @@
 
     @stack('head')
 
+    @include('layouts.elements.custom-scripts', ['position' => 'head'])
 </head>
 
 <body class="w-100 h-100 border-info">
@@ -55,5 +56,6 @@
        document.querySelector('.carousel-item:first-child').classList.add("active");
    </script>
     @stack('js')
+@include('layouts.elements.custom-scripts', ['position' => 'body'])
 </body>
 </html>

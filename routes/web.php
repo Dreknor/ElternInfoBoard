@@ -591,10 +591,17 @@ Route::middleware('auth')->group(function () {
                 ->name('settings.custom-theme.update');
             Route::post('settings/custom-theme/reset', [\App\Http\Controllers\Settings\CustomThemeController::class, 'reset'])
                 ->name('settings.custom-theme.reset');
-            Route::get('settings/custom-scripts', [\App\Http\Controllers\Settings\CustomScriptController::class, 'edit'])
-                ->name('settings.custom-scripts.edit');
-            Route::put('settings/custom-scripts', [\App\Http\Controllers\Settings\CustomScriptController::class, 'update'])
-                ->name('settings.custom-scripts.update');
+            Route::controller(\App\Http\Controllers\Settings\CustomScriptController::class)
+                ->prefix('settings/custom-scripts')->name('settings.custom-scripts.')->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::put('app', 'updateApp')->name('app');
+                    Route::get('create', 'create')->name('create');
+                    Route::post('/', 'store')->name('store');
+                    Route::get('{customScript}/edit', 'edit')->name('edit');
+                    Route::put('{customScript}', 'update')->name('update');
+                    Route::patch('{customScript}/toggle', 'toggle')->name('toggle');
+                    Route::delete('{customScript}', 'destroy')->name('destroy');
+                });
             Route::post('settings/pflichtstunden/preview', [SettingsController::class, 'pflichtstundenPreview'])->name('settings.pflichtstunden.preview');
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);

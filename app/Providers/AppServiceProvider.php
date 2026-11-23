@@ -44,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // exists:/unique:users,… ignorieren Schülerkonten (S-04)
         $this->app->extend('validation.presence', fn ($verifier, $app) => new \App\Validation\StudentAwarePresenceVerifier($app['db']));
+
+        // Eigene Skripte einmal pro Request laden (Kopf und Ende der Seite teilen sich die Abfrage)
+        $this->app->scoped(\App\Services\CustomScripts\CustomScriptRenderer::class);
     }
 
     /**
@@ -66,6 +69,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Keine ausführbaren bzw. im Browser aktiven Dateien in der (öffentlich gespeicherten) Medienbibliothek
         \Spatie\MediaLibrary\MediaCollections\Models\Media::creating(fn ($media) => \App\Support\UploadGuard::assertAllowed($media));
+
+        // Eigene Skripte: begrenztes Skript ohne verbliebene Rolle deaktivieren
+        config('permission.models.role', \Spatie\Permission\Models\Role::class)::deleting(
+            fn ($role) => app(\App\Services\CustomScripts\DisableScriptsOnRoleDeletion::class)->handle($role)
+        );
 
         // Editor-HTML bereinigt ausgeben: @safeHtml($post->news) statt {!! $post->news !!}
         \Illuminate\Support\Facades\Blade::directive('safeHtml', fn (string $expression) => "<?php echo \\App\\Support\\SafeHtml::clean({$expression}); ?>");

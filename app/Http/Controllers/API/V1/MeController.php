@@ -59,7 +59,7 @@ class MeController extends Controller
             'school_name' => $general->app_name ?: config('app.name'),
             'ical_url' => $user->releaseCalendar ? url($user->uuid.'/ical') : null,
             // Instanzspezifischer Chat (null, wenn nicht freigeschaltet/angeboten)
-            'chat' => app(\App\Services\CustomScripts\CustomScriptRenderer::class)->appChat(),
+            'chat' => app(\App\Services\CustomScripts\CustomScriptRenderer::class)->appChat($user),
         ]]);
     }
 
