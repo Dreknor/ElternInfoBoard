@@ -20,6 +20,19 @@ return new class extends Migration
 
     public function up(): void
     {
+        // Ein früherer, abgebrochener Lauf (Fremdschlüssel auf roles schlug unter MySQL fehl)
+        // kann beide Tabellen bereits angelegt haben. MySQL führt DDL ohne Transaktion aus.
+        if (! Schema::hasTable('custom_scripts')) {
+            $this->createScriptsTable();
+        }
+
+        $this->createRolePivot();
+
+        $this->migrateLegacySnippet();
+    }
+
+    private function createScriptsTable(): void
+    {
         Schema::create('custom_scripts', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
@@ -41,16 +54,38 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
+    }
 
+    /**
+     * roles.id ist bei dieser App ein INT UNSIGNED (increments) aus der alten
+     * Spatie-Migration – role_id muss denselben Typ haben, sonst lehnt MySQL den
+     * Fremdschlüssel ab (errno 150).
+     */
+    private function createRolePivot(): void
+    {
         $rolesTable = config('permission.table_names.roles', 'roles');
 
-        Schema::create('custom_script_role', function (Blueprint $table) use ($rolesTable) {
-            $table->foreignId('custom_script_id')->constrained('custom_scripts')->cascadeOnDelete();
-            $table->foreignId('role_id')->constrained($rolesTable)->cascadeOnDelete();
-            $table->primary(['custom_script_id', 'role_id']);
-        });
+        if (! Schema::hasTable('custom_script_role')) {
+            Schema::create('custom_script_role', function (Blueprint $table) {
+                $table->foreignId('custom_script_id')->constrained('custom_scripts')->cascadeOnDelete();
+                $table->unsignedInteger('role_id');
+                $table->primary(['custom_script_id', 'role_id']);
+            });
+        } else {
+            // Rest eines abgebrochenen Laufs: Spaltentyp korrigieren
+            Schema::table('custom_script_role', function (Blueprint $table) {
+                $table->unsignedInteger('role_id')->change();
+            });
+        }
 
-        $this->migrateLegacySnippet();
+        $hasRoleForeignKey = collect(Schema::getForeignKeys('custom_script_role'))
+            ->contains(fn (array $fk) => $fk['columns'] === ['role_id']);
+
+        if (! $hasRoleForeignKey) {
+            Schema::table('custom_script_role', function (Blueprint $table) use ($rolesTable) {
+                $table->foreign('role_id')->references('id')->on($rolesTable)->cascadeOnDelete();
+            });
+        }
     }
 
     public function down(): void
