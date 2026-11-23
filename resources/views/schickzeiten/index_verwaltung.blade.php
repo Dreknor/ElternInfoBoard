@@ -5,12 +5,17 @@
     <div class="container-fluid px-4 py-6" x-data="{ activeTab: '{{ request('tab', 'anwesenheitsabfragen') }}' }">
         <!-- Header -->
         <div class="ea-hero">
-            <div class="flex items-center gap-4">
-                <div class="ea-hero-icon"><i class="fas fa-child" aria-hidden="true"></i></div>
-                <div class="min-w-0">
-                    <h1 class="ea-hero-title">Hort-Verwaltung</h1>
-                    <p class="ea-hero-sub">Verwalten Sie Anwesenheitsabfragen und Schickzeiten</p>
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="ea-hero-icon"><i class="fas fa-child" aria-hidden="true"></i></div>
+                    <div class="min-w-0">
+                        <h1 class="ea-hero-title">Hort-Verwaltung</h1>
+                        <p class="ea-hero-sub">Verwalten Sie Anwesenheitsabfragen und Schickzeiten</p>
+                    </div>
                 </div>
+                <a href="{{ route('anwesenheit.auswertung') }}" class="ea-btn ea-btn-light">
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i> Betreuungsumfang
+                </a>
             </div>
         </div>
 

@@ -90,6 +90,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" id="verlauf-tab" data-toggle="tab" href="#Verlauf" role="tab" aria-controls="Verlauf" aria-selected="false" title="An- und Abmeldungen des Tages">
+                                <i class="fas fa-history"></i><span>Verlauf</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" id="regelmaessig-tab" data-toggle="tab" href="#Regelmaessig" role="tab" aria-controls="Regelmaessig" aria-selected="false" title="Regelmäßige Schickzeiten">
                                 <i class="fas fa-clock"></i><span>Schickzeiten</span>
                             </a>
@@ -237,6 +242,66 @@
                                 </table>
 
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: An-/Abmeldeverlauf -->
+                    <div class="tab-pane fade" id="Verlauf" role="tabpanel" aria-labelledby="verlauf-tab">
+                        <div class="modal-body border-top">
+                            <div class="d-flex align-items-center mb-2" style="gap: .5rem;">
+                                <label for="verlaufDate" class="mb-0 small">Tag</label>
+                                <input type="date" id="verlaufDate" class="form-control form-control-sm" style="max-width: 11rem;" max="{{ today()->toDateString() }}" value="{{ today()->toDateString() }}">
+                            </div>
+                            <div id="verlaufSummary" class="mb-2 small"></div>
+                            <div class="table-responsive">
+                                <table class="table table-sm" id="verlaufTable">
+                                    <thead>
+                                    <tr>
+                                        <th>Zeit</th>
+                                        <th>Art</th>
+                                        <th>Quelle</th>
+                                        <th class="text-right">Aktion</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div id="verlaufActionForm" class="border rounded p-2 mb-2 bg-light" style="display: none;">
+                                <div class="small font-weight-bold mb-1" id="verlaufActionTitle"></div>
+                                <div class="form-row">
+                                    <div class="col-4" id="verlaufActionTimeWrap">
+                                        <input type="time" id="verlaufActionTime" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" id="verlaufActionNote" class="form-control form-control-sm" maxlength="500" placeholder="Begründung (Pflicht)">
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-right">
+                                    <button type="button" class="btn btn-sm btn-secondary" id="verlaufActionCancel">Abbrechen</button>
+                                    <button type="button" class="btn btn-sm btn-primary" id="verlaufActionSave">Speichern</button>
+                                </div>
+                                <div class="text-danger small mt-1" id="verlaufActionError"></div>
+                            </div>
+                            <details>
+                                <summary class="small">An- oder Abmeldung nachtragen</summary>
+                                <div class="form-row mt-2">
+                                    <div class="col-5">
+                                        <select id="verlaufNewType" class="form-control form-control-sm">
+                                            <option value="check_out">Abmeldung</option>
+                                            <option value="check_in">Anmeldung</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="time" id="verlaufNewTime" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-sm btn-primary btn-block" id="verlaufNewSave">Nachtragen</button>
+                                    </div>
+                                </div>
+                                <input type="text" id="verlaufNewNote" class="form-control form-control-sm mt-2" maxlength="500" placeholder="Begründung (Pflicht), z. B. Abmelden vergessen">
+                                <div class="text-danger small mt-1" id="verlaufNewError"></div>
+                                <p class="small text-muted mt-1 mb-0">Nachträge und Korrekturen ändern nur den Verlauf, nicht den aktuellen Stand in der Anwesenheitsliste, und lösen keine Benachrichtigung an die Eltern aus.</p>
+                            </details>
                         </div>
                     </div>
 
@@ -659,6 +724,142 @@
                 alert('Fehler beim Aktualisieren.');
             });
         }
+
+        // ── Tab „Verlauf“: An-/Abmeldungen eines Tages, Korrektur, Storno, Nachtrag ──
+        const verlaufUrlTemplate = `{{ route('anwesenheit.verlauf', ['child' => 'childID']) }}`;
+        const verlaufCorrectUrl = `{{ route('anwesenheit.verlauf.correct', ['attendanceEvent' => 'eventID']) }}`;
+        const verlaufCancelUrl = `{{ route('anwesenheit.verlauf.cancel', ['attendanceEvent' => 'eventID']) }}`;
+        const verlaufDateInput = document.getElementById('verlaufDate');
+        let verlaufAction = null; // {kind: 'correct'|'cancel', eventId}
+
+        function verlaufPost(url, data) {
+            return $.ajax({url: url, method: 'POST', data: Object.assign({_token: '{{ csrf_token() }}'}, data), headers: {'Accept': 'application/json'}});
+        }
+
+        function verlaufErrorText(xhr) {
+            const errors = xhr.responseJSON && xhr.responseJSON.errors;
+            if (errors) return Object.values(errors).flat().join(' ');
+            return 'Speichern fehlgeschlagen.';
+        }
+
+        function renderVerlauf(day) {
+            const flags = [];
+            if (day.running) flags.push('<span class="badge badge-info">läuft</span>');
+            if (day.incomplete) flags.push('<span class="badge badge-warning">unvollständig</span>');
+            if (day.automatic) flags.push('<span class="badge badge-secondary">automatisch angemeldet</span>');
+            if (day.holiday) flags.push('<span class="badge badge-light">Ferien</span>');
+            const intervals = day.intervals.map(i => `${i.from}–${i.to}${i.capped ? '*' : ''}`).join(', ');
+            document.getElementById('verlaufSummary').innerHTML =
+                `<b>Umfang: ${escapeHtml(day.duration)} h</b> ${flags.join(' ')}` +
+                (intervals ? `<br><span class="text-muted">${escapeHtml(intervals)}</span>` : `<br><span class="text-muted">${escapeHtml(day.status_label)}</span>`) +
+                (day.intervals.some(i => i.capped) ? '<br><span class="text-muted">* bis Hortende gerechnet, Abmeldung fehlt</span>' : '');
+
+            const tbody = document.querySelector('#verlaufTable tbody');
+            tbody.innerHTML = '';
+            if (day.events.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-muted">Keine An- oder Abmeldungen</td></tr>';
+                return;
+            }
+            day.events.forEach(e => {
+                const row = document.createElement('tr');
+                if (e.cancelled) row.className = 'text-muted';
+                let details = '';
+                if (e.corrected) details += `<div class="small text-muted">korrigiert von ${escapeHtml(e.corrected.original_time)} (${escapeHtml(e.corrected.by || '')}): ${escapeHtml(e.corrected.note)}</div>`;
+                if (e.cancelled) details += `<div class="small text-muted">storniert (${escapeHtml(e.cancelled.by || '')}): ${escapeHtml(e.cancelled.note)}</div>`;
+                if (e.note) details += `<div class="small text-muted">${escapeHtml(e.note)}</div>`;
+                const time = e.cancelled ? `<s>${escapeHtml(e.time)}</s>` : `<b>${escapeHtml(e.time)}</b>`;
+                const actions = e.cancelled ? '' :
+                    `<button type="button" class="btn btn-sm btn-outline-primary verlauf-correct" data-id="${e.id}" data-time="${escapeHtml(e.time)}" title="Uhrzeit korrigieren"><i class="fas fa-pen"></i></button>
+                     <button type="button" class="btn btn-sm btn-outline-danger verlauf-cancel" data-id="${e.id}" title="Stornieren (z. B. Fehlklick)"><i class="fas fa-ban"></i></button>`;
+                row.innerHTML = `<td>${time}${details}</td><td>${escapeHtml(e.type_label)}</td><td class="small">${escapeHtml(e.source_label)}${e.user ? '<br>' + escapeHtml(e.user) : ''}</td><td class="text-right text-nowrap">${actions}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function reloadVerlauf() {
+            if (!currentCheckinChildId) return;
+            const childId = currentCheckinChildId;
+            const url = verlaufUrlTemplate.replace('childID', childId) + '?date=' + encodeURIComponent(verlaufDateInput.value);
+            fetch(url, {cache: 'no-store', headers: {'Accept': 'application/json'}})
+                .then(r => r.json())
+                .then(data => {
+                    if (childId !== currentCheckinChildId || !data.success) return;
+                    renderVerlauf(data.data);
+                })
+                .catch(error => console.error('Fehler beim Laden des Verlaufs:', error));
+        }
+
+        function closeVerlaufAction() {
+            verlaufAction = null;
+            document.getElementById('verlaufActionForm').style.display = 'none';
+            document.getElementById('verlaufActionError').textContent = '';
+        }
+
+        document.addEventListener('click', function (event) {
+            const item = event.target.closest('.child-item');
+            if (item) {
+                verlaufDateInput.value = '{{ today()->toDateString() }}';
+                closeVerlaufAction();
+                // currentCheckinChildId wird im Handler darüber gesetzt
+                setTimeout(reloadVerlauf, 0);
+                return;
+            }
+
+            const correctBtn = event.target.closest('.verlauf-correct');
+            const cancelBtn = event.target.closest('.verlauf-cancel');
+            if (!correctBtn && !cancelBtn) return;
+
+            const isCorrect = !!correctBtn;
+            const btn = correctBtn || cancelBtn;
+            verlaufAction = {kind: isCorrect ? 'correct' : 'cancel', eventId: btn.dataset.id};
+            document.getElementById('verlaufActionTitle').textContent = isCorrect ? 'Uhrzeit korrigieren' : 'Eintrag stornieren (zählt nicht mehr zum Umfang)';
+            document.getElementById('verlaufActionTimeWrap').style.display = isCorrect ? '' : 'none';
+            document.getElementById('verlaufActionTime').value = isCorrect ? btn.dataset.time : '';
+            document.getElementById('verlaufActionNote').value = '';
+            document.getElementById('verlaufActionError').textContent = '';
+            document.getElementById('verlaufActionForm').style.display = 'block';
+            document.getElementById('verlaufActionNote').focus();
+        });
+
+        verlaufDateInput.addEventListener('change', function () {
+            closeVerlaufAction();
+            reloadVerlauf();
+        });
+
+        document.getElementById('verlauf-tab').addEventListener('click', reloadVerlauf);
+        document.getElementById('verlaufActionCancel').addEventListener('click', closeVerlaufAction);
+
+        document.getElementById('verlaufActionSave').addEventListener('click', function () {
+            if (!verlaufAction) return;
+            const note = document.getElementById('verlaufActionNote').value;
+            const request = verlaufAction.kind === 'correct'
+                ? verlaufPost(verlaufCorrectUrl.replace('eventID', verlaufAction.eventId), {time: document.getElementById('verlaufActionTime').value, note: note})
+                : verlaufPost(verlaufCancelUrl.replace('eventID', verlaufAction.eventId), {note: note});
+            request.done(function () {
+                closeVerlaufAction();
+                reloadVerlauf();
+            }).fail(function (xhr) {
+                document.getElementById('verlaufActionError').textContent = verlaufErrorText(xhr);
+            });
+        });
+
+        document.getElementById('verlaufNewSave').addEventListener('click', function () {
+            if (!currentCheckinChildId) return;
+            const errorBox = document.getElementById('verlaufNewError');
+            errorBox.textContent = '';
+            verlaufPost(verlaufUrlTemplate.replace('childID', currentCheckinChildId), {
+                type: document.getElementById('verlaufNewType').value,
+                date: verlaufDateInput.value,
+                time: document.getElementById('verlaufNewTime').value,
+                note: document.getElementById('verlaufNewNote').value,
+            }).done(function () {
+                document.getElementById('verlaufNewTime').value = '';
+                document.getElementById('verlaufNewNote').value = '';
+                reloadVerlauf();
+            }).fail(function (xhr) {
+                errorBox.textContent = verlaufErrorText(xhr);
+            });
+        });
 
         function resetToggleButton(btn) {
             if (btn) {

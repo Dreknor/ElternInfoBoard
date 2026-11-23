@@ -12,6 +12,8 @@ use App\Model\ChildMandate;
 use App\Model\Groups;
 use App\Model\Notification;
 use App\Model\User;
+use App\Model\ChildAttendanceEvent;
+use App\Services\Attendance\AttendanceLog;
 use App\Services\Family\FamilyResolver;
 use App\Services\HolidayService;
 use App\Services\LatePickupService;
@@ -210,6 +212,8 @@ class CareController extends Controller implements HasMiddleware
                 'checked_out' => true,
             ]);
 
+            app(AttendanceLog::class)->record($child, ChildAttendanceEvent::TYPE_CHECK_OUT, ChildAttendanceEvent::SOURCE_STAFF, $pickedUpAt, auth()->id());
+
             $latePickupService->detectAndRecord($child, $checkIn, $pickedUpAt);
         }
 
@@ -301,10 +305,15 @@ class CareController extends Controller implements HasMiddleware
             ]);
         }
 
+        $checkedInAt = now();
+
+        if ($statusChanged) {
+            app(AttendanceLog::class)->record($child, ChildAttendanceEvent::TYPE_CHECK_IN, ChildAttendanceEvent::SOURCE_STAFF, $checkedInAt, auth()->id());
+        }
+
         if ($statusChanged && $child->notification) {
 
             try {
-                $checkedInAt = now();
                 foreach ($this->notificationRecipients($child) as $recipient) {
                     dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkIn', $child->id, $checkedInAt));
                 }
@@ -354,6 +363,8 @@ class CareController extends Controller implements HasMiddleware
             ->get();
 
         $checkIn = [];
+        $autoCheckedIn = [];
+        $now = now();
         foreach ($children as $child) {
 
             if ($child->krankmeldungToday() || ! $child->auto_checkIn) {
@@ -366,6 +377,7 @@ class CareController extends Controller implements HasMiddleware
             if ($existingCheckIn) {
                 if (! $existingCheckIn->checked_in && ! $existingCheckIn->checked_out && $existingCheckIn->should_be !== false) {
                     $existingCheckIn->update(['checked_in' => true]);
+                    $autoCheckedIn[] = $child->id;
                 }
 
                 continue;
@@ -375,12 +387,29 @@ class CareController extends Controller implements HasMiddleware
                 'child_id' => $child->id,
                 'checked_in' => true,
                 'checked_out' => false,
-                'date' => now()->toDateString(),
+                'date' => $now->toDateString(),
+                'checked_in_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
 
         }
 
         ChildCheckIn::query()->insertOrIgnore($checkIn);
+
+        // Verlauf: nur Kinder, deren Tageszeile jetzt tatsächlich durch diesen Lauf angemeldet ist
+        // (insertOrIgnore überspringt Kinder, für die parallel ein Eintrag entstanden ist).
+        $inserted = empty($checkIn) ? collect() : ChildCheckIn::query()
+            ->whereIn('child_id', array_column($checkIn, 'child_id'))
+            ->whereDate('date', $now->toDateString())
+            ->where('checked_in', true)
+            ->where('checked_in_at', $now)
+            ->pluck('child_id');
+
+        $log = app(AttendanceLog::class);
+        foreach ($inserted->merge($autoCheckedIn)->unique() as $childId) {
+            $log->record($childId, ChildAttendanceEvent::TYPE_CHECK_IN, ChildAttendanceEvent::SOURCE_AUTO, $now);
+        }
     }
 
     public function destroyAbfrage($date)

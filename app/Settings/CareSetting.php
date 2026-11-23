@@ -43,6 +43,9 @@ class CareSetting extends Settings
 
     public string $auto_checkin_time_ferien;
 
+    /** Aufbewahrung des An-/Abmeldeverlaufs (child_attendance_events) in Monaten. */
+    public int $attendance_history_months;
+
     public const VIEW_MODES = ['simple', 'detailed', 'board'];
 
     /** Cookie mit der auf diesem Gerät gewählten Ansicht (überschreibt die Einstellung) */

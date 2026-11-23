@@ -720,6 +720,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/anwesenheit/checkins/{child}/liste', [\App\Http\Controllers\Anwesenheit\CareController::class, 'getCheckIns'])->name('checkins.api');
         Route::post('/anwesenheit/should_be/{checkin}/toogle', [\App\Http\Controllers\Anwesenheit\CareController::class, 'toogleShouldBe'])->name('checkIn.shouldBe');
 
+        // An-/Abmeldeverlauf und Betreuungsumfang
+        Route::get('/anwesenheit/{child}/verlauf', [\App\Http\Controllers\Anwesenheit\AttendanceHistoryController::class, 'day'])->name('anwesenheit.verlauf');
+        Route::post('/anwesenheit/{child}/verlauf', [\App\Http\Controllers\Anwesenheit\AttendanceHistoryController::class, 'store'])->name('anwesenheit.verlauf.store');
+        Route::post('/anwesenheit/verlauf/{attendanceEvent}/korrektur', [\App\Http\Controllers\Anwesenheit\AttendanceHistoryController::class, 'correct'])->name('anwesenheit.verlauf.correct');
+        Route::post('/anwesenheit/verlauf/{attendanceEvent}/storno', [\App\Http\Controllers\Anwesenheit\AttendanceHistoryController::class, 'cancel'])->name('anwesenheit.verlauf.cancel');
+        Route::get('/auswertung', [\App\Http\Controllers\Anwesenheit\AttendanceHistoryController::class, 'report'])->name('anwesenheit.auswertung');
+        Route::get('/auswertung/export', [\App\Http\Controllers\Anwesenheit\AttendanceHistoryController::class, 'export'])->name('anwesenheit.auswertung.export');
+
         Route::post('/anwesenheit/{child}/abmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'abmelden']);
         Route::post('/anwesenheit/{child}/anmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'anmelden']);
         Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);
