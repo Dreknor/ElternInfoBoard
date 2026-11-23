@@ -165,6 +165,37 @@ class ListenTerminPflichtstundenTest extends TestCase
     }
 
     #[Test]
+    public function update_migration_erfasst_nach_ohne_doppelte_eintraege(): void
+    {
+        $fehlt = $this->termin();
+        $gebucht = $this->termin();
+        listen_termine::whereKey($fehlt->id)->update(['reserviert_fuer' => $this->parent->id, 'updated_at' => now()]);
+        // regulär gebucht → Observer legt bereits an
+        $this->actingAs($this->parent)->put("listen/termine/{$gebucht->id}");
+        $this->assertCount(1, $this->pflichtstunden($gebucht));
+
+        $migration = require database_path('migrations/2026_11_23_000002_nacherfassen_listen_pflichtstunden.php');
+        $migration->up();
+        $migration->up(); // erneuter Lauf darf nichts doppelt anlegen
+        $this->artisan('pflichtstunden:listen-nacherfassen')->assertSuccessful();
+
+        $this->assertCount(1, $this->pflichtstunden($fehlt));
+        $this->assertCount(1, $this->pflichtstunden($gebucht));
+    }
+
+    #[Test]
+    public function update_migration_ueberspringt_wenn_autocreate_aus(): void
+    {
+        $t = $this->termin();
+        listen_termine::whereKey($t->id)->update(['reserviert_fuer' => $this->parent->id, 'updated_at' => now()]);
+        $this->setAutocreate(false);
+
+        (require database_path('migrations/2026_11_23_000002_nacherfassen_listen_pflichtstunden.php'))->up();
+
+        $this->assertCount(0, $this->pflichtstunden($t));
+    }
+
+    #[Test]
     public function nacherfassen_bricht_ab_wenn_autocreate_aus(): void
     {
         $this->setAutocreate(false);

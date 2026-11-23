@@ -7,6 +7,7 @@ use App\Model\Pflichtstunde;
 use App\Settings\PflichtstundenSetting;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Legt Pflichtstunden für gebuchte Listentermine nach, bei denen die automatische
@@ -88,6 +89,38 @@ class PflichtstundenListenNacherfassen extends Command
 
         $angelegt = 0;
         foreach ($termine as $t) {
+            if ($this->anlegen($t->id)) {
+                $angelegt++;
+            }
+        }
+
+        $this->info("{$angelegt} Pflichtstunde(n) nacherfasst (nicht genehmigt).");
+
+        return Command::SUCCESS;
+    }
+
+    /**
+     * Legt die Pflichtstunde für einen Termin an – nur wenn es noch keine gibt.
+     *
+     * Termin-Zeile wird gesperrt und unter der Sperre neu geprüft: Die Buchung
+     * (ListenService::reserveTermin) legt ihre Pflichtstunde unter derselben Sperre an,
+     * so entstehen auch bei gleichzeitiger Ausführung keine Doppelungen.
+     */
+    private function anlegen(int $terminId): bool
+    {
+        return DB::transaction(function () use ($terminId) {
+            $t = listen_termine::with('liste')->whereKey($terminId)->lockForUpdate()->first();
+            if ($t === null || $t->reserviert_fuer === null) {
+                return false;
+            }
+
+            $existiert = Pflichtstunde::withoutGlobalScopes()->withTrashed()
+                ->where('listen_termin_id', $t->id)
+                ->exists();
+            if ($existiert) {
+                return false;
+            }
+
             // Gleiche Felder wie ListenTermineObserver::createPflichtstunde
             Pflichtstunde::create([
                 'user_id' => $t->reserviert_fuer,
@@ -98,11 +131,8 @@ class PflichtstundenListenNacherfassen extends Command
                                 ($t->comment ? ' - '.$t->comment : ''),
                 'approved' => false,
             ]);
-            $angelegt++;
-        }
 
-        $this->info("{$angelegt} Pflichtstunde(n) nacherfasst (nicht genehmigt).");
-
-        return Command::SUCCESS;
+            return true;
+        });
     }
 }
