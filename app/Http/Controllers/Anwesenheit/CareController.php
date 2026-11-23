@@ -221,9 +221,12 @@ class CareController extends Controller implements HasMiddleware
 
         }
 
-        if ($child->notification) {
+        // Eltern nur benachrichtigen, wenn tatsächlich ein offener Check-In geschlossen wurde.
+        // Ohne diese Prüfung lösten veraltete Listen (anderes Gerät, Doppelklick) eine
+        // "abgemeldet"-Push aus, obwohl sich am Status nichts geändert hatte.
+        if ($checkIn && $child->notification) {
             foreach ($this->notificationRecipients($child) as $recipient) {
-                dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkOut'));
+                dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkOut', $child->id, $pickedUpAt));
             }
         }
 
@@ -261,6 +264,9 @@ class CareController extends Controller implements HasMiddleware
 
         }
 
+        // War das Kind bereits angemeldet, ändert sich nichts – dann auch keine Push an die Eltern.
+        $statusChanged = ! $checkIn || ! $checkIn->checked_in || $checkIn->checked_out;
+
         if ($checkIn) {
             $checkIn->update([
                 'checked_in' => true,
@@ -275,11 +281,12 @@ class CareController extends Controller implements HasMiddleware
             ]);
         }
 
-        if ($child->notification) {
+        if ($statusChanged && $child->notification) {
 
             try {
+                $checkedInAt = now();
                 foreach ($this->notificationRecipients($child) as $recipient) {
-                    dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkIn'));
+                    dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkIn', $child->id, $checkedInAt));
                 }
             } catch (\Exception $e) {
                 Log::error('Error sending notification: '.$e->getMessage());
