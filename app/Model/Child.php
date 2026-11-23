@@ -288,6 +288,12 @@ class Child extends Model implements HasMedia
         return $this->hasMany(ChildCheckIn::class, 'child_id');
     }
 
+    /** Einzelne An-/Abmeldungen (Verlauf), siehe App\Services\Attendance */
+    public function attendanceEvents(): HasMany
+    {
+        return $this->hasMany(ChildAttendanceEvent::class, 'child_id');
+    }
+
     public function latePickups(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Model\LatePickup::class, 'child_id');

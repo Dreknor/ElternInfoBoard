@@ -106,6 +106,9 @@ try {
         // Alte CheckIns automatisch löschen (täglich, CheckIns älter als 3 Monate)
         Schedule::command('checkins:cleanup --months=3')->dailyAt('03:00');
 
+        // An-/Abmeldeverlauf nach eingestellter Aufbewahrungsfrist löschen (Standard 6 Monate)
+        Schedule::command('attendance:cleanup')->dailyAt('03:05');
+
         // Alte Schickzeiten mit spezifischem Datum löschen (täglich, älter als 2 Wochen)
         Schedule::command('schickzeiten:cleanup --weeks=2')->dailyAt('03:30');
 
