@@ -160,12 +160,16 @@ class ListenService
         // verhindert, dass gleichzeitige Anfragen derselben Familie beide durchkommen).
         $this->lockedForBooking($liste, function () use ($user, $liste, $child, $termin) {
             $this->assertLimit($user, $liste, $child, 'termin');
-            $updated = listen_termine::where('id', $termin->id)
-                ->whereNull('reserviert_fuer')
-                ->update(['reserviert_fuer' => $user->id, 'child_id' => $child?->id, 'updated_at' => now()]);
-            if ($updated === 0) {
-                throw new HttpException(409, 'Dieser Termin wurde gerade von jemand anderem gebucht.');
-            }
+            // Über das Modell speichern (nicht per Query-Builder-Update), damit der
+            // ListenTermineObserver feuert und ggf. die Pflichtstunde automatisch anlegt.
+            // Zeilensperre in eigener Transaktion: bleibt atomar, auch bei Listen mit „multiple“.
+            DB::transaction(function () use ($user, $child, $termin) {
+                $frei = listen_termine::whereKey($termin->id)->whereNull('reserviert_fuer')->lockForUpdate()->first();
+                if ($frei === null) {
+                    throw new HttpException(409, 'Dieser Termin wurde gerade von jemand anderem gebucht.');
+                }
+                $frei->update(['reserviert_fuer' => $user->id, 'child_id' => $child?->id]);
+            });
         });
 
         try {
