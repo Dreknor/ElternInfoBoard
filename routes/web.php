@@ -574,6 +574,7 @@ Route::middleware('auth')->group(function () {
             Route::put('roles', [RolesController::class, 'update']);
             Route::post('roles', [RolesController::class, 'store']);
             Route::post('roles/permission', [RolesController::class, 'storePermission']);
+            Route::delete('roles/{role}', [RolesController::class, 'destroy'])->whereNumber('role');
         });
 
         // Routen zur Rechteverwaltung

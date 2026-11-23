@@ -129,16 +129,144 @@
                     </form>
                 </div>
             </div>
+
+            <!-- Manage Roles Card -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden"
+                 x-data="rollenVerwaltung(@js($rollenVerwaltung))">
+                <div class="bg-gradient-to-r from-gray-700 to-gray-800 px-6 py-4 border-b border-gray-900">
+                    <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+                        <i class="fas fa-users-cog"></i>
+                        Rollen verwalten
+                    </h5>
+                </div>
+                <div class="p-6">
+                    <ul class="divide-y divide-gray-200">
+                        <template x-for="rolle in rollen" :key="rolle.id">
+                            <li class="flex items-center justify-between gap-3 py-3">
+                                <div class="min-w-0">
+                                    <span class="text-sm font-medium text-gray-900" x-text="rolle.name"></span>
+                                    <span class="ml-2 text-xs text-gray-500"
+                                          x-text="rolle.users_count === 1 ? '1 Benutzer' : rolle.users_count + ' Benutzer'"></span>
+                                </div>
+                                <template x-if="rolle.locked">
+                                    <span class="text-gray-400 text-sm flex items-center gap-1"
+                                          title="Systemrolle – wird im Programm verwendet und kann nicht gelöscht werden">
+                                        <i class="fas fa-lock"></i>
+                                        <span class="hidden sm:inline">Systemrolle</span>
+                                    </span>
+                                </template>
+                                <template x-if="!rolle.locked">
+                                    <button type="button"
+                                            @click="open(rolle)"
+                                            class="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1">
+                                        <i class="fas fa-trash-alt"></i>
+                                        <span>Löschen</span>
+                                    </button>
+                                </template>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <!-- Bestätigungsdialog -->
+                <div x-show="aktiv" x-cloak
+                     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                     @keydown.escape.window="close()">
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                         @click.outside="close()">
+                        <template x-if="aktiv">
+                            <form method="post" :action="'{{ url('roles') }}/' + aktiv.id">
+                                @csrf
+                                @method('delete')
+                                <div class="px-6 py-4 border-b border-gray-200">
+                                    <h5 class="text-lg font-bold text-gray-800 mb-0">
+                                        Rolle „<span x-text="aktiv.name"></span>“ löschen?
+                                    </h5>
+                                </div>
+                                <div class="px-6 py-4 space-y-4 text-sm text-gray-700">
+                                    <p>Die Rolle wird endgültig gelöscht. Das lässt sich nicht rückgängig machen.</p>
+
+                                    <template x-if="aktiv.users_count > 0">
+                                        <div class="space-y-3">
+                                            <div class="rounded-lg bg-red-50 border border-red-200 p-3 text-red-800">
+                                                <p class="font-semibold mb-1">
+                                                    Diese Rolle ist <span x-text="aktiv.users_count"></span>
+                                                    <span x-text="aktiv.users_count === 1 ? 'Benutzer' : 'Benutzern'"></span> zugewiesen.
+                                                </p>
+                                                <p x-show="aktiv.users_without_other_role > 0" class="mb-0">
+                                                    <span x-text="aktiv.users_without_other_role"></span>
+                                                    davon <span x-text="aktiv.users_without_other_role === 1 ? 'hat' : 'haben'"></span>
+                                                    danach keine Rolle mehr.
+                                                </p>
+                                            </div>
+
+                                            <details class="border border-gray-200 rounded-lg">
+                                                <summary class="px-3 py-2 cursor-pointer font-medium">Betroffene Benutzer anzeigen</summary>
+                                                <ul class="px-3 pb-2 max-h-48 overflow-y-auto list-disc list-inside">
+                                                    <template x-for="name in aktiv.users"><li x-text="name"></li></template>
+                                                </ul>
+                                            </details>
+
+                                            <div>
+                                                <p class="font-medium mb-1">Diese Benutzer verlieren die Rechte der Rolle:</p>
+                                                <p x-show="aktiv.permissions.length === 0" class="text-gray-500 mb-0">Die Rolle hat keine Rechte.</p>
+                                                <div class="flex flex-wrap gap-1" x-show="aktiv.permissions.length > 0">
+                                                    <template x-for="recht in aktiv.permissions">
+                                                        <span class="px-2 py-0.5 bg-gray-100 rounded text-xs" x-text="recht"></span>
+                                                    </template>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label for="confirm-role-name" class="block font-medium mb-1">
+                                                    Zur Bestätigung den Rollennamen „<span x-text="aktiv.name"></span>“ eingeben:
+                                                </label>
+                                                <input type="text" id="confirm-role-name" name="confirm_name"
+                                                       x-model="bestaetigung" autocomplete="off"
+                                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+                                    <button type="button" @click="close()"
+                                            class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                                        Abbrechen
+                                    </button>
+                                    <button type="submit"
+                                            :disabled="aktiv.users_count > 0 && bestaetigung.trim() !== aktiv.name"
+                                            class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+                                        <i class="fas fa-trash-alt"></i>
+                                        <span>Endgültig löschen</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </template>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-
-
 
 @endsection
 
 @push('js')
     <script>
+        function rollenVerwaltung(rollen) {
+            return {
+                rollen: rollen,
+                aktiv: null,
+                bestaetigung: '',
+                open(rolle) {
+                    this.aktiv = rolle;
+                    this.bestaetigung = '';
+                },
+                close() {
+                    this.aktiv = null;
+                },
+            };
+        }
+
         $(document).ready(function () {
             // Cache jQuery selectors
             const $checkboxes = $('input[type="checkbox"]');
