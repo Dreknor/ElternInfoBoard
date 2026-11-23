@@ -206,6 +206,7 @@ class SettingsController extends Controller implements HasMiddleware
                     'auto_checkin_time_schulzeit' => 'required|date_format:H:i',
                     'auto_checkin_enabled_ferien' => 'nullable|boolean',
                     'auto_checkin_time_ferien' => 'required|date_format:H:i',
+                    'attendance_history_months' => 'nullable|integer|min:1|max:60',
                 ]);
 
                 $careSettings = new CareSetting;
@@ -240,6 +241,7 @@ class SettingsController extends Controller implements HasMiddleware
                 $careSettings->auto_checkin_time_schulzeit = $validated['auto_checkin_time_schulzeit'];
                 $careSettings->auto_checkin_enabled_ferien = $validated['auto_checkin_enabled_ferien'] ?? false;
                 $careSettings->auto_checkin_time_ferien = $validated['auto_checkin_time_ferien'];
+                $careSettings->attendance_history_months = (int) ($validated['attendance_history_months'] ?? $careSettings->attendance_history_months);
 
                 $careSettings->save();
 

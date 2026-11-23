@@ -4,9 +4,16 @@
 @section('content')
     <div class="container-fluid px-4 py-6" x-data="{ activeTab: '{{ request('tab', 'anwesenheitsabfragen') }}' }">
         <!-- Header -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Hort-Verwaltung</h1>
-            <p class="text-gray-600">Verwalten Sie Anwesenheitsabfragen und Schickzeiten</p>
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">Hort-Verwaltung</h1>
+                <p class="text-gray-600">Verwalten Sie Anwesenheitsabfragen und Schickzeiten</p>
+            </div>
+            <a href="{{ route('anwesenheit.auswertung') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                <i class="fas fa-chart-bar"></i>
+                Betreuungsumfang
+            </a>
         </div>
 
         <!-- Tab Navigation -->

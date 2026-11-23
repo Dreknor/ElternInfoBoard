@@ -301,6 +301,21 @@
             </div>
         </div>
 
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    Aufbewahrung An-/Abmeldeverlauf (Monate)
+                    <input type="number" min="1" max="60" class="form-control" name="attendance_history_months"
+                           value="{{ $careSettings->attendance_history_months }}" required>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    So lange bleiben die einzelnen An- und Abmeldungen für die Auswertung des Betreuungsumfangs gespeichert. Ältere Einträge werden nachts automatisch gelöscht.
+                </div>
+            </div>
+        </div>
+
         <div class="form-row">
             <button type="submit" class="btn btn-success btn-block">
                 Save Settings
