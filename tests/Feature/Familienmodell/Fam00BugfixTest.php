@@ -253,6 +253,7 @@ class Fam00BugfixTest extends TestCase
         $child->parents()->attach($parentB);
         $partnerOfA = User::factory()->create(['sorg2' => $parentA->id]);
         $parentA->update(['sorg2' => $partnerOfA->id]);
+        $child->checkIns()->create(['checked_in' => true, 'checked_out' => false, 'date' => now()->toDateString()]);
 
         $this->actingAs($staff)->post("care/anwesenheit/{$child->id}/abmelden")->assertSuccessful();
 
