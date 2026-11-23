@@ -41,6 +41,7 @@
         .student-prose a { color: var(--color-primary); text-decoration: underline; }
     </style>
     @stack('css')
+    @include('layouts.elements.custom-scripts', ['position' => 'head'])
 </head>
 <body class="min-h-screen bg-[var(--app-bg)] text-[var(--app-text)] {{ isset($activeTheme) ? $activeTheme->bodyClasses() : '' }}">
 
@@ -111,5 +112,6 @@
     </div>
 </nav>
 @stack('js')
+@include('layouts.elements.custom-scripts', ['position' => 'body'])
 </body>
 </html>

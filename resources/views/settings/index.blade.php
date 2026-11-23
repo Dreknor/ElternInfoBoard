@@ -62,7 +62,7 @@
                     @endforeach
 
                     @if(\App\Services\CustomScripts\CustomScriptRenderer::enabled())
-                        <a href="{{ route('settings.custom-scripts.edit') }}"
+                        <a href="{{ route('settings.custom-scripts.index') }}"
                            class="md:w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-lg text-left text-sm whitespace-nowrap md:whitespace-normal font-medium transition-all duration-150 hover:bg-black/5 dark:hover:bg-white/5"
                            style="color: var(--color-text-primary);">
                             <i class="fas fa-code w-4 text-center text-sm flex-shrink-0" style="color: var(--color-primary);"></i>

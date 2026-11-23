@@ -9,14 +9,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Schlanke Seite, die nur das instanzspezifische Snippet (z. B. Chatbot) lädt.
+ * Schlanke Seite, die nur die eigenen Skripte mit "Auf der Chat-Seite verwenden" (z. B. Chatbot) lädt.
  * Die App öffnet sie über auth/web-link im In-App-Browser.
  */
 class ChatController extends Controller
 {
-    public function show(CustomScriptRenderer $renderer): View
+    public function show(Request $request, CustomScriptRenderer $renderer): View
     {
-        $snippet = $renderer->chatPageSnippet();
+        $snippet = $renderer->chatPageSnippet($request->user());
 
         abort_if($snippet === null, 404);
 
