@@ -40,6 +40,16 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller implements HasMiddleware
 {
+    /**
+     * Rechte, die bei der Übernahme eines Kontos keine Rechteausweitung bedeuten:
+     * Rollenmarkierung bzw. reine Einstellungen des Zielkontos selbst.
+     */
+    private const IMPERSONATION_NEUTRAL_PERMISSIONS = [
+        'role is assignable',        // markiert eine Rolle als zuweisbar, kein Recht des Nutzers
+        'allow password-less-login', // betrifft nur die Anmeldung, nicht die übernommene Sitzung
+        'disable news mail',         // betrifft nur die eigene E-Mail-Zusammenfassung
+    ];
+
     private $groupsRepository;
 
     private UserService $userService;
@@ -378,17 +388,18 @@ class UserController extends Controller implements HasMiddleware
         $targetUser = User::findOrFail($id);
 
         // Keine Rechteausweitung: nur Konten übernehmen, die nicht mehr dürfen als man selbst
-        $missing = $targetUser->getAllPermissions()->pluck('name')
-            ->diff($request->user()->getAllPermissions()->pluck('name'));
+        $missing = $this->impersonationEscalation($request->user(), $targetUser);
         if ($missing->isNotEmpty()) {
             Log::warning('loginAsUser: abgelehnt (Zielkonto hat weitergehende Rechte)', [
                 'requestor_id' => $request->user()->id,
                 'target_user_id' => $targetUser->id,
+                'missing_permissions' => $missing->all(),
             ]);
             \App\Services\Security\SecurityLog::record('impersonation.denied', $targetUser->id, ['reason' => 'privilege_escalation']);
 
             return redirect()->back()->with([
-                'Meldung' => 'Dieses Konto hat weitergehende Rechte als Ihr eigenes und kann nicht übernommen werden.',
+                'Meldung' => 'Dieses Konto hat weitergehende Rechte als Ihr eigenes und kann nicht übernommen werden ('
+                    .$missing->implode(', ').').',
                 'type' => 'danger',
             ]);
         }
@@ -409,8 +420,26 @@ class UserController extends Controller implements HasMiddleware
     }
 
     /**
-     * @return RedirectResponse
+     * Rechte, die der Handelnde durch die Übernahme des Zielkontos hinzugewinnen würde.
+     *
+     * Wer „edit permission“ hat, kann sich jede Rolle und jedes Recht selbst geben –
+     * für ihn ist die Übernahme nie eine Rechteausweitung.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
      */
+    private function impersonationEscalation(User $actor, User $target): \Illuminate\Support\Collection
+    {
+        if ($actor->can('edit permission')) {
+            return collect();
+        }
+
+        return $target->getAllPermissions()->pluck('name')
+            ->diff($actor->getAllPermissions()->pluck('name'))
+            ->diff(self::IMPERSONATION_NEUTRAL_PERMISSIONS)
+            ->sort()
+            ->values();
+    }
+
     /**
      * Konto aus seiner Familie lösen (Route stammt aus der sorg2-Zeit; der
      * zweite Parameter wird nicht mehr ausgewertet).

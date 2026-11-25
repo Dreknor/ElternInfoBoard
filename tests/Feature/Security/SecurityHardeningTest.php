@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
@@ -589,6 +590,48 @@ class SecurityHardeningTest extends TestCase
         $this->assertSame($support->id, auth()->id(), 'Konto mit weitergehenden Rechten darf nicht übernommen werden');
 
         $this->actingAs($support)->post('showUser/'.$parent->id)->assertRedirect();
+        $this->assertSame($parent->id, auth()->id());
+    }
+
+    /** @test */
+    public function impersonation_still_blocks_accounts_with_real_additional_rights(): void
+    {
+        $support = $this->userWith('edit user', 'loginAsUser');
+        $elternrat = $this->userWith('view elternrat', 'role is assignable');
+
+        $this->actingAs($support)->post('showUser/'.$elternrat->id)
+            ->assertSessionHas('Meldung', fn (string $m) => str_contains($m, 'view elternrat') && ! str_contains($m, 'role is assignable'));
+        $this->assertSame($support->id, auth()->id());
+    }
+
+    /** @test */
+    public function impersonation_ignores_role_markers_and_login_settings_of_the_target(): void
+    {
+        $support = $this->userWith('edit user', 'loginAsUser');
+
+        $role = Role::findOrCreate('Eltern', 'web');
+        foreach (['role is assignable', 'allow password-less-login', 'disable news mail'] as $name) {
+            $role->givePermissionTo(Permission::findOrCreate($name, 'web'));
+        }
+        $parent = $this->parent();
+        $parent->assignRole($role);
+
+        $this->actingAs($support)->post('showUser/'.$parent->id)->assertRedirect();
+        $this->assertSame($parent->id, auth()->id());
+    }
+
+    /** @test */
+    public function permission_administrators_can_impersonate_any_parent(): void
+    {
+        // Wer Rechte verwalten darf, kann sich jedes Recht selbst geben – keine Rechteausweitung
+        $admin = $this->userWith('edit user', 'loginAsUser', 'edit permission');
+
+        $role = Role::findOrCreate('Eltern', 'web');
+        $role->givePermissionTo(Permission::findOrCreate('view all', 'web'), Permission::findOrCreate('create own group', 'web'));
+        $parent = $this->parent();
+        $parent->assignRole($role);
+
+        $this->actingAs($admin)->post('showUser/'.$parent->id)->assertRedirect();
         $this->assertSame($parent->id, auth()->id());
     }
 
